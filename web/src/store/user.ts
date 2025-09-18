@@ -40,12 +40,32 @@ export const useUserStore = defineStore('user', () => {
   const setUserInfo = (info: UserInfo) => {
     userInfo.value = info
     permissions.value = info.permissions || []
+    // 将用户信息持久化到本地存储
+    localStorage.setItem('userInfo', JSON.stringify(info))
+  }
+
+  // 获取用户信息
+  const getUserInfo = (): UserInfo | null => {
+    if (!userInfo.value) {
+      const storedUserInfo = localStorage.getItem('userInfo')
+      if (storedUserInfo) {
+        try {
+          const parsedUserInfo = JSON.parse(storedUserInfo)
+          userInfo.value = parsedUserInfo
+          permissions.value = parsedUserInfo.permissions || []
+        } catch (error) {
+          console.error('Failed to parse stored user info:', error)
+        }
+      }
+    }
+    return userInfo.value
   }
 
   // 清除用户信息
   const clearUserInfo = () => {
     userInfo.value = null
     permissions.value = []
+    localStorage.removeItem('userInfo')
   }
 
   // 检查权限
@@ -72,6 +92,7 @@ export const useUserStore = defineStore('user', () => {
     getToken,
     clearToken,
     setUserInfo,
+    getUserInfo,
     clearUserInfo,
     hasPermission,
     hasRole,

@@ -13,41 +13,67 @@
       </div>
 
       <el-form-item prop="username">
-        <span class="svg-container">
-          <el-icon><User /></el-icon>
-        </span>
-        <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="用户名"
-          name="username"
-          type="text"
-          tabindex="1"
-          autocomplete="on"
-        />
+        <div class="input-wrapper">
+          <div class="icon-wrapper">
+            <el-icon class="input-icon"><User /></el-icon>
+          </div>
+          <el-input
+            ref="username"
+            v-model="loginForm.username"
+            placeholder="用户名"
+            name="username"
+            type="text"
+            tabindex="1"
+            autocomplete="on"
+            class="styled-input"
+          />
+        </div>
       </el-form-item>
 
       <el-form-item prop="password">
-        <span class="svg-container">
-          <el-icon><Lock /></el-icon>
-        </span>
-        <el-input
-          :key="passwordType"
-          ref="password"
-          v-model="loginForm.password"
-          :type="passwordType"
-          placeholder="密码"
-          name="password"
-          tabindex="2"
-          autocomplete="on"
-          @keyup.enter="handleLogin"
-        />
-        <span class="show-pwd" @click="showPwd">
-          <el-icon>
-            <View v-if="passwordType === 'password'" />
-            <Hide v-else />
-          </el-icon>
-        </span>
+        <div class="input-wrapper">
+          <div class="icon-wrapper">
+            <el-icon class="input-icon"><Lock /></el-icon>
+          </div>
+          <el-input
+            :key="passwordType"
+            ref="password"
+            v-model="loginForm.password"
+            :type="passwordType"
+            placeholder="密码"
+            name="password"
+            tabindex="2"
+            autocomplete="on"
+            @keyup.enter="handleLogin"
+            class="styled-input"
+          />
+          <div class="password-toggle" @click="showPwd">
+            <el-icon class="toggle-icon">
+              <View v-if="passwordType === 'password'" />
+              <Hide v-else />
+            </el-icon>
+          </div>
+        </div>
+      </el-form-item>
+      
+      <el-form-item prop="captcha" v-if="showCaptcha">
+        <div class="input-wrapper captcha-wrapper">
+          <div class="icon-wrapper">
+            <el-icon class="input-icon"><Key /></el-icon>
+          </div>
+          <el-input
+            ref="captchaInput"
+            v-model="loginForm.captcha"
+            placeholder="验证码"
+            name="captcha"
+            type="text"
+            tabindex="3"
+            class="styled-input captcha-input"
+          />
+          <div class="captcha-image" @click="refreshCaptcha">
+            <img :src="captchaUrl" alt="验证码" />
+          </div>
+        </div>
       </el-form-item>
 
       <el-button
@@ -152,21 +178,22 @@ const handleLogin = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
 }
 
 .login-form {
   position: relative;
-  width: 420px;
+  width: 440px;
   max-width: 90%;
   padding: 60px 40px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
   z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .title-container {
@@ -183,62 +210,100 @@ const handleLogin = async () => {
   letter-spacing: 1px;
 }
 
-.svg-container {
-  padding: 0 15px 0 0;
-  color: #667eea;
-  vertical-align: middle;
-  width: 24px;
-  display: inline-flex;
+.input-wrapper {
+  position: relative;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  transition: all 0.3s;
+  height: 52px;
+  width: 100%;
+  padding: 0 15px;
+  margin-bottom: 5px;
+  background-color: #f5f7fa;
 }
 
-.show-pwd {
+.input-wrapper:hover {
+  border-color: #c0c4cc;
+  background-color: #f9fafc;
+}
+
+.input-wrapper:focus-within {
+  border-color: #667eea;
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  color: #889aa4;
+  margin-right: 5px;
+}
+
+.input-icon {
+  font-size: 18px;
+}
+
+.password-toggle {
   position: absolute;
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
-  color: #a0aec0;
   cursor: pointer;
-  user-select: none;
-  transition: color 0.3s ease;
+  color: #889aa4;
+  transition: all 0.3s;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.show-pwd:hover {
+.password-toggle:hover {
   color: #667eea;
 }
 
+.toggle-icon {
+  font-size: 16px;
+}
+
 :deep(.el-form-item) {
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 12px;
-  margin-bottom: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  margin-bottom: 28px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 :deep(.el-form-item:hover) {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: transparent;
+  box-shadow: none;
 }
 
-:deep(.el-input) {
-  display: inline-block;
-  height: 48px;
-  width: calc(100% - 40px);
+:deep(.styled-input .el-input) {
+  display: block;
+  height: 52px;
+  width: 100%;
+  flex: 1;
 }
 
-:deep(.el-input input) {
+:deep(.styled-input .el-input input) {
   background: transparent;
   border: 0;
   -webkit-appearance: none;
   border-radius: 0;
-  padding: 14px 0;
+  padding: 0;
   color: #2d3748;
-  height: 48px;
+  height: 52px;
   caret-color: #667eea;
   font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 :deep(.el-input input::placeholder) {

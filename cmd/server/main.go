@@ -54,7 +54,7 @@ func main() {
 	// 注册路由
 	controller.RegisterRoutes(r)
 
-	hashedPassword, err := utils.HashPassword("password")
+	hashedPassword, err := utils.HashPassword("admin123")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 	}

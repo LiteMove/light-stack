@@ -5,7 +5,14 @@
 </template>
 
 <script setup lang="ts">
-// 这里可以添加全局的应用逻辑
+import { onMounted } from 'vue'
+import { useUserStore } from '@/store'
+
+onMounted(() => {
+  // 应用启动时，从本地存储恢复用户信息
+  const userStore = useUserStore()
+  userStore.getUserInfo()
+})
 </script>
 
 <style scoped>

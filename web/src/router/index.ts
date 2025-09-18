@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import Layout from '@/layout/index.vue'
+import { useUserStore } from '@/store'
 
 // 静态路由
 export const constantRoutes: RouteRecordRaw[] = [
@@ -90,6 +91,18 @@ const router = createRouter({
   history: createWebHistory(),
   routes: constantRoutes,
   scrollBehavior: () => ({ left: 0, top: 0 })
+})
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore()
+  
+  // 确保用户信息已加载
+  if (userStore.getToken() && !userStore.userInfo) {
+    userStore.getUserInfo()
+  }
+  
+  next()
 })
 
 export default router
