@@ -12,29 +12,29 @@ type RoleRepository interface {
 	// 创建角色
 	Create(role *model.Role) error
 	// 根据ID获取角色
-	GetByID(id uint) (*model.Role, error)
+	GetByID(id uint64) (*model.Role, error)
 	// 根据编码获取角色
 	GetByCode(code string) (*model.Role, error)
 	// 更新角色
 	Update(role *model.Role) error
 	// 删除角色
-	Delete(id uint) error
+	Delete(id uint64) error
 	// 检查角色编码是否存在
 	CodeExists(tenantID uint64, code string) (bool, error)
 	// 获取角色列表（分页）
 	GetList(tenantID uint64, page, pageSize int, status int) ([]*model.Role, int64, error)
 	// 获取用户的角色列表
-	GetUserRoles(userID uint) ([]*model.Role, error)
+	GetUserRoles(userID uint64) ([]*model.Role, error)
 	// 为用户分配角色
-	AssignRolesToUser(userID uint, roleIDs []uint) error
+	AssignRolesToUser(userID uint64, roleIDs []uint64) error
 	// 移除用户角色
-	RemoveUserRoles(userID uint, roleIDs []uint) error
+	RemoveUserRoles(userID uint64, roleIDs []uint64) error
 	// 更新用户角色（先清空再分配）
-	UpdateUserRoles(userID uint, roleIDs []uint) error
+	UpdateUserRoles(userID uint64, roleIDs []uint64) error
 	// 获取角色的用户数量
-	GetRoleUserCount(roleID uint) (int64, error)
+	GetRoleUserCount(roleID uint64) (int64, error)
 	// 获取角色及其用户信息
-	GetRoleWithUsers(roleID uint) (*model.RoleWithUsers, error)
+	GetRoleWithUsers(roleID uint64) (*model.RoleWithUsers, error)
 }
 
 // roleRepository 角色数据访问实现
@@ -55,7 +55,7 @@ func (r *roleRepository) Create(role *model.Role) error {
 }
 
 // GetByID 根据ID获取角色
-func (r *roleRepository) GetByID(id uint) (*model.Role, error) {
+func (r *roleRepository) GetByID(id uint64) (*model.Role, error) {
 	var role model.Role
 	err := r.db.Preload("Users").First(&role, id).Error
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *roleRepository) Update(role *model.Role) error {
 }
 
 // Delete 删除角色（软删除）
-func (r *roleRepository) Delete(id uint) error {
+func (r *roleRepository) Delete(id uint64) error {
 	return r.db.Delete(&model.Role{}, id).Error
 }
 
@@ -129,7 +129,7 @@ func (r *roleRepository) GetList(tenantID uint64, page, pageSize int, status int
 }
 
 // GetUserRoles 获取用户的角色列表
-func (r *roleRepository) GetUserRoles(userID uint) ([]*model.Role, error) {
+func (r *roleRepository) GetUserRoles(userID uint64) ([]*model.Role, error) {
 	var roles []*model.Role
 	err := r.db.
 		Joins("JOIN user_roles ON roles.id = user_roles.role_id").
@@ -140,7 +140,7 @@ func (r *roleRepository) GetUserRoles(userID uint) ([]*model.Role, error) {
 }
 
 // AssignRolesToUser 为用户分配角色
-func (r *roleRepository) AssignRolesToUser(userID uint, roleIDs []uint) error {
+func (r *roleRepository) AssignRolesToUser(userID uint64, roleIDs []uint64) error {
 	if len(roleIDs) == 0 {
 		return nil
 	}
@@ -158,7 +158,7 @@ func (r *roleRepository) AssignRolesToUser(userID uint, roleIDs []uint) error {
 }
 
 // RemoveUserRoles 移除用户角色
-func (r *roleRepository) RemoveUserRoles(userID uint, roleIDs []uint) error {
+func (r *roleRepository) RemoveUserRoles(userID uint64, roleIDs []uint64) error {
 	if len(roleIDs) == 0 {
 		return nil
 	}
@@ -168,7 +168,7 @@ func (r *roleRepository) RemoveUserRoles(userID uint, roleIDs []uint) error {
 }
 
 // UpdateUserRoles 更新用户角色（先清空再分配）
-func (r *roleRepository) UpdateUserRoles(userID uint, roleIDs []uint) error {
+func (r *roleRepository) UpdateUserRoles(userID uint64, roleIDs []uint64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// 删除现有角色关联
 		if err := tx.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error; err != nil {
@@ -192,14 +192,14 @@ func (r *roleRepository) UpdateUserRoles(userID uint, roleIDs []uint) error {
 }
 
 // GetRoleUserCount 获取角色的用户数量
-func (r *roleRepository) GetRoleUserCount(roleID uint) (int64, error) {
+func (r *roleRepository) GetRoleUserCount(roleID uint64) (int64, error) {
 	var count int64
 	err := r.db.Model(&model.UserRole{}).Where("role_id = ?", roleID).Count(&count).Error
 	return count, err
 }
 
 // GetRoleWithUsers 获取角色及其用户信息
-func (r *roleRepository) GetRoleWithUsers(roleID uint) (*model.RoleWithUsers, error) {
+func (r *roleRepository) GetRoleWithUsers(roleID uint64) (*model.RoleWithUsers, error) {
 	var role model.Role
 	err := r.db.Preload("Users").First(&role, roleID).Error
 	if err != nil {

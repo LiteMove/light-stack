@@ -29,7 +29,7 @@ func (Role) TableName() string {
 
 // RoleProfile 角色资料（简化版本）
 type RoleProfile struct {
-	ID          uint      `json:"id"`
+	ID          uint64    `json:"id"`
 	Name        string    `json:"name"`
 	Code        string    `json:"code"`
 	Description string    `json:"description"`
@@ -65,7 +65,7 @@ func (r *Role) BeforeCreate(tx *gorm.DB) error {
 
 // Permission 权限模型
 type Permission struct {
-	ID          uint           `json:"id" gorm:"primarykey"`
+	ID          uint64         `json:"id" gorm:"primarykey"`
 	Name        string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
 	Code        string         `json:"code" gorm:"not null;size:100;uniqueIndex" validate:"required,max=100"`
 	Type        string         `json:"type" gorm:"not null;default:api;size:20" validate:"required,oneof=api menu"`
@@ -87,8 +87,8 @@ func (Permission) TableName() string {
 
 // Menu 菜单权限模型
 type Menu struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	ParentID  uint           `json:"parent_id" gorm:"not null;default:0;index"`
+	ID        uint64         `json:"id" gorm:"primarykey"`
+	ParentID  uint64         `json:"parent_id" gorm:"not null;default:0;index"`
 	Name      string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
 	Code      string         `json:"code" gorm:"not null;size:100;uniqueIndex" validate:"required,max=100"`
 	Type      string         `json:"type" gorm:"not null;default:menu;size:20" validate:"required,oneof=directory menu permission"`

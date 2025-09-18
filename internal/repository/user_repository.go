@@ -13,9 +13,9 @@ type UserRepository interface {
 	// 创建用户
 	Create(user *model.User) error
 	// 根据ID获取用户
-	GetByID(id uint) (*model.User, error)
+	GetByID(id uint64) (*model.User, error)
 	// 根据ID获取用户（包含角色）
-	GetByIDWithRoles(id uint) (*model.User, error)
+	GetByIDWithRoles(id uint64) (*model.User, error)
 	// 根据用户名获取用户
 	GetByUsername(tenantID uint64, username string) (*model.User, error)
 	// 根据用户名获取用户（包含角色）
@@ -25,9 +25,9 @@ type UserRepository interface {
 	// 更新用户
 	Update(user *model.User) error
 	// 更新用户登录信息
-	UpdateLoginInfo(id uint, ip string) error
+	UpdateLoginInfo(id uint64, ip string) error
 	// 删除用户
-	Delete(id uint) error
+	Delete(id uint64) error
 	// 检查用户名是否存在
 	UsernameExists(tenantID uint64, username string) (bool, error)
 	// 检查邮箱是否存在
@@ -35,15 +35,15 @@ type UserRepository interface {
 	// 获取用户列表（分页）
 	GetList(tenantID uint64, page, pageSize int, status int) ([]*model.User, int64, error)
 	// 更新用户状态
-	UpdateStatus(id uint, status int) error
+	UpdateStatus(id uint64, status int) error
 	// 更新密码
-	UpdatePassword(id uint, hashedPassword string) error
+	UpdatePassword(id uint64, hashedPassword string) error
 	// 记录登录失败
-	RecordLoginFailure(id uint) error
+	RecordLoginFailure(id uint64) error
 	// 重置登录失败计数
-	ResetLoginFailures(id uint) error
+	ResetLoginFailures(id uint64) error
 	// 锁定用户
-	LockUser(id uint, lockUntil time.Time) error
+	LockUser(id uint64, lockUntil time.Time) error
 }
 
 // userRepository 用户数据访问实现
@@ -64,7 +64,7 @@ func (r *userRepository) Create(user *model.User) error {
 }
 
 // GetByID 根据ID获取用户
-func (r *userRepository) GetByID(id uint) (*model.User, error) {
+func (r *userRepository) GetByID(id uint64) (*model.User, error) {
 	var user model.User
 	err := r.db.First(&user, id).Error
 	if err != nil {
@@ -77,7 +77,7 @@ func (r *userRepository) GetByID(id uint) (*model.User, error) {
 }
 
 // GetByIDWithRoles 根据ID获取用户（包含角色）
-func (r *userRepository) GetByIDWithRoles(id uint) (*model.User, error) {
+func (r *userRepository) GetByIDWithRoles(id uint64) (*model.User, error) {
 	var user model.User
 	err := r.db.Preload("Roles").First(&user, id).Error
 	if err != nil {
@@ -136,7 +136,7 @@ func (r *userRepository) Update(user *model.User) error {
 }
 
 // UpdateLoginInfo 更新用户登录信息
-func (r *userRepository) UpdateLoginInfo(id uint, ip string) error {
+func (r *userRepository) UpdateLoginInfo(id uint64, ip string) error {
 	now := time.Now()
 	updates := map[string]interface{}{
 		"last_login_at":  &now,
@@ -148,7 +148,7 @@ func (r *userRepository) UpdateLoginInfo(id uint, ip string) error {
 }
 
 // Delete 删除用户（软删除）
-func (r *userRepository) Delete(id uint) error {
+func (r *userRepository) Delete(id uint64) error {
 	return r.db.Delete(&model.User{}, id).Error
 }
 
@@ -201,30 +201,30 @@ func (r *userRepository) GetList(tenantID uint64, page, pageSize int, status int
 }
 
 // UpdateStatus 更新用户状态
-func (r *userRepository) UpdateStatus(id uint, status int) error {
+func (r *userRepository) UpdateStatus(id uint64, status int) error {
 	return r.db.Model(&model.User{}).Where("id = ?", id).Update("status", status).Error
 }
 
 // UpdatePassword 更新密码
-func (r *userRepository) UpdatePassword(id uint, hashedPassword string) error {
+func (r *userRepository) UpdatePassword(id uint64, hashedPassword string) error {
 	return r.db.Model(&model.User{}).Where("id = ?", id).Update("password", hashedPassword).Error
 }
 
 // RecordLoginFailure 记录登录失败
-func (r *userRepository) RecordLoginFailure(id uint) error {
+func (r *userRepository) RecordLoginFailure(id uint64) error {
 	return r.db.Model(&model.User{}).Where("id = ?", id).
 		Update("login_failures", gorm.Expr("login_failures + 1")).Error
 }
 
 // ResetLoginFailures 重置登录失败计数
-func (r *userRepository) ResetLoginFailures(id uint) error {
+func (r *userRepository) ResetLoginFailures(id uint64) error {
 	return r.db.Model(&model.User{}).Where("id = ?", id).Update("login_failures", 0).Error
 }
 
 // LockUser 锁定用户
-func (r *userRepository) LockUser(id uint, lockUntil time.Time) error {
+func (r *userRepository) LockUser(id uint64, lockUntil time.Time) error {
 	updates := map[string]interface{}{
-		"status":      3, // 锁定状态
+		"status":       3, // 锁定状态
 		"locked_until": &lockUntil,
 	}
 	return r.db.Model(&model.User{}).Where("id = ?", id).Updates(updates).Error

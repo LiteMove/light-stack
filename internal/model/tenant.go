@@ -25,7 +25,7 @@ func (Tenant) TableName() string {
 
 // TenantProfile 租户资料（简化版本）
 type TenantProfile struct {
-	ID        uint       `json:"id"`
+	ID        uint64     `json:"id"`
 	Name      string     `json:"name"`
 	Domain    string     `json:"domain"`
 	Status    int        `json:"status"`

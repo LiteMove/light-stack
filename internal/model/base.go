@@ -7,7 +7,7 @@ import (
 
 // BaseModel 基础模型（包含ID和基本时间字段）
 type BaseModel struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
+	ID        uint64         `json:"id" gorm:"primarykey"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
@@ -16,7 +16,7 @@ type BaseModel struct {
 // TenantBaseModel 租户基础模型（包含租户ID）
 type TenantBaseModel struct {
 	BaseModel
-	TenantID uint `json:"tenant_id" gorm:"not null;default:0;index"`
+	TenantID uint64 `json:"tenant_id" gorm:"not null;default:0;index"`
 }
 
 // BeforeCreate 创建前的钩子（设置默认值）

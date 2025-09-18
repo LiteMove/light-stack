@@ -7,7 +7,7 @@ import (
 // OperationLog 操作日志模型
 type OperationLog struct {
 	TenantBaseModel
-	UserID       uint   `json:"user_id" gorm:"not null;index:idx_user_id" validate:"required"`
+	UserID       uint64 `json:"user_id" gorm:"not null;index:idx_user_id" validate:"required"`
 	Username     string `json:"username" gorm:"not null;size:50" validate:"required,max=50"`
 	Operation    string `json:"operation" gorm:"not null;size:50;index:idx_operation" validate:"required,max=50"`
 	Method       string `json:"method" gorm:"not null;size:10" validate:"required,max=10"`
@@ -31,9 +31,9 @@ func (OperationLog) TableName() string {
 
 // LoginLog 登录日志模型
 type LoginLog struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	TenantID  uint      `json:"tenant_id" gorm:"not null;default:0;index:idx_tenant_id"`
-	UserID    *uint     `json:"user_id" gorm:"index:idx_user_id"`
+	ID        uint64    `json:"id" gorm:"primarykey"`
+	TenantID  uint64    `json:"tenant_id" gorm:"not null;default:0;index:idx_tenant_id"`
+	UserID    *uint64   `json:"user_id" gorm:"index:idx_user_id"`
 	Username  string    `json:"username" gorm:"not null;size:50;index:idx_username" validate:"required,max=50"`
 	IP        string    `json:"ip" gorm:"not null;size:45" validate:"required,max=45"`
 	UserAgent string    `json:"user_agent" gorm:"size:500" validate:"max=500"`
@@ -55,9 +55,9 @@ func (LoginLog) TableName() string {
 
 // OperationLogProfile 操作日志资料（简化版本）
 type OperationLogProfile struct {
-	ID           uint      `json:"id"`
-	TenantID     uint      `json:"tenant_id"`
-	UserID       uint      `json:"user_id"`
+	ID           uint64    `json:"id"`
+	TenantID     uint64    `json:"tenant_id"`
+	UserID       uint64    `json:"user_id"`
 	Username     string    `json:"username"`
 	Operation    string    `json:"operation"`
 	Method       string    `json:"method"`
@@ -95,9 +95,9 @@ func (ol *OperationLog) ToProfile() OperationLogProfile {
 
 // LoginLogProfile 登录日志资料（简化版本）
 type LoginLogProfile struct {
-	ID        uint      `json:"id"`
-	TenantID  uint      `json:"tenant_id"`
-	UserID    *uint     `json:"user_id"`
+	ID        uint64    `json:"id"`
+	TenantID  uint64    `json:"tenant_id"`
+	UserID    *uint64   `json:"user_id"`
 	Username  string    `json:"username"`
 	IP        string    `json:"ip"`
 	UserAgent string    `json:"user_agent"`

@@ -10,14 +10,14 @@ import (
 
 // Claims JWT声明结构
 type Claims struct {
-	UserID   uint   `json:"user_id"`
+	UserID   uint64 `json:"user_id"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成JWT token
-func GenerateToken(userID uint, username, role string) (string, error) {
+func GenerateToken(userID uint64, username, role string) (string, error) {
 	cfg := config.Get()
 	if cfg == nil {
 		return "", errors.New("config not initialized")

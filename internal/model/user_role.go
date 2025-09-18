@@ -6,9 +6,9 @@ import (
 
 // UserRole 用户角色关联模型
 type UserRole struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	UserID    uint      `json:"user_id" gorm:"not null;uniqueIndex:uk_user_role;index:idx_user_id" validate:"required"`
-	RoleID    uint      `json:"role_id" gorm:"not null;uniqueIndex:uk_user_role;index:idx_role_id" validate:"required"`
+	ID        uint64    `json:"id" gorm:"primarykey"`
+	UserID    uint64    `json:"user_id" gorm:"not null;uniqueIndex:uk_user_role;index:idx_user_id" validate:"required"`
+	RoleID    uint64    `json:"role_id" gorm:"not null;uniqueIndex:uk_user_role;index:idx_role_id" validate:"required"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -19,9 +19,9 @@ func (UserRole) TableName() string {
 
 // RoleMenuPermission 角色菜单权限关联模型
 type RoleMenuPermission struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	RoleID    uint      `json:"role_id" gorm:"not null;uniqueIndex:uk_role_menu;index:idx_role_id" validate:"required"`
-	MenuID    uint      `json:"menu_id" gorm:"not null;uniqueIndex:uk_role_menu;index:idx_menu_id" validate:"required"`
+	ID        uint64    `json:"id" gorm:"primarykey"`
+	RoleID    uint64    `json:"role_id" gorm:"not null;uniqueIndex:uk_role_menu;index:idx_role_id" validate:"required"`
+	MenuID    uint64    `json:"menu_id" gorm:"not null;uniqueIndex:uk_role_menu;index:idx_menu_id" validate:"required"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -32,7 +32,7 @@ func (RoleMenuPermission) TableName() string {
 
 // UserRoleInfo 用户角色信息（包含角色详情）
 type UserRoleInfo struct {
-	UserID      uint      `json:"user_id"`
+	UserID      uint64    `json:"user_id"`
 	Username    string    `json:"username"`
 	Nickname    string    `json:"nickname"`
 	Email       string    `json:"email"`

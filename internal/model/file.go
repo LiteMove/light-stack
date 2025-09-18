@@ -28,8 +28,8 @@ func (File) TableName() string {
 
 // FileProfile 文件资料（简化版本）
 type FileProfile struct {
-	ID           uint      `json:"id"`
-	TenantID     uint      `json:"tenant_id"`
+	ID           uint64    `json:"id"`
+	TenantID     uint64    `json:"tenant_id"`
 	OriginalName string    `json:"original_name"`
 	FileName     string    `json:"file_name"`
 	FilePath     string    `json:"file_path"`

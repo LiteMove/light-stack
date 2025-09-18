@@ -21,15 +21,15 @@ type AuthService interface {
 	// 验证token
 	ValidateToken(tokenString string) (*jwt.Claims, error)
 	// 修改密码
-	ChangePassword(userID uint, oldPassword, newPassword string) error
+	ChangePassword(userID uint64, oldPassword, newPassword string) error
 	// 获取用户信息
-	GetUserProfile(userID uint) (*model.UserProfile, error)
+	GetUserProfile(userID uint64) (*model.UserProfile, error)
 	// 更新用户信息
-	UpdateUserProfile(userID uint, req *UpdateProfileRequest) (*model.UserProfile, error)
+	UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*model.UserProfile, error)
 	// 为用户分配角色
-	AssignUserRoles(userID uint, roleIDs []uint) error
+	AssignUserRoles(userID uint64, roleIDs []uint64) error
 	// 获取用户角色
-	GetUserRoles(userID uint) ([]*model.Role, error)
+	GetUserRoles(userID uint64) ([]*model.Role, error)
 }
 
 // RoleService 角色服务接口
@@ -37,17 +37,17 @@ type RoleService interface {
 	// 创建角色
 	Create(req *CreateRoleRequest) (*model.RoleProfile, error)
 	// 更新角色
-	Update(id uint, req *UpdateRoleRequest) (*model.RoleProfile, error)
+	Update(id uint64, req *UpdateRoleRequest) (*model.RoleProfile, error)
 	// 删除角色
-	Delete(id uint) error
+	Delete(id uint64) error
 	// 获取角色信息
-	GetByID(id uint) (*model.RoleProfile, error)
+	GetByID(id uint64) (*model.RoleProfile, error)
 	// 获取角色列表
 	GetList(tenantID uint64, page, pageSize int, status int) ([]*model.Role, int64, error)
 	// 为用户分配角色
-	AssignRolesToUser(userID uint, roleIDs []uint) error
+	AssignRolesToUser(userID uint64, roleIDs []uint64) error
 	// 移除用户角色
-	RemoveUserRoles(userID uint, roleIDs []uint) error
+	RemoveUserRoles(userID uint64, roleIDs []uint64) error
 }
 
 // authService 认证服务实现
@@ -87,13 +87,13 @@ type LoginRequest struct {
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-	TenantID uint64 `json:"tenant_id"` // 租户ID，0表示系统租户
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Email    string `json:"email" validate:"email,max=100"`
-	Password string `json:"password" validate:"required,min=6"`
-	Nickname string `json:"nickname" validate:"max=100"`
-	Phone    string `json:"phone" validate:"max=20"`
-	RoleIDs  []uint `json:"role_ids"` // 分配的角色ID列表
+	TenantID uint64   `json:"tenant_id"` // 租户ID，0表示系统租户
+	Username string   `json:"username" validate:"required,min=3,max=50"`
+	Email    string   `json:"email" validate:"email,max=100"`
+	Password string   `json:"password" validate:"required,min=6"`
+	Nickname string   `json:"nickname" validate:"max=100"`
+	Phone    string   `json:"phone" validate:"max=20"`
+	RoleIDs  []uint64 `json:"role_ids"` // 分配的角色ID列表
 }
 
 // UpdateProfileRequest 更新用户信息请求
@@ -284,7 +284,7 @@ func (s *authService) Register(req *RegisterRequest) (*model.UserProfile, error)
 		// 如果没有指定角色，分配默认用户角色
 		userRole, err := s.roleRepo.GetByCode("user")
 		if err == nil {
-			s.roleRepo.AssignRolesToUser(user.ID, []uint{userRole.ID})
+			s.roleRepo.AssignRolesToUser(user.ID, []uint64{userRole.ID})
 		}
 	}
 
@@ -360,7 +360,7 @@ func (s *authService) ValidateToken(tokenString string) (*jwt.Claims, error) {
 }
 
 // ChangePassword 修改密码
-func (s *authService) ChangePassword(userID uint, oldPassword, newPassword string) error {
+func (s *authService) ChangePassword(userID uint64, oldPassword, newPassword string) error {
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -395,7 +395,7 @@ func (s *authService) ChangePassword(userID uint, oldPassword, newPassword strin
 }
 
 // GetUserProfile 获取用户信息
-func (s *authService) GetUserProfile(userID uint) (*model.UserProfile, error) {
+func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) {
 	user, err := s.userRepo.GetByIDWithRoles(userID)
 	if err != nil {
 		return nil, errors.New("用户不存在")
@@ -406,7 +406,7 @@ func (s *authService) GetUserProfile(userID uint) (*model.UserProfile, error) {
 }
 
 // UpdateUserProfile 更新用户信息
-func (s *authService) UpdateUserProfile(userID uint, req *UpdateProfileRequest) (*model.UserProfile, error) {
+func (s *authService) UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*model.UserProfile, error) {
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -439,12 +439,12 @@ func (s *authService) UpdateUserProfile(userID uint, req *UpdateProfileRequest) 
 }
 
 // AssignUserRoles 为用户分配角色
-func (s *authService) AssignUserRoles(userID uint, roleIDs []uint) error {
+func (s *authService) AssignUserRoles(userID uint64, roleIDs []uint64) error {
 	return s.roleRepo.UpdateUserRoles(userID, roleIDs)
 }
 
 // GetUserRoles 获取用户角色
-func (s *authService) GetUserRoles(userID uint) ([]*model.Role, error) {
+func (s *authService) GetUserRoles(userID uint64) ([]*model.Role, error) {
 	return s.roleRepo.GetUserRoles(userID)
 }
 
@@ -484,7 +484,6 @@ func (s *roleService) Create(req *CreateRoleRequest) (*model.RoleProfile, error)
 
 	// 创建角色
 	role := &model.Role{
-		TenantID:    req.TenantID,
 		Name:        req.Name,
 		Code:        req.Code,
 		Description: req.Description,
@@ -503,7 +502,7 @@ func (s *roleService) Create(req *CreateRoleRequest) (*model.RoleProfile, error)
 }
 
 // Update 更新角色
-func (s *roleService) Update(id uint, req *UpdateRoleRequest) (*model.RoleProfile, error) {
+func (s *roleService) Update(id uint64, req *UpdateRoleRequest) (*model.RoleProfile, error) {
 	role, err := s.roleRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.New("角色不存在")
@@ -526,7 +525,7 @@ func (s *roleService) Update(id uint, req *UpdateRoleRequest) (*model.RoleProfil
 }
 
 // Delete 删除角色
-func (s *roleService) Delete(id uint) error {
+func (s *roleService) Delete(id uint64) error {
 	// 检查角色是否还有用户在使用
 	count, err := s.roleRepo.GetRoleUserCount(id)
 	if err != nil {
@@ -546,7 +545,7 @@ func (s *roleService) Delete(id uint) error {
 }
 
 // GetByID 获取角色信息
-func (s *roleService) GetByID(id uint) (*model.RoleProfile, error) {
+func (s *roleService) GetByID(id uint64) (*model.RoleProfile, error) {
 	role, err := s.roleRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.New("角色不存在")
@@ -562,11 +561,11 @@ func (s *roleService) GetList(tenantID uint64, page, pageSize int, status int) (
 }
 
 // AssignRolesToUser 为用户分配角色
-func (s *roleService) AssignRolesToUser(userID uint, roleIDs []uint) error {
+func (s *roleService) AssignRolesToUser(userID uint64, roleIDs []uint64) error {
 	return s.roleRepo.UpdateUserRoles(userID, roleIDs)
 }
 
 // RemoveUserRoles 移除用户角色
-func (s *roleService) RemoveUserRoles(userID uint, roleIDs []uint) error {
+func (s *roleService) RemoveUserRoles(userID uint64, roleIDs []uint64) error {
 	return s.roleRepo.RemoveUserRoles(userID, roleIDs)
 }

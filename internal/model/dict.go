@@ -24,19 +24,16 @@ func (DictType) TableName() string {
 
 // DictData 字典数据模型
 type DictData struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	DictType  string         `json:"dict_type" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
-	Label     string         `json:"label" gorm:"not null;size:100" validate:"required,max=100"`
-	Value     string         `json:"value" gorm:"not null;size:100;uniqueIndex:uk_type_value" validate:"required,max=100"`
-	SortOrder int            `json:"sort_order" gorm:"not null;default:0;index:idx_sort_order"`
-	CssClass  string         `json:"css_class" gorm:"size:100" validate:"max=100"`
-	ListClass string         `json:"list_class" gorm:"size:100" validate:"max=100"`
-	IsDefault bool           `json:"is_default" gorm:"not null;default:false"`
-	Status    int            `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2"`
-	Remark    string         `json:"remark" gorm:"size:255" validate:"max=255"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	BaseModel
+	DictType  string `json:"dict_type" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
+	Label     string `json:"label" gorm:"not null;size:100" validate:"required,max=100"`
+	Value     string `json:"value" gorm:"not null;size:100;uniqueIndex:uk_type_value" validate:"required,max=100"`
+	SortOrder int    `json:"sort_order" gorm:"not null;default:0;index:idx_sort_order"`
+	CssClass  string `json:"css_class" gorm:"size:100" validate:"max=100"`
+	ListClass string `json:"list_class" gorm:"size:100" validate:"max=100"`
+	IsDefault bool   `json:"is_default" gorm:"not null;default:false"`
+	Status    int    `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2"`
+	Remark    string `json:"remark" gorm:"size:255" validate:"max=255"`
 }
 
 // TableName 指定表名
@@ -46,7 +43,7 @@ func (DictData) TableName() string {
 
 // DictTypeProfile 字典类型资料（简化版本）
 type DictTypeProfile struct {
-	ID          uint      `json:"id"`
+	ID          uint64    `json:"id"`
 	Name        string    `json:"name"`
 	Type        string    `json:"type"`
 	Description string    `json:"description"`
@@ -70,7 +67,7 @@ func (dt *DictType) ToProfile() DictTypeProfile {
 
 // DictDataProfile 字典数据资料（简化版本）
 type DictDataProfile struct {
-	ID        uint      `json:"id"`
+	ID        uint64    `json:"id"`
 	DictType  string    `json:"dict_type"`
 	Label     string    `json:"label"`
 	Value     string    `json:"value"`

@@ -113,7 +113,7 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	profile, err := c.authService.GetUserProfile(userID.(uint))
+	profile, err := c.authService.GetUserProfile(userID.(uint64))
 	if err != nil {
 		response.Error(ctx, 404, err.Error())
 		return
@@ -137,7 +137,7 @@ func (c *AuthController) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	profile, err := c.authService.UpdateUserProfile(userID.(uint), &req)
+	profile, err := c.authService.UpdateUserProfile(userID.(uint64), &req)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -161,7 +161,7 @@ func (c *AuthController) ChangePassword(ctx *gin.Context) {
 		return
 	}
 
-	err := c.authService.ChangePassword(userID.(uint), req.OldPassword, req.NewPassword)
+	err := c.authService.ChangePassword(userID.(uint64), req.OldPassword, req.NewPassword)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -185,7 +185,7 @@ func (c *AuthController) AssignUserRoles(ctx *gin.Context) {
 		return
 	}
 
-	err = c.authService.AssignUserRoles(uint(userID), req.RoleIDs)
+	err = c.authService.AssignUserRoles(uint64(userID), req.RoleIDs)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -203,7 +203,7 @@ func (c *AuthController) GetUserRoles(ctx *gin.Context) {
 		return
 	}
 
-	roles, err := c.authService.GetUserRoles(uint(userID))
+	roles, err := c.authService.GetUserRoles(uint64(userID))
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -258,7 +258,7 @@ func (c *RoleController) UpdateRole(ctx *gin.Context) {
 		return
 	}
 
-	role, err := c.roleService.Update(uint(roleID), &req)
+	role, err := c.roleService.Update(uint64(roleID), &req)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -276,7 +276,7 @@ func (c *RoleController) DeleteRole(ctx *gin.Context) {
 		return
 	}
 
-	err = c.roleService.Delete(uint(roleID))
+	err = c.roleService.Delete(uint64(roleID))
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
@@ -294,7 +294,7 @@ func (c *RoleController) GetRole(ctx *gin.Context) {
 		return
 	}
 
-	role, err := c.roleService.GetByID(uint(roleID))
+	role, err := c.roleService.GetByID(uint64(roleID))
 	if err != nil {
 		response.NotFound(ctx, err.Error())
 		return
@@ -343,5 +343,5 @@ type ChangePasswordRequest struct {
 
 // AssignRolesRequest 分配角色请求
 type AssignRolesRequest struct {
-	RoleIDs []uint `json:"role_ids" validate:"required"`
+	RoleIDs []uint64 `json:"role_ids" validate:"required"`
 }
