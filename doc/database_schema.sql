@@ -354,7 +354,7 @@ INSERT INTO `dict_data` (`dict_type`, `label`, `value`, `sort_order`, `css_class
 ('role_status', '禁用', '2', 2, 'danger', 'danger', 0, 1, '角色禁用状态', NOW(), NOW());
 
 -- 插入基础菜单
-INSERT INTO `menus` (`id`, `parent_id`, `name`, `path`, `component`, `icon`, `sort_order`, `is_hidden`, `is_system`, `permission_code`, `meta`, `created_at`, `updated_at`) VALUES
+INSERT INTO `menus` (`id`, `parent_id`, `name`, `path`, `component`, `icon`, `sort_order`, `is_hidden`, `is_system`, `meta`, `created_at`, `updated_at`) VALUES
 (1, 0, '系统管理', '/system', 'Layout', 'system', 100, 0, 1, NULL, '{"title":"系统管理","icon":"system"}', NOW(), NOW()),
 (2, 1, '用户管理', '/system/users', 'system/users/index', 'user', 1, 0, 1, 'user:list', '{"title":"用户管理","icon":"user"}', NOW(), NOW()),
 (3, 1, '角色管理', '/system/roles', 'system/roles/index', 'role', 2, 0, 1, 'role:list', '{"title":"角色管理","icon":"role"}', NOW(), NOW()),

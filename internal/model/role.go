@@ -1,16 +1,15 @@
 package model
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 // Role 角色模型
 type Role struct {
 	ID          uint           `json:"id" gorm:"primarykey"`
-	TenantID    uint64         `json:"tenant_id" gorm:"not null;default:0;index" validate:"min=0"`
 	Name        string         `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
-	Code        string         `json:"code" gorm:"not null;size:50;uniqueIndex:uk_tenant_code" validate:"required,min=1,max=50"`
+	Code        string         `json:"code" gorm:"not null;size:50;uniqueIndex" validate:"required,min=1,max=50"`
 	Description string         `json:"description" gorm:"size:255" validate:"max=255"`
 	Status      int            `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
 	IsSystem    bool           `json:"is_system" gorm:"not null;default:false"`
@@ -20,9 +19,8 @@ type Role struct {
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 关联关系
-	Users       []User       `json:"users,omitempty" gorm:"many2many:user_roles;"`
-	Permissions []Permission `json:"permissions,omitempty" gorm:"many2many:role_permissions;"`
-	Menus       []Menu       `json:"menus,omitempty" gorm:"many2many:role_menus;"`
+	Users []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
+	Menus []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
 }
 
 // TableName 指定表名
@@ -88,25 +86,28 @@ func (Permission) TableName() string {
 	return "permissions"
 }
 
-// Menu 菜单模型
+// Menu 菜单权限模型
 type Menu struct {
-	ID             uint           `json:"id" gorm:"primarykey"`
-	ParentID       uint           `json:"parent_id" gorm:"not null;default:0;index"`
-	Name           string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
-	Path           string         `json:"path" gorm:"size:255" validate:"max=255"`
-	Component      string         `json:"component" gorm:"size:255" validate:"max=255"`
-	Icon           string         `json:"icon" gorm:"size:100" validate:"max=100"`
-	SortOrder      int            `json:"sort_order" gorm:"not null;default:0"`
-	IsHidden       bool           `json:"is_hidden" gorm:"not null;default:false"`
-	IsSystem       bool           `json:"is_system" gorm:"not null;default:false"`
-	PermissionCode string         `json:"permission_code" gorm:"size:100;index" validate:"max=100"`
-	Meta           string         `json:"meta" gorm:"type:json"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
+	ID        uint           `json:"id" gorm:"primarykey"`
+	ParentID  uint           `json:"parent_id" gorm:"not null;default:0;index"`
+	Name      string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
+	Code      string         `json:"code" gorm:"not null;size:100;uniqueIndex" validate:"required,max=100"`
+	Type      string         `json:"type" gorm:"not null;default:menu;size:20" validate:"required,oneof=directory menu permission"`
+	Path      string         `json:"path" gorm:"size:255" validate:"max=255"`
+	Component string         `json:"component" gorm:"size:255" validate:"max=255"`
+	Icon      string         `json:"icon" gorm:"size:100" validate:"max=100"`
+	Resource  string         `json:"resource" gorm:"size:255" validate:"max=255"`
+	Action    string         `json:"action" gorm:"size:50" validate:"max=50"`
+	SortOrder int            `json:"sort_order" gorm:"not null;default:0"`
+	IsHidden  bool           `json:"is_hidden" gorm:"not null;default:false"`
+	IsSystem  bool           `json:"is_system" gorm:"not null;default:false"`
+	Meta      string         `json:"meta" gorm:"type:json"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 关联关系
-	Roles []Role `json:"roles,omitempty" gorm:"many2many:role_menus;"`
+	Roles []Role `json:"roles,omitempty" gorm:"many2many:role_menu_permissions;"`
 }
 
 // TableName 指定表名
