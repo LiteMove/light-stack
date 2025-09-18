@@ -12,7 +12,8 @@
       "Bash(./server.exe)",
       "Bash(chmod:*)",
       "Bash(./server)",
-      "Bash(GOOS=linux go run cmd/server/main.go)"
+      "Bash(GOOS=linux go run cmd/server/main.go)",
+      "Bash(npx vite:*)"
     ],
     "deny": [],
     "ask": []

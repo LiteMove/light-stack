@@ -5,6 +5,8 @@
     width="700px"
     :before-close="handleClose"
     destroy-on-close
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
   >
     <el-form
       ref="formRef"
@@ -12,6 +14,8 @@
       :rules="rules"
       label-width="100px"
       label-position="right"
+      v-loading="loading"
+      element-loading-text="处理中..."
     >
       <el-row :gutter="20">
         <el-col :span="12">
@@ -353,8 +357,22 @@ const handleTypeChange = (type: string) => {
 
 // 获取图标组件
 const getIconComponent = (icon: string) => {
-  // 这里可以根据图标名称返回对应的图标组件
-  return 'Menu'
+  // 动态导入 Element Plus 图标
+  const iconMap: Record<string, any> = {
+    Menu: 'Menu',
+    Folder: 'Folder', 
+    Document: 'Document',
+    Key: 'Key',
+    Setting: 'Setting',
+    User: 'User',
+    Lock: 'Lock',
+    Monitor: 'Monitor',
+    DataLine: 'DataLine',
+    House: 'House',
+    UserFilled: 'UserFilled',
+    Tools: 'Tools'
+  }
+  return iconMap[icon] || 'Menu'
 }
 
 // 提交表单
