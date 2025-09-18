@@ -7,20 +7,19 @@ import (
 
 // Role 角色模型
 type Role struct {
-	ID          uint           `json:"id" gorm:"primarykey"`
-	Name        string         `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
-	Code        string         `json:"code" gorm:"not null;size:50;uniqueIndex" validate:"required,min=1,max=50"`
-	Description string         `json:"description" gorm:"size:255" validate:"max=255"`
-	Status      int            `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
-	IsSystem    bool           `json:"is_system" gorm:"not null;default:false"`
-	SortOrder   int            `json:"sort_order" gorm:"not null;default:0"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	TenantBaseModel
+
+	Name        string `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
+	Code        string `json:"code" gorm:"not null;size:50;uniqueIndex" validate:"required,min=1,max=50"`
+	Description string `json:"description" gorm:"size:255" validate:"max=255"`
+	Status      int    `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
+	IsSystem    bool   `json:"is_system" gorm:"not null;default:false"`
+	SortOrder   int    `json:"sort_order" gorm:"not null;default:0"`
 
 	// 关联关系
-	Users []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
-	Menus []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Users  []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
+	Menus  []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Tenant Tenant `json:"tenant,omitempty" gorm:"foreignKey:TenantID"`
 }
 
 // TableName 指定表名

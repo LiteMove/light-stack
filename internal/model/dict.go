@@ -1,0 +1,119 @@
+package model
+
+import (
+	"gorm.io/gorm"
+	"time"
+)
+
+// DictType 字典类型模型
+type DictType struct {
+	BaseModel
+	Name        string `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
+	Type        string `json:"type" gorm:"not null;size:100;uniqueIndex:uk_type" validate:"required,min=1,max=100"`
+	Description string `json:"description" gorm:"size:255" validate:"max=255"`
+	Status      int    `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2"`
+
+	// 关联关系
+	DictData []DictData `json:"dict_data,omitempty" gorm:"foreignKey:DictType;references:Type"`
+}
+
+// TableName 指定表名
+func (DictType) TableName() string {
+	return "dict_types"
+}
+
+// DictData 字典数据模型
+type DictData struct {
+	ID        uint           `json:"id" gorm:"primarykey"`
+	DictType  string         `json:"dict_type" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
+	Label     string         `json:"label" gorm:"not null;size:100" validate:"required,max=100"`
+	Value     string         `json:"value" gorm:"not null;size:100;uniqueIndex:uk_type_value" validate:"required,max=100"`
+	SortOrder int            `json:"sort_order" gorm:"not null;default:0;index:idx_sort_order"`
+	CssClass  string         `json:"css_class" gorm:"size:100" validate:"max=100"`
+	ListClass string         `json:"list_class" gorm:"size:100" validate:"max=100"`
+	IsDefault bool           `json:"is_default" gorm:"not null;default:false"`
+	Status    int            `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2"`
+	Remark    string         `json:"remark" gorm:"size:255" validate:"max=255"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// TableName 指定表名
+func (DictData) TableName() string {
+	return "dict_data"
+}
+
+// DictTypeProfile 字典类型资料（简化版本）
+type DictTypeProfile struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Type        string    `json:"type"`
+	Description string    `json:"description"`
+	Status      int       `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// ToProfile 转换为字典类型资料
+func (dt *DictType) ToProfile() DictTypeProfile {
+	return DictTypeProfile{
+		ID:          dt.ID,
+		Name:        dt.Name,
+		Type:        dt.Type,
+		Description: dt.Description,
+		Status:      dt.Status,
+		CreatedAt:   dt.CreatedAt,
+		UpdatedAt:   dt.UpdatedAt,
+	}
+}
+
+// DictDataProfile 字典数据资料（简化版本）
+type DictDataProfile struct {
+	ID        uint      `json:"id"`
+	DictType  string    `json:"dict_type"`
+	Label     string    `json:"label"`
+	Value     string    `json:"value"`
+	SortOrder int       `json:"sort_order"`
+	CssClass  string    `json:"css_class"`
+	ListClass string    `json:"list_class"`
+	IsDefault bool      `json:"is_default"`
+	Status    int       `json:"status"`
+	Remark    string    `json:"remark"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// ToProfile 转换为字典数据资料
+func (dd *DictData) ToProfile() DictDataProfile {
+	return DictDataProfile{
+		ID:        dd.ID,
+		DictType:  dd.DictType,
+		Label:     dd.Label,
+		Value:     dd.Value,
+		SortOrder: dd.SortOrder,
+		CssClass:  dd.CssClass,
+		ListClass: dd.ListClass,
+		IsDefault: dd.IsDefault,
+		Status:    dd.Status,
+		Remark:    dd.Remark,
+		CreatedAt: dd.CreatedAt,
+		UpdatedAt: dd.UpdatedAt,
+	}
+}
+
+// BeforeCreate 创建前的钩子
+func (dt *DictType) BeforeCreate(tx *gorm.DB) error {
+	if dt.Status == 0 {
+		dt.Status = 1 // 默认启用
+	}
+	return nil
+}
+
+// BeforeCreate 创建前的钩子
+func (dd *DictData) BeforeCreate(tx *gorm.DB) error {
+	if dd.Status == 0 {
+		dd.Status = 1 // 默认启用
+	}
+	return nil
+}
