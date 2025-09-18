@@ -18,9 +18,6 @@ CREATE TABLE `tenants` (
   `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '租户状态：1-启用 2-禁用 3-试用 4-过期',
   `expired_at` datetime DEFAULT NULL COMMENT '过期时间',
   `config` json DEFAULT NULL COMMENT '租户配置信息（Logo、主题色等）',
-  `max_users` int(11) DEFAULT 100 COMMENT '最大用户数',
-  `max_roles` int(11) DEFAULT 20 COMMENT '最大角色数',
-  `max_storage` bigint(20) DEFAULT 104857600 COMMENT '最大存储空间（字节）',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
@@ -69,7 +66,6 @@ CREATE TABLE `users` (
 -- 角色表
 CREATE TABLE `roles` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '角色ID',
-  `tenant_id` bigint(20) NOT NULL DEFAULT 0 COMMENT '租户ID，0表示系统角色',
   `name` varchar(100) NOT NULL COMMENT '角色名称',
   `code` varchar(50) NOT NULL COMMENT '角色编码',
   `description` varchar(255) DEFAULT NULL COMMENT '角色描述',
@@ -80,27 +76,10 @@ CREATE TABLE `roles` (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_tenant_code` (`tenant_id`, `code`),
-  KEY `idx_tenant_id` (`tenant_id`),
+  UNIQUE KEY `uk_code` (`code`),
   KEY `idx_status` (`status`),
   KEY `idx_is_system` (`is_system`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
-
--- 权限表
-CREATE TABLE `permissions` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '权限ID',
-  `name` varchar(100) NOT NULL COMMENT '权限名称',
-  `code` varchar(100) NOT NULL COMMENT '权限编码',
-  `type` varchar(20) NOT NULL DEFAULT 'api' COMMENT '权限类型：api-接口权限 menu-菜单权限',
-  `resource` varchar(255) DEFAULT NULL COMMENT '资源路径',
-  `action` varchar(50) DEFAULT NULL COMMENT '操作类型',
-  `description` varchar(255) DEFAULT NULL COMMENT '权限描述',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_code` (`code`),
-  KEY `idx_type` (`type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
 
 -- 用户角色关联表
 CREATE TABLE `user_roles` (
@@ -114,70 +93,49 @@ CREATE TABLE `user_roles` (
   KEY `idx_role_id` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
 
--- 角色权限关联表
-CREATE TABLE `role_permissions` (
+-- 角色菜单权限关联表（合并菜单和权限）
+CREATE TABLE `role_menu_permissions` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `role_id` bigint(20) NOT NULL COMMENT '角色ID',
-  `permission_id` bigint(20) NOT NULL COMMENT '权限ID',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_role_permission` (`role_id`, `permission_id`),
-  KEY `idx_role_id` (`role_id`),
-  KEY `idx_permission_id` (`permission_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
-
--- ========================================
--- 4. 菜单管理表
--- ========================================
-
--- 菜单表
-CREATE TABLE `menus` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '菜单ID',
-  `parent_id` bigint(20) NOT NULL DEFAULT 0 COMMENT '父菜单ID，0表示顶级菜单',
-  `name` varchar(100) NOT NULL COMMENT '菜单名称',
-  `path` varchar(255) DEFAULT NULL COMMENT '路由路径',
-  `component` varchar(255) DEFAULT NULL COMMENT '组件路径',
-  `icon` varchar(100) DEFAULT NULL COMMENT '菜单图标',
-  `sort_order` int(11) NOT NULL DEFAULT 0 COMMENT '排序号',
-  `is_hidden` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否隐藏：0-显示 1-隐藏',
-  `is_system` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否系统菜单：0-否 1-是',
-  `permission_code` varchar(100) DEFAULT NULL COMMENT '关联权限编码',
-  `meta` json DEFAULT NULL COMMENT '菜单元数据',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_parent_id` (`parent_id`),
-  KEY `idx_sort_order` (`sort_order`),
-  KEY `idx_is_system` (`is_system`),
-  KEY `idx_permission_code` (`permission_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单表';
-
--- 租户菜单可见性配置表
-CREATE TABLE `tenant_menus` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `tenant_id` bigint(20) NOT NULL COMMENT '租户ID',
-  `menu_id` bigint(20) NOT NULL COMMENT '菜单ID',
-  `is_visible` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否可见：0-不可见 1-可见',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_tenant_menu` (`tenant_id`, `menu_id`),
-  KEY `idx_tenant_id` (`tenant_id`),
-  KEY `idx_menu_id` (`menu_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='租户菜单可见性配置表';
-
--- 角色菜单关联表
-CREATE TABLE `role_menus` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `role_id` bigint(20) NOT NULL COMMENT '角色ID',
-  `menu_id` bigint(20) NOT NULL COMMENT '菜单ID',
+  `menu_id` bigint(20) NOT NULL COMMENT '菜单/权限ID',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_role_menu` (`role_id`, `menu_id`),
   KEY `idx_role_id` (`role_id`),
   KEY `idx_menu_id` (`menu_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色菜单关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色菜单权限关联表';
+
+-- ========================================
+-- 4. 菜单管理表
+-- ========================================
+
+-- 菜单权限表（合并菜单和权限）
+CREATE TABLE `menus` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '菜单/权限ID',
+  `parent_id` bigint(20) NOT NULL DEFAULT 0 COMMENT '父菜单ID，0表示顶级菜单',
+  `name` varchar(100) NOT NULL COMMENT '菜单/权限名称',
+  `code` varchar(100) NOT NULL COMMENT '权限编码（唯一标识）',
+  `type` varchar(20) NOT NULL DEFAULT 'menu' COMMENT '类型：directory-目录 menu-菜单 permission-权限',
+  `path` varchar(255) DEFAULT NULL COMMENT '路由路径（菜单类型有效）',
+  `component` varchar(255) DEFAULT NULL COMMENT '组件路径（菜单类型有效）',
+  `icon` varchar(100) DEFAULT NULL COMMENT '图标（目录/菜单类型有效）',
+  `resource` varchar(255) DEFAULT NULL COMMENT '资源路径（权限类型有效）',
+  `action` varchar(50) DEFAULT NULL COMMENT '操作类型（权限类型有效）',
+  `sort_order` int(11) NOT NULL DEFAULT 0 COMMENT '排序号',
+  `is_hidden` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否隐藏：0-显示 1-隐藏',
+  `is_system` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否系统菜单/权限：0-否 1-是',
+  `meta` json DEFAULT NULL COMMENT '元数据',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`),
+  KEY `idx_parent_id` (`parent_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_sort_order` (`sort_order`),
+  KEY `idx_is_system` (`is_system`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单权限表';
+
 
 -- ========================================
 -- 5. 数据字典表
@@ -310,36 +268,72 @@ INSERT INTO `users` (`id`, `tenant_id`, `username`, `password`, `nickname`, `ema
 -- 密码：admin123
 
 -- 插入默认角色
-INSERT INTO `roles` (`id`, `tenant_id`, `name`, `code`, `description`, `status`, `is_system`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 0, '超级管理员', 'super_admin', '拥有系统所有权限', 1, 1, 1, NOW(), NOW()),
-(2, 0, '租户管理员', 'tenant_admin', '租户管理员，管理本租户下的用户和角色', 1, 1, 2, NOW(), NOW()),
-(3, 0, '普通用户', 'user', '普通用户，只能查看和操作自己的信息', 1, 1, 3, NOW(), NOW());
+INSERT INTO `roles` (`id`, `name`, `code`, `description`, `status`, `is_system`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, '超级管理员', 'super_admin', '拥有系统所有权限，可管理所有租户、用户、角色和菜单权限', 1, 1, 1, NOW(), NOW()),
+(2, '租户管理员', 'tenant_admin', '租户管理员，可管理本租户下的用户（创建、修改、删除），可以给用户分配非系统角色', 1, 1, 2, NOW(), NOW()),
+(3, '普通用户', 'user', '普通用户，只能查看和操作自己的信息', 1, 1, 3, NOW(), NOW());
+
+-- 给租户管理员角色分配权限（可管理本租户用户，分配非系统角色）
+INSERT INTO `role_menu_permissions` (`role_id`, `menu_id`, `created_at`) VALUES
+-- 用户管理菜单和所有操作权限
+(2, 2, NOW()),
+(2, 8, NOW()),
+(2, 9, NOW()),
+(2, 10, NOW()),
+(2, 11, NOW()),
+(2, 24, NOW()),
+(2, 25, NOW()),
+-- 角色管理菜单和查看权限（只能查看，不能修改）
+(2, 3, NOW()),
+(2, 12, NOW());
 
 -- 给超级管理员分配角色
 INSERT INTO `user_roles` (`user_id`, `role_id`, `created_at`) VALUES (1, 1, NOW());
 
--- 插入基础权限
-INSERT INTO `permissions` (`name`, `code`, `type`, `resource`, `action`, `description`, `created_at`, `updated_at`) VALUES
-('用户管理-查看', 'user:list', 'api', '/api/users', 'GET', '查看用户列表', NOW(), NOW()),
-('用户管理-创建', 'user:create', 'api', '/api/users', 'POST', '创建用户', NOW(), NOW()),
-('用户管理-更新', 'user:update', 'api', '/api/users/*', 'PUT', '更新用户信息', NOW(), NOW()),
-('用户管理-删除', 'user:delete', 'api', '/api/users/*', 'DELETE', '删除用户', NOW(), NOW()),
-('角色管理-查看', 'role:list', 'api', '/api/roles', 'GET', '查看角色列表', NOW(), NOW()),
-('角色管理-创建', 'role:create', 'api', '/api/roles', 'POST', '创建角色', NOW(), NOW()),
-('角色管理-更新', 'role:update', 'api', '/api/roles/*', 'PUT', '更新角色信息', NOW(), NOW()),
-('角色管理-删除', 'role:delete', 'api', '/api/roles/*', 'DELETE', '删除角色', NOW(), NOW()),
-('菜单管理-查看', 'menu:list', 'api', '/api/menus', 'GET', '查看菜单列表', NOW(), NOW()),
-('菜单管理-创建', 'menu:create', 'api', '/api/menus', 'POST', '创建菜单', NOW(), NOW()),
-('菜单管理-更新', 'menu:update', 'api', '/api/menus/*', 'PUT', '更新菜单信息', NOW(), NOW()),
-('菜单管理-删除', 'menu:delete', 'api', '/api/menus/*', 'DELETE', '删除菜单', NOW(), NOW()),
-('租户管理-查看', 'tenant:list', 'api', '/api/tenants', 'GET', '查看租户列表', NOW(), NOW()),
-('租户管理-创建', 'tenant:create', 'api', '/api/tenants', 'POST', '创建租户', NOW(), NOW()),
-('租户管理-更新', 'tenant:update', 'api', '/api/tenants/*', 'PUT', '更新租户信息', NOW(), NOW()),
-('租户管理-删除', 'tenant:delete', 'api', '/api/tenants/*', 'DELETE', '删除租户', NOW(), NOW());
+-- 插入基础菜单权限数据（合并菜单和权限）
+INSERT INTO `menus` (`id`, `parent_id`, `name`, `code`, `type`, `path`, `component`, `icon`, `resource`, `action`, `sort_order`, `is_hidden`, `is_system`, `meta`, `created_at`, `updated_at`) VALUES
+-- 目录类型
+(1, 0, '系统管理', 'system:management', 'directory', '/system', 'Layout', 'system', NULL, NULL, 100, 0, 1, '{"title":"系统管理","icon":"system"}', NOW(), NOW()),
 
--- 给超级管理员角色分配所有权限
-INSERT INTO `role_permissions` (`role_id`, `permission_id`, `created_at`)
-SELECT 1, id, NOW() FROM `permissions`;
+-- 菜单类型
+(2, 1, '用户管理', 'system:user:menu', 'menu', '/system/users', 'system/users/index', 'user', NULL, NULL, 1, 0, 1, '{"title":"用户管理","icon":"user"}', NOW(), NOW()),
+(3, 1, '角色管理', 'system:role:menu', 'menu', '/system/roles', 'system/roles/index', 'role', NULL, NULL, 2, 0, 1, '{"title":"角色管理","icon":"role"}', NOW(), NOW()),
+(4, 1, '菜单权限', 'system:menu:menu', 'menu', '/system/menus', 'system/menus/index', 'menu', NULL, NULL, 3, 0, 1, '{"title":"菜单权限管理","icon":"menu"}', NOW(), NOW()),
+(5, 1, '租户管理', 'system:tenant:menu', 'menu', '/system/tenants', 'system/tenants/index', 'tenant', NULL, NULL, 4, 0, 1, '{"title":"租户管理","icon":"tenant"}', NOW(), NOW()),
+(6, 1, '字典管理', 'system:dict:menu', 'menu', '/system/dicts', 'system/dicts/index', 'dict', NULL, NULL, 5, 0, 1, '{"title":"字典管理","icon":"dict"}', NOW(), NOW()),
+(7, 1, '操作日志', 'system:log:menu', 'menu', '/system/logs', 'system/logs/index', 'log', NULL, NULL, 6, 0, 1, '{"title":"操作日志","icon":"log"}', NOW(), NOW()),
+
+-- 权限类型（用户管理相关）
+(8, 2, '用户管理-查看', 'user:list', 'permission', NULL, NULL, NULL, '/api/users', 'GET', 1, 0, 1, NULL, NOW(), NOW()),
+(9, 2, '用户管理-创建', 'user:create', 'permission', NULL, NULL, NULL, '/api/users', 'POST', 2, 0, 1, NULL, NOW(), NOW()),
+(10, 2, '用户管理-更新', 'user:update', 'permission', NULL, NULL, NULL, '/api/users/*', 'PUT', 3, 0, 1, NULL, NOW(), NOW()),
+(11, 2, '用户管理-删除', 'user:delete', 'permission', NULL, NULL, NULL, '/api/users/*', 'DELETE', 4, 0, 1, NULL, NOW(), NOW()),
+
+-- 权限类型（角色管理相关）- 租户只能查看角色，不能修改
+(12, 3, '角色管理-查看', 'role:list', 'permission', NULL, NULL, NULL, '/api/roles', 'GET', 1, 0, 1, NULL, NOW(), NOW()),
+(13, 3, '角色管理-创建', 'role:create', 'permission', NULL, NULL, NULL, '/api/roles', 'POST', 2, 0, 1, NULL, NOW(), NOW()),
+(14, 3, '角色管理-更新', 'role:update', 'permission', NULL, NULL, NULL, '/api/roles/*', 'PUT', 3, 0, 1, NULL, NOW(), NOW()),
+(15, 3, '角色管理-删除', 'role:delete', 'permission', NULL, NULL, NULL, '/api/roles/*', 'DELETE', 4, 0, 1, NULL, NOW(), NOW()),
+
+-- 权限类型（菜单权限相关）
+(16, 4, '菜单权限-查看', 'menu:list', 'permission', NULL, NULL, NULL, '/api/menus', 'GET', 1, 0, 1, NULL, NOW(), NOW()),
+(17, 4, '菜单权限-创建', 'menu:create', 'permission', NULL, NULL, NULL, '/api/menus', 'POST', 2, 0, 1, NULL, NOW(), NOW()),
+(18, 4, '菜单权限-更新', 'menu:update', 'permission', NULL, NULL, NULL, '/api/menus/*', 'PUT', 3, 0, 1, NULL, NOW(), NOW()),
+(19, 4, '菜单权限-删除', 'menu:delete', 'permission', NULL, NULL, NULL, '/api/menus/*', 'DELETE', 4, 0, 1, NULL, NOW(), NOW()),
+
+-- 权限类型（租户管理相关）
+(20, 5, '租户管理-查看', 'tenant:list', 'permission', NULL, NULL, NULL, '/api/tenants', 'GET', 1, 0, 1, NULL, NOW(), NOW()),
+(21, 5, '租户管理-创建', 'tenant:create', 'permission', NULL, NULL, NULL, '/api/tenants', 'POST', 2, 0, 1, NULL, NOW(), NOW()),
+(22, 5, '租户管理-更新', 'tenant:update', 'permission', NULL, NULL, NULL, '/api/tenants/*', 'PUT', 3, 0, 1, NULL, NOW(), NOW()),
+(23, 5, '租户管理-删除', 'tenant:delete', 'permission', NULL, NULL, NULL, '/api/tenants/*', 'DELETE', 4, 0, 1, NULL, NOW(), NOW()),
+
+-- 权限类型（用户角色分配）- 租户可以使用的权限
+(24, 2, '用户角色-分配', 'user:role:assign', 'permission', NULL, NULL, NULL, '/api/users/*/roles', 'POST', 5, 0, 1, NULL, NOW(), NOW()),
+(25, 2, '用户角色-查看', 'user:role:list', 'permission', NULL, NULL, NULL, '/api/users/*/roles', 'GET', 6, 0, 1, NULL, NOW(), NOW());
+
+-- 给超级管理员角色分配所有菜单权限
+INSERT INTO `role_menu_permissions` (`role_id`, `menu_id`, `created_at`)
+SELECT 1, id, NOW() FROM `menus` WHERE `is_system` = 1;
 
 -- 插入数据字典类型
 INSERT INTO `dict_types` (`name`, `type`, `description`, `status`, `created_at`, `updated_at`) VALUES
@@ -369,8 +363,5 @@ INSERT INTO `menus` (`id`, `parent_id`, `name`, `path`, `component`, `icon`, `so
 (6, 1, '字典管理', '/system/dicts', 'system/dicts/index', 'dict', 5, 0, 1, NULL, '{"title":"字典管理","icon":"dict"}', NOW(), NOW()),
 (7, 1, '操作日志', '/system/logs', 'system/logs/index', 'log', 6, 0, 1, NULL, '{"title":"操作日志","icon":"log"}', NOW(), NOW());
 
--- 给超级管理员角色分配菜单权限
-INSERT INTO `role_menus` (`role_id`, `menu_id`, `created_at`)
-SELECT 1, id, NOW() FROM `menus` WHERE `is_system` = 1;
 
 SET FOREIGN_KEY_CHECKS = 1;
