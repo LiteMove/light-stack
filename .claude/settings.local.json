@@ -8,7 +8,11 @@
       "Bash(go get:*)",
       "Bash(go mod:*)",
       "Bash(go run:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(./server.exe)",
+      "Bash(chmod:*)",
+      "Bash(./server)",
+      "Bash(GOOS=linux go run cmd/server/main.go)"
     ],
     "deny": [],
     "ask": []

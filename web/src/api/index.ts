@@ -5,6 +5,11 @@ import type {
   User,
   Role,
   Menu,
+  MenuFormData,
+  MenuQueryParams,
+  MenuStatusData,
+  BatchMenuStatusData,
+  AssignMenusData,
   ApiResponse,
   PageResponse,
   PageParams
@@ -86,34 +91,64 @@ export const roleApi = {
 
 // 菜单管理API
 export const menuApi = {
-  // 获取菜单列表
-  getMenus(): Promise<ApiResponse<Menu[]>> {
-    return http.get('/v1/menus')
+  // 获取菜单列表(分页)
+  getMenus(params: MenuQueryParams): Promise<ApiResponse<PageResponse<Menu>>> {
+    return http.get('/v1/admin/menus', { params })
   },
 
-  // 获取用户菜单
-  getUserMenus(): Promise<ApiResponse<Menu[]>> {
-    return http.get('/v1/menus/user')
+  // 获取菜单树
+  getMenuTree(): Promise<ApiResponse<Menu[]>> {
+    return http.get('/v1/admin/menus/tree')
+  },
+
+  // 获取用户菜单树
+  getUserMenuTree(): Promise<ApiResponse<Menu[]>> {
+    return http.get('/v1/user/menus')
+  },
+
+  // 获取用户菜单权限
+  getUserPermissions(): Promise<ApiResponse<{ permissions: string[] }>> {
+    return http.get('/v1/user/permissions')
   },
 
   // 获取菜单详情
   getMenu(id: number): Promise<ApiResponse<Menu>> {
-    return http.get(`/v1/menus/${id}`)
+    return http.get(`/v1/admin/menus/${id}`)
   },
 
   // 创建菜单
-  createMenu(data: Partial<Menu>): Promise<ApiResponse<Menu>> {
-    return http.post('/v1/menus', data)
+  createMenu(data: MenuFormData): Promise<ApiResponse<Menu>> {
+    return http.post('/v1/admin/menus', data)
   },
 
   // 更新菜单
-  updateMenu(id: number, data: Partial<Menu>): Promise<ApiResponse<Menu>> {
-    return http.put(`/v1/menus/${id}`, data)
+  updateMenu(id: number, data: MenuFormData): Promise<ApiResponse<Menu>> {
+    return http.put(`/v1/admin/menus/${id}`, data)
   },
 
   // 删除菜单
   deleteMenu(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/menus/${id}`)
+    return http.delete(`/v1/admin/menus/${id}`)
+  },
+
+  // 更新菜单状态
+  updateMenuStatus(id: number, data: MenuStatusData): Promise<ApiResponse> {
+    return http.put(`/v1/admin/menus/${id}/status`, data)
+  },
+
+  // 批量更新菜单状态
+  batchUpdateMenuStatus(data: BatchMenuStatusData): Promise<ApiResponse> {
+    return http.put('/v1/admin/menus/batch/status', data)
+  },
+
+  // 获取角色菜单
+  getRoleMenus(roleId: number): Promise<ApiResponse<Menu[]>> {
+    return http.get(`/v1/admin/roles/${roleId}/menus`)
+  },
+
+  // 为角色分配菜单
+  assignMenusToRole(roleId: number, data: AssignMenusData): Promise<ApiResponse> {
+    return http.put(`/v1/admin/roles/${roleId}/menus`, data)
   }
 }
 

@@ -73,17 +73,62 @@ export interface Role {
 // 菜单信息
 export interface Menu {
   id: number
-  parentId: number
+  parent_id: number
   name: string
+  code: string
+  type: 'directory' | 'menu' | 'permission'
   path?: string
   component?: string
   icon?: string
-  sortOrder: number
-  isHidden: boolean
-  isSystem: boolean
-  permissionCode?: string
-  meta?: any
+  resource?: string
+  action?: string
+  sort_order: number
+  is_hidden: boolean
+  is_system: boolean
+  status: number
+  meta?: string
   children?: Menu[]
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
+}
+
+// 菜单创建/更新请求参数
+export interface MenuFormData {
+  parent_id?: number
+  name: string
+  code: string
+  type: 'directory' | 'menu' | 'permission'
+  path?: string
+  component?: string
+  icon?: string
+  resource?: string
+  action?: string
+  sort_order: number
+  is_hidden: boolean
+  status: number
+  meta?: string
+}
+
+// 菜单列表查询参数
+export interface MenuQueryParams {
+  page: number
+  page_size: number
+  name?: string
+  status?: number
+}
+
+// 菜单状态更新参数
+export interface MenuStatusData {
+  status: number
+}
+
+// 批量状态更新参数
+export interface BatchMenuStatusData {
+  ids: number[]
+  status: number
+}
+
+// 角色菜单分配参数
+export interface AssignMenusData {
+  menu_ids: number[]
 }

@@ -135,10 +135,34 @@ const handleLogin = async () => {
     loading.value = true
 
     const response = await authApi.login(loginForm)
-    const { token, user } = response.data
-
+    console.log('Login response:', response)
+    console.log('Login response.data:', response.data)
+    
+    // 更安全的解构方式
+    const responseData = response.data || response
+    console.log('Response data:', responseData)
+    
+    let token, user
+    
+    // 检查token和user的提取
+    if (responseData.token && responseData.user) {
+      token = responseData.token
+      user = responseData.user
+    } else if (responseData.data && responseData.data.token && responseData.data.user) {
+      // 如果数据在data字段里
+      token = responseData.data.token
+      user = responseData.data.user
+    } else {
+      console.error('Invalid response structure:', responseData)
+      ElMessage.error('登录响应格式错误')
+      return
+    }
+    
+    console.log('Extracted token:', token, 'Type:', typeof token)
+    console.log('Extracted user:', user)
     // 保存token和用户信息
-    userStore.setToken(token)
+    userStore.setToken(token.access_token.trim())
+    console.log('Token saved, retrieving to verify:', userStore.getToken())
     userStore.setUserInfo({
       id: user.id,
       username: user.username,

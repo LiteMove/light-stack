@@ -100,16 +100,85 @@ type Menu struct {
 	SortOrder int            `json:"sort_order" gorm:"not null;default:0"`
 	IsHidden  bool           `json:"is_hidden" gorm:"not null;default:false"`
 	IsSystem  bool           `json:"is_system" gorm:"not null;default:false"`
+	Status    int            `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
 	Meta      string         `json:"meta" gorm:"type:json"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 关联关系
-	Roles []Role `json:"roles,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Roles    []Role `json:"roles,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Children []Menu `json:"children,omitempty" gorm:"-"`
 }
 
 // TableName 指定表名
 func (Menu) TableName() string {
 	return "menus"
+}
+
+// MenuProfile 菜单资料（简化版本）
+type MenuProfile struct {
+	ID        uint64        `json:"id"`
+	ParentID  uint64        `json:"parent_id"`
+	Name      string        `json:"name"`
+	Code      string        `json:"code"`
+	Type      string        `json:"type"`
+	Path      string        `json:"path"`
+	Component string        `json:"component"`
+	Icon      string        `json:"icon"`
+	Resource  string        `json:"resource"`
+	Action    string        `json:"action"`
+	SortOrder int           `json:"sort_order"`
+	IsHidden  bool          `json:"is_hidden"`
+	IsSystem  bool          `json:"is_system"`
+	Status    int           `json:"status"`
+	Meta      string        `json:"meta"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
+	Children  []MenuProfile `json:"children,omitempty"`
+}
+
+// ToProfile 转换为菜单资料
+func (m *Menu) ToProfile() MenuProfile {
+	return MenuProfile{
+		ID:        m.ID,
+		ParentID:  m.ParentID,
+		Name:      m.Name,
+		Code:      m.Code,
+		Type:      m.Type,
+		Path:      m.Path,
+		Component: m.Component,
+		Icon:      m.Icon,
+		Resource:  m.Resource,
+		Action:    m.Action,
+		SortOrder: m.SortOrder,
+		IsHidden:  m.IsHidden,
+		IsSystem:  m.IsSystem,
+		Status:    m.Status,
+		Meta:      m.Meta,
+		CreatedAt: m.CreatedAt,
+		UpdatedAt: m.UpdatedAt,
+	}
+}
+
+// MenuTreeNode 菜单树节点
+type MenuTreeNode struct {
+	MenuProfile
+	Children []MenuTreeNode `json:"children,omitempty"`
+}
+
+// ToTreeNode 转换为菜单树节点
+func (m *Menu) ToTreeNode() MenuTreeNode {
+	return MenuTreeNode{
+		MenuProfile: m.ToProfile(),
+		Children:    make([]MenuTreeNode, 0),
+	}
+}
+
+// BeforeCreate 创建前的钩子
+func (m *Menu) BeforeCreate(tx *gorm.DB) error {
+	if m.Status == 0 {
+		m.Status = 1 // 默认启用
+	}
+	return nil
 }

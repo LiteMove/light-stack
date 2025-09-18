@@ -97,7 +97,7 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 检查是否为管理员
-		if userRole.(string) != "admin" {
+		if userRole.(string) != "super_admin" {
 			response.Forbidden(c, "需要管理员权限")
 			c.Abort()
 			return
