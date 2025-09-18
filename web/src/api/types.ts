@@ -17,7 +17,7 @@ export interface PageResponse<T = any> {
 // 分页请求参数
 export interface PageParams {
   page: number
-  pageSize: number
+  page_size: number // Go后端使用下划线命名
   [key: string]: any
 }
 

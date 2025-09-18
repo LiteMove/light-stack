@@ -34,9 +34,11 @@ func RegisterRoutes(r *gin.Engine) {
 	roleRepo := repository.NewRoleRepository(db)
 	menuRepo := repository.NewMenuRepository(db)
 	authService := service.NewAuthService(userRepo, roleRepo)
+	userService := service.NewUserService(userRepo, roleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)
 	authController := NewAuthController(authService, roleService)
+	userController := NewUserController(userService)
 	roleController := NewRoleController(roleService)
 	menuController := NewMenuController(menuService)
 	healthController := NewHealthController()
@@ -113,7 +115,16 @@ func RegisterRoutes(r *gin.Engine) {
 				// 用户角色管理
 				users := admin.Group("/users")
 				{
-					users.PUT("/:id/roles", authController.AssignUserRoles) // 为用户分配角色
+					users.POST("", userController.CreateUser)                        // 创建用户
+					users.GET("", userController.GetUsers)                           // 获取用户列表
+					users.GET("/:id", userController.GetUser)                        // 获取用户详情
+					users.PUT("/:id", userController.UpdateUser)                     // 更新用户
+					users.DELETE("/:id", userController.DeleteUser)                  // 删除用户
+					users.PUT("/:id/status", userController.UpdateUserStatus)        // 更新用户状态
+					users.PUT("/batch/status", userController.BatchUpdateUserStatus) // 批量更新用户状态
+					users.POST("/:id/reset-password", userController.ResetPassword)  // 重置密码
+					users.PUT("/:id/roles", userController.AssignUserRoles)          // 为用户分配角色
+					users.GET("/:id/roles", userController.GetUserRoles)             // 获取用户角色
 				}
 			}
 		}

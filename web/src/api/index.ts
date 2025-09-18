@@ -37,27 +37,52 @@ export const authApi = {
 export const userApi = {
   // 获取用户列表
   getUsers(params: PageParams): Promise<ApiResponse<PageResponse<User>>> {
-    return http.get('/v1/users', { params })
+    return http.get('/v1/admin/users', { params })
   },
 
   // 获取用户详情
   getUser(id: number): Promise<ApiResponse<User>> {
-    return http.get(`/v1/users/${id}`)
+    return http.get(`/v1/admin/users/${id}`)
   },
 
   // 创建用户
   createUser(data: Partial<User>): Promise<ApiResponse<User>> {
-    return http.post('/v1/users', data)
+    return http.post('/v1/admin/users', data)
   },
 
   // 更新用户
   updateUser(id: number, data: Partial<User>): Promise<ApiResponse<User>> {
-    return http.put(`/v1/users/${id}`, data)
+    return http.put(`/v1/admin/users/${id}`, data)
   },
 
   // 删除用户
   deleteUser(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/users/${id}`)
+    return http.delete(`/v1/admin/users/${id}`)
+  },
+
+  // 更新用户状态
+  updateUserStatus(id: number, data: { status: number }): Promise<ApiResponse> {
+    return http.put(`/v1/admin/users/${id}/status`, data)
+  },
+
+  // 批量更新用户状态
+  batchUpdateUserStatus(data: { ids: number[], status: number }): Promise<ApiResponse> {
+    return http.put('/v1/admin/users/batch/status', data)
+  },
+
+  // 重置用户密码
+  resetPassword(id: number): Promise<ApiResponse<{ new_password: string }>> {
+    return http.post(`/v1/admin/users/${id}/reset-password`)
+  },
+
+  // 分配用户角色
+  assignUserRoles(id: number, data: { role_ids: number[] }): Promise<ApiResponse> {
+    return http.put(`/v1/admin/users/${id}/roles`, data)
+  },
+
+  // 获取用户角色
+  getUserRoles(id: number): Promise<ApiResponse<Role[]>> {
+    return http.get(`/v1/admin/users/${id}/roles`)
   }
 }
 
