@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/LiteMove/light-stack/internal/config"
 	"github.com/LiteMove/light-stack/internal/controller"
 	"github.com/LiteMove/light-stack/internal/middleware"
@@ -9,7 +11,6 @@ import (
 	"github.com/LiteMove/light-stack/pkg/cache"
 	"github.com/LiteMove/light-stack/pkg/database"
 	"github.com/LiteMove/light-stack/pkg/logger"
-	"log"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+
 	"github.com/LiteMove/light-stack/internal/model"
 
 	"gorm.io/gorm"
@@ -20,9 +21,9 @@ type RoleRepository interface {
 	// 删除角色
 	Delete(id uint64) error
 	// 检查角色编码是否存在
-	CodeExists(tenantID uint64, code string) (bool, error)
+	CodeExists(code string) (bool, error)
 	// 获取角色列表（分页）
-	GetList(tenantID uint64, page, pageSize int, status int) ([]*model.Role, int64, error)
+	GetList(page, pageSize int, status int) ([]*model.Role, int64, error)
 	// 获取用户的角色列表
 	GetUserRoles(userID uint64) ([]*model.Role, error)
 	// 为用户分配角色
@@ -91,20 +92,20 @@ func (r *roleRepository) Delete(id uint64) error {
 }
 
 // CodeExists 检查角色编码是否存在
-func (r *roleRepository) CodeExists(tenantID uint64, code string) (bool, error) {
+func (r *roleRepository) CodeExists(code string) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.Role{}).
-		Where("tenant_id = ? AND code = ?", tenantID, code).
+		Where("code = ?", code).
 		Count(&count).Error
 	return count > 0, err
 }
 
 // GetList 获取角色列表（分页）
-func (r *roleRepository) GetList(tenantID uint64, page, pageSize int, status int) ([]*model.Role, int64, error) {
+func (r *roleRepository) GetList(page, pageSize int, status int) ([]*model.Role, int64, error) {
 	var roles []*model.Role
 	var total int64
 
-	query := r.db.Model(&model.Role{}).Where("tenant_id = ?", tenantID)
+	query := r.db.Model(&model.Role{})
 
 	// 状态筛选
 	if status > 0 {

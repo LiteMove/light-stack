@@ -90,27 +90,27 @@ export const userApi = {
 export const roleApi = {
   // 获取角色列表
   getRoles(params: PageParams): Promise<ApiResponse<PageResponse<Role>>> {
-    return http.get('/v1/roles', { params })
+    return http.get('/v1/admin/roles', { params })
   },
 
   // 获取角色详情
   getRole(id: number): Promise<ApiResponse<Role>> {
-    return http.get(`/v1/roles/${id}`)
+    return http.get(`/v1/admin/roles/${id}`)
   },
 
   // 创建角色
   createRole(data: Partial<Role>): Promise<ApiResponse<Role>> {
-    return http.post('/v1/roles', data)
+    return http.post('/v1/admin/roles', data)
   },
 
   // 更新角色
   updateRole(id: number, data: Partial<Role>): Promise<ApiResponse<Role>> {
-    return http.put(`/v1/roles/${id}`, data)
+    return http.put(`/v1/admin/roles/${id}`, data)
   },
 
   // 删除角色
   deleteRole(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/roles/${id}`)
+    return http.delete(`/v1/admin/roles/${id}`)
   }
 }
 
