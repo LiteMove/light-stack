@@ -7,8 +7,7 @@ import (
 
 // Role 角色模型
 type Role struct {
-	TenantBaseModel
-
+	BaseModel
 	Name        string `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
 	Code        string `json:"code" gorm:"not null;size:50;uniqueIndex" validate:"required,min=1,max=50"`
 	Description string `json:"description" gorm:"size:255" validate:"max=255"`
