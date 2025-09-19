@@ -44,6 +44,14 @@ type UserRepository interface {
 	ResetLoginFailures(id uint64) error
 	// 锁定用户
 	LockUser(id uint64, lockUntil time.Time) error
+	// 为用户分配角色
+	AssignRole(userID uint64, roleIDs []uint64) error
+	// 移除用户角色
+	RemoveRole(userID uint64, roleID uint64) error
+	// 批量分配角色
+	BatchAssignRoles(userID uint64, roleIDs []uint64) error
+	// 批量移除角色
+	BatchRemoveRoles(userID uint64, roleIDs []uint64) error
 }
 
 // userRepository 用户数据访问实现
@@ -228,4 +236,57 @@ func (r *userRepository) LockUser(id uint64, lockUntil time.Time) error {
 		"locked_until": &lockUntil,
 	}
 	return r.db.Model(&model.User{}).Where("id = ?", id).Updates(updates).Error
+}
+
+// AssignRole 为用户分配角色（单个角色）
+func (r *userRepository) AssignRole(userID uint64, roleIDs []uint64) error {
+	return r.BatchAssignRoles(userID, roleIDs)
+}
+
+// RemoveRole 移除用户角色（单个角色）
+func (r *userRepository) RemoveRole(userID uint64, roleID uint64) error {
+	return r.BatchRemoveRoles(userID, []uint64{roleID})
+}
+
+// BatchAssignRoles 批量为用户分配角色
+func (r *userRepository) BatchAssignRoles(userID uint64, roleIDs []uint64) error {
+	// 使用事务处理
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 先删除现有的角色关联（如果需要替换）
+		if err := tx.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error; err != nil {
+			return err
+		}
+
+		// 批量插入新的角色关联
+		userRoles := make([]model.UserRole, 0, len(roleIDs))
+		for _, roleID := range roleIDs {
+			// 检查关联是否已存在
+			var count int64
+			tx.Model(&model.UserRole{}).Where("user_id = ? AND role_id = ?", userID, roleID).Count(&count)
+			if count == 0 {
+				userRoles = append(userRoles, model.UserRole{
+					UserID: userID,
+					RoleID: roleID,
+				})
+			}
+		}
+
+		// 批量插入
+		if len(userRoles) > 0 {
+			if err := tx.Create(&userRoles).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+// BatchRemoveRoles 批量移除用户角色
+func (r *userRepository) BatchRemoveRoles(userID uint64, roleIDs []uint64) error {
+	// 使用事务处理
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 删除指定的角色关联
+		return tx.Where("user_id = ? AND role_id IN ?", userID, roleIDs).Delete(&model.UserRole{}).Error
+	})
 }

@@ -374,15 +374,36 @@ func (s *userService) AssignUserRoles(userID uint64, roleIDs []uint64) error {
 		}
 	}
 
-	// TODO: 实现用户角色关联操作
-	// 这里需要在repository层实现用户角色关联表的操作
-	return errors.New("用户角色分配功能待实现")
+	// 分配角色
+	if err := s.userRepo.BatchAssignRoles(userID, roleIDs); err != nil {
+		return fmt.Errorf("分配角色失败: %w", err)
+	}
+
+	return nil
 }
 
 // RemoveUserRoles 移除用户角色
 func (s *userService) RemoveUserRoles(userID uint64, roleIDs []uint64) error {
-	// TODO: 实现用户角色移除操作
-	return errors.New("用户角色移除功能待实现")
+	// 获取用户信息
+	_, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return fmt.Errorf("获取用户信息失败: %w", err)
+	}
+
+	// 验证角色是否存在
+	for _, roleID := range roleIDs {
+		_, err := s.roleRepo.GetByID(roleID)
+		if err != nil {
+			return fmt.Errorf("角色ID %d 不存在", roleID)
+		}
+	}
+
+	// 移除角色
+	if err := s.userRepo.BatchRemoveRoles(userID, roleIDs); err != nil {
+		return fmt.Errorf("移除角色失败: %w", err)
+	}
+
+	return nil
 }
 
 // GetUserRoles 获取用户角色

@@ -148,6 +148,7 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Key, Search } from '@element-plus/icons-vue'
 import type { User, Role } from '@/api/types'
+import {userApi} from "@/api";
 
 interface Props {
   visible: boolean
@@ -228,9 +229,16 @@ const initUserRoles = async () => {
   try {
     loading.value = true
     // 这里应该从API获取用户当前的角色
-    // const { data } = await userApi.getUserRoles(props.userData.id)
+    const { data } = await userApi.getUserRoles(props.userData.id)
+    // 数组对象，提取角色ID
+    // 为空判断
+    if (!data || data.length === 0) {
+      selectedRoleIds.value = []
+      originalRoleIds.value = []
+      return
+    }
+    const currentRoleIds = data.map((role: Role) => role.id)
     // 临时使用空数组
-    const currentRoleIds: number[] = []
     selectedRoleIds.value = [...currentRoleIds]
     originalRoleIds.value = [...currentRoleIds]
   } catch (error) {
@@ -267,13 +275,11 @@ const handleSubmit = async () => {
     loading.value = true
     
     // 这里应该调用API保存角色分配
-    // await userApi.assignRoles(props.userData.id, {
-    //   roleIds: selectedRoleIds.value
-    // })
-    
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await userApi.assignUserRoles(props.userData.id, {
+      role_ids: selectedRoleIds.value
+    })
+
+
     ElMessage.success('角色分配成功')
     emit('success')
     handleClose()

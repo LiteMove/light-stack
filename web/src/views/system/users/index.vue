@@ -230,7 +230,7 @@
           <template #default="{ row }">
             <div class="roles-container">
               <el-tag 
-                v-for="role in getUserRoles(row.id)" 
+                v-for="role in row.roles"
                 :key="role.id"
                 :type="role.isSystem ? 'danger' : 'primary'"
                 size="small"
@@ -239,7 +239,7 @@
               >
                 {{ role.name }}
               </el-tag>
-              <span v-if="getUserRoles(row.id).length === 0" class="empty-value">未分配</span>
+              <span v-if="row.roles == null || row.roles.length === 0" class="empty-value">未分配</span>
             </div>
           </template>
         </el-table-column>
