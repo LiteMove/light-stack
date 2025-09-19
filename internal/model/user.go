@@ -1,14 +1,15 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // User 用户模型
 type User struct {
 	ID            uint64         `json:"id" gorm:"primarykey"`
-	TenantID      uint64         `json:"tenant_id" gorm:"not null;default:0;uniqueIndex:uk_tenant_username;uniqueIndex:uk_tenant_email;uniqueIndex:uk_tenant_phone;index:idx_tenant_id"`
+	TenantID      uint64         `json:"tenant_id" gorm:"not null;default:1;uniqueIndex:uk_tenant_username;uniqueIndex:uk_tenant_email;uniqueIndex:uk_tenant_phone;index:idx_tenant_id"`
 	Username      string         `json:"username" gorm:"not null;size:50;uniqueIndex:uk_tenant_username" validate:"required,min=3,max=50"`
 	Password      string         `json:"-" gorm:"not null;size:255" validate:"required,min=6"`
 	Nickname      string         `json:"nickname" gorm:"size:100" validate:"max=100"`

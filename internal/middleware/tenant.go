@@ -24,8 +24,8 @@ func TenantMiddleware(tenantService service.TenantService) gin.HandlerFunc {
 		}
 
 		// 系统管理域名，不需要租户验证
-		if host == "localhost" || host == "127.0.0.1" || host == "admin.example.com" {
-			c.Set("tenant_id", uint64(0)) // 系统租户ID为0
+		if host == "localhost" || host == "127.0.0.1" {
+			c.Set("tenant_id", uint64(1)) // 系统租户ID为1
 			c.Set("tenant_domain", "system")
 			c.Next()
 			return
