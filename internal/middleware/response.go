@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/LiteMove/light-stack/pkg/jwt"
-	"github.com/LiteMove/light-stack/pkg/response"
 	"strings"
 	"time"
+
+	"github.com/LiteMove/light-stack/pkg/jwt"
+	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

@@ -386,7 +386,7 @@ const formVisible = ref(false)
 const formData = ref<Partial<Menu>>({})
 const parentOptions = ref<Menu[]>([])
 const isTreeView = ref(true) // 默认树形视图
-const expandAll = ref(true) // 展开状态
+const expandAll = ref(false) // 展开状态
 
 // 搜索表单
 const searchForm = reactive<Partial<MenuQueryParams & { type: string }>>({

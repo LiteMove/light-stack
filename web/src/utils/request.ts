@@ -35,8 +35,8 @@ request.interceptors.request.use(
       // 如果token是对象，尝试提取字符串值
       if (typeof token === 'object' && token !== null) {
         // 如果token是一个包含token字段的对象
-        if ('token' in token) {
-          tokenString = String(token.token)
+        if ('access_token' in token) {
+          tokenString = String(token.access_token)
         } else {
           console.error('Token is an object but does not contain token field:', token)
           return config

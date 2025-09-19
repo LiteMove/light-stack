@@ -3,6 +3,7 @@ package controller
 import (
 	"strconv"
 
+	"github.com/LiteMove/light-stack/internal/middleware"
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/service"
 	"github.com/LiteMove/light-stack/pkg/response"
@@ -89,8 +90,11 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	// 从上下文获取租户ID（这里暂时使用默认值1）
-	tenantID := uint64(1) // TODO: 从JWT token或其他方式获取
+	// 从上下文获取租户ID
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		tenantID = uint64(0) // 默认系统租户
+	}
 
 	// 创建用户对象
 	user := &model.User{
@@ -140,7 +144,10 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 	}
 
 	// 从上下文获取租户ID
-	tenantID := uint64(1) // TODO: 从JWT token获取
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		tenantID = uint64(0) // 默认系统租户
+	}
 
 	// 调用服务获取用户列表
 	users, total, err := c.userService.GetUserList(tenantID, req.Page, req.PageSize, req.Keyword, req.Status, req.RoleID)

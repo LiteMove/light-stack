@@ -33,14 +33,17 @@ func RegisterRoutes(r *gin.Engine) {
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
 	menuRepo := repository.NewMenuRepository(db)
+	tenantRepo := repository.NewTenantRepository(db)
 	authService := service.NewAuthService(userRepo, roleRepo)
 	userService := service.NewUserService(userRepo, roleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)
+	tenantService := service.NewTenantService(tenantRepo, userRepo)
 	authController := NewAuthController(authService, roleService)
 	userController := NewUserController(userService)
 	roleController := NewRoleController(roleService)
 	menuController := NewMenuController(menuService)
+	tenantController := NewTenantController(tenantService)
 	healthController := NewHealthController()
 
 	// API 分组
@@ -87,6 +90,19 @@ func RegisterRoutes(r *gin.Engine) {
 			admin.Use(middleware.JWTAuthMiddleware())   // 应用JWT认证中间件
 			admin.Use(middleware.AdminAuthMiddleware()) // 应用管理员权限中间件
 			{
+				// 租户管理
+				tenants := admin.Group("/tenants")
+				{
+					tenants.POST("", tenantController.CreateTenant)                 // 创建租户
+					tenants.GET("", tenantController.GetTenants)                    // 获取租户列表
+					tenants.GET("/:id", tenantController.GetTenant)                 // 获取租户详情
+					tenants.PUT("/:id", tenantController.UpdateTenant)              // 更新租户
+					tenants.DELETE("/:id", tenantController.DeleteTenant)           // 删除租户
+					tenants.PUT("/:id/status", tenantController.UpdateTenantStatus) // 更新租户状态
+					tenants.GET("/check-domain", tenantController.CheckDomain)      // 检查域名可用性
+					tenants.GET("/check-name", tenantController.CheckName)          // 检查名称可用性
+				}
+
 				// 角色管理
 				roles := admin.Group("/roles")
 				{

@@ -40,6 +40,15 @@ export const constantRoutes: RouteRecordRaw[] = [
       icon: 'Setting'
     },
     children: [
+        {
+            path: '/system/tenants',
+            name: 'tenants',
+            component: () => import('@/views/system/tenants/index.vue'),
+            meta: {
+                title: '租户管理',
+                icon: 'User'
+            }
+        },
       {
         path: '/system/users',
         name: 'Users',
