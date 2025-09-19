@@ -209,15 +209,7 @@
                   @click="handleEdit(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="权限管理" placement="top">
-                <el-button
-                  type="warning"
-                  link
-                  size="small"
-                  :icon="Key"
-                  @click="handlePermissions(row)"
-                />
-              </el-tooltip>
+
               <el-tooltip content="菜单权限" placement="top">
                 <el-button
                   type="info"
@@ -273,12 +265,7 @@
       @success="handleFormSuccess"
     />
 
-    <!-- 权限分配弹窗 -->
-    <PermissionAssignDialog
-      v-model:visible="permissionAssignVisible"
-      :role-data="selectedRole"
-      @success="handlePermissionAssignSuccess"
-    />
+
 
     <!-- 菜单权限分配弹窗 -->
     <MenuAssignDialog
@@ -304,14 +291,13 @@ import {
   Check,
   Close,
   Download,
-  Key,
   Menu,
   CopyDocument
 } from '@element-plus/icons-vue'
 import { roleApi } from '@/api'
 import type { Role, RoleQueryParams } from '@/api/types'
 import RoleForm from './components/RoleForm.vue'
-import PermissionAssignDialog from './components/PermissionAssignDialog.vue'
+
 import MenuAssignDialog from './components/MenuAssignDialog.vue'
 import { formatDateTime } from '@/utils/date'
 
@@ -320,7 +306,7 @@ const loading = ref(false)
 const roleList = ref<Role[]>([])
 const selectedRows = ref<Role[]>([])
 const formVisible = ref(false)
-const permissionAssignVisible = ref(false)
+
 const menuAssignVisible = ref(false)
 const formData = ref<Partial<Role>>({})
 const selectedRole = ref<Role | null>(null)
@@ -455,11 +441,7 @@ const handleStatusChange = async (row: Role) => {
   }
 }
 
-// 权限管理
-const handlePermissions = (row: Role) => {
-  selectedRole.value = row
-  permissionAssignVisible.value = true
-}
+
 
 // 菜单权限管理
 const handleMenus = (row: Role) => {
@@ -546,10 +528,7 @@ const handleFormSuccess = () => {
   refreshRoles()
 }
 
-// 权限分配成功回调
-const handlePermissionAssignSuccess = () => {
-  ElMessage.success('权限分配成功')
-}
+
 
 // 菜单分配成功回调
 const handleMenuAssignSuccess = () => {

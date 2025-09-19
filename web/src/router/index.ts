@@ -68,15 +68,6 @@ export const constantRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: '/system/permissions',
-        name: 'Permissions',
-        component: () => import('@/views/system/permissions/index.vue'),
-        meta: {
-          title: '权限管理',
-          icon: 'Key'
-        }
-      },
-      {
         path: '/system/menus',
         name: 'Menus',
         component: () => import('@/views/system/menus/index.vue'),
