@@ -132,3 +132,68 @@ export interface BatchMenuStatusData {
 export interface AssignMenusData {
   menu_ids: number[]
 }
+
+// 权限信息
+export interface Permission {
+  id: number
+  tenantId: number
+  name: string
+  code: string
+  type: 'api' | 'page' | 'button' | 'data'
+  resource?: string
+  action?: string
+  description?: string
+  status: number
+  isSystem: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+// 角色权限分配参数
+export interface AssignPermissionsData {
+  permission_ids: number[]
+}
+
+// 角色创建/更新请求参数
+export interface RoleFormData {
+  name: string
+  code: string
+  description?: string
+  status: number
+  sortOrder: number
+}
+
+// 角色查询参数
+export interface RoleQueryParams {
+  page: number
+  page_size: number
+  keyword?: string
+  status?: number
+}
+
+// 权限查询参数
+export interface PermissionQueryParams {
+  page: number
+  page_size: number
+  keyword?: string
+  type?: string
+  status?: number
+}
+
+// 权限创建/更新请求参数
+export interface PermissionFormData {
+  name: string
+  code: string
+  type: 'api' | 'page' | 'button' | 'data'
+  resource?: string
+  action?: string
+  description?: string
+  status: number
+  sortOrder: number
+}
+
+// 用户角色分配参数
+export interface AssignUserRolesData {
+  role_ids: number[]
+}

@@ -5,11 +5,18 @@ import type {
   User,
   Role,
   Menu,
+  Permission,
   MenuFormData,
   MenuQueryParams,
   MenuStatusData,
   BatchMenuStatusData,
   AssignMenusData,
+  RoleFormData,
+  RoleQueryParams,
+  PermissionFormData,
+  PermissionQueryParams,
+  AssignPermissionsData,
+  AssignUserRolesData,
   ApiResponse,
   PageResponse,
   PageParams
@@ -89,7 +96,7 @@ export const userApi = {
 // 角色管理API
 export const roleApi = {
   // 获取角色列表
-  getRoles(params: PageParams): Promise<ApiResponse<PageResponse<Role>>> {
+  getRoles(params: RoleQueryParams): Promise<ApiResponse<PageResponse<Role>>> {
     return http.get('/v1/admin/roles', { params })
   },
 
@@ -99,18 +106,91 @@ export const roleApi = {
   },
 
   // 创建角色
-  createRole(data: Partial<Role>): Promise<ApiResponse<Role>> {
+  createRole(data: RoleFormData): Promise<ApiResponse<Role>> {
     return http.post('/v1/admin/roles', data)
   },
 
   // 更新角色
-  updateRole(id: number, data: Partial<Role>): Promise<ApiResponse<Role>> {
+  updateRole(id: number, data: RoleFormData): Promise<ApiResponse<Role>> {
     return http.put(`/v1/admin/roles/${id}`, data)
   },
 
   // 删除角色
   deleteRole(id: number): Promise<ApiResponse> {
     return http.delete(`/v1/admin/roles/${id}`)
+  },
+
+  // 更新角色状态
+  updateRoleStatus(id: number, data: { status: number }): Promise<ApiResponse> {
+    return http.put(`/v1/admin/roles/${id}/status`, data)
+  },
+
+  // 批量更新角色状态
+  batchUpdateRoleStatus(data: { ids: number[], status: number }): Promise<ApiResponse> {
+    return http.put('/v1/admin/roles/batch/status', data)
+  },
+
+  // 获取角色权限
+  getRolePermissions(roleId: number): Promise<ApiResponse<Permission[]>> {
+    return http.get(`/v1/admin/roles/${roleId}/permissions`)
+  },
+
+  // 为角色分配权限
+  assignPermissionsToRole(roleId: number, data: AssignPermissionsData): Promise<ApiResponse> {
+    return http.put(`/v1/admin/roles/${roleId}/permissions`, data)
+  },
+
+  // 获取角色菜单
+  getRoleMenus(roleId: number): Promise<ApiResponse<Menu[]>> {
+    return http.get(`/v1/admin/roles/${roleId}/menus`)
+  },
+
+  // 为角色分配菜单
+  assignMenusToRole(roleId: number, data: AssignMenusData): Promise<ApiResponse> {
+    return http.put(`/v1/admin/roles/${roleId}/menus`, data)
+  }
+}
+
+// 权限管理API
+export const permissionApi = {
+  // 获取权限列表
+  getPermissions(params: PermissionQueryParams): Promise<ApiResponse<PageResponse<Permission>>> {
+    return http.get('/v1/admin/permissions', { params })
+  },
+
+  // 获取权限详情
+  getPermission(id: number): Promise<ApiResponse<Permission>> {
+    return http.get(`/v1/admin/permissions/${id}`)
+  },
+
+  // 创建权限
+  createPermission(data: PermissionFormData): Promise<ApiResponse<Permission>> {
+    return http.post('/v1/admin/permissions', data)
+  },
+
+  // 更新权限
+  updatePermission(id: number, data: PermissionFormData): Promise<ApiResponse<Permission>> {
+    return http.put(`/v1/admin/permissions/${id}`, data)
+  },
+
+  // 删除权限
+  deletePermission(id: number): Promise<ApiResponse> {
+    return http.delete(`/v1/admin/permissions/${id}`)
+  },
+
+  // 更新权限状态
+  updatePermissionStatus(id: number, data: { status: number }): Promise<ApiResponse> {
+    return http.put(`/v1/admin/permissions/${id}/status`, data)
+  },
+
+  // 批量更新权限状态
+  batchUpdatePermissionStatus(data: { ids: number[], status: number }): Promise<ApiResponse> {
+    return http.put('/v1/admin/permissions/batch/status', data)
+  },
+
+  // 获取权限类型列表
+  getPermissionTypes(): Promise<ApiResponse<string[]>> {
+    return http.get('/v1/admin/permissions/types')
   }
 }
 

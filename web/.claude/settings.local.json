@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npm run dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

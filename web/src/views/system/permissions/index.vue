@@ -1,32 +1,32 @@
 <template>
-  <div class="user-management">
+  <div class="permission-management">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
         <h2 class="page-title">
-          <el-icon class="title-icon"><UserFilled /></el-icon>
-          用户管理
+          <el-icon class="title-icon"><Key /></el-icon>
+          权限管理
         </h2>
-        <p class="page-desc">管理系统用户信息、权限分配和状态控制</p>
+        <p class="page-desc">管理系统权限、权限类型和访问控制策略</p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="Plus" @click="handleAdd" size="default">
-          新建用户
+          新建权限
         </el-button>
-        <el-button 
-          :icon="RefreshRight" 
-          @click="refreshUsers"
+        <el-button
+          :icon="RefreshRight"
+          @click="refreshPermissions"
           :loading="loading"
           size="default"
         >
           刷新
         </el-button>
-        <el-button 
-          :icon="Download" 
-          @click="exportUsers"
+        <el-button
+          :icon="Download"
+          @click="exportPermissions"
           size="default"
         >
-          导出用户
+          导出权限
         </el-button>
       </div>
     </div>
@@ -40,13 +40,28 @@
             <el-form-item label="关键词" class="search-item">
               <el-input
                 v-model="searchForm.keyword"
-                placeholder="搜索用户名、昵称或邮箱"
+                placeholder="搜索权限名称或编码"
                 clearable
                 @keyup.enter="handleSearch"
                 @clear="handleSearch"
                 :prefix-icon="Search"
                 style="width: 260px"
               />
+            </el-form-item>
+            <el-form-item label="权限类型" class="search-item">
+              <el-select
+                v-model="searchForm.type"
+                placeholder="权限类型筛选"
+                clearable
+                @change="handleSearch"
+                style="width: 140px"
+              >
+                <el-option label="全部" value="" />
+                <el-option label="API接口" value="api" />
+                <el-option label="页面权限" value="page" />
+                <el-option label="按钮权限" value="button" />
+                <el-option label="数据权限" value="data" />
+              </el-select>
             </el-form-item>
             <el-form-item label="状态" class="search-item">
               <el-select
@@ -59,23 +74,6 @@
                 <el-option label="全部" :value="0" />
                 <el-option label="正常" :value="1" />
                 <el-option label="禁用" :value="2" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="角色" class="search-item">
-              <el-select
-                v-model="searchForm.roleId"
-                placeholder="角色筛选"
-                clearable
-                @change="handleSearch"
-                style="width: 140px"
-              >
-                <el-option label="全部" :value="0" />
-                <el-option 
-                  v-for="role in roles" 
-                  :key="role.id" 
-                  :label="role.name" 
-                  :value="role.id" 
-                />
               </el-select>
             </el-form-item>
             <el-form-item class="search-actions">
@@ -98,7 +96,7 @@
         <div class="batch-section" v-show="selectedRows.length > 0">
           <div class="batch-info">
             <el-icon class="info-icon"><InfoFilled /></el-icon>
-            已选择 <strong class="selected-count">{{ selectedRows.length }}</strong> 个用户
+            已选择 <strong class="selected-count">{{ selectedRows.length }}</strong> 个权限
           </div>
           <div class="batch-actions">
             <el-button type="success" size="small" :icon="Check" @click="batchEnable">
@@ -115,15 +113,15 @@
       </div>
     </el-card>
 
-    <!-- 用户列表表格 -->
+    <!-- 权限列表表格 -->
     <el-card class="table-card" shadow="never">
       <template #header>
         <div class="table-header">
           <div class="table-title">
             <el-icon class="title-icon"><List /></el-icon>
-            <span>用户列表</span>
+            <span>权限列表</span>
             <el-tag type="info" size="small" class="total-count">
-              共 {{ pagination.total }} 个用户
+              共 {{ pagination.total }} 个权限
             </el-tag>
           </div>
           <div class="table-actions">
@@ -131,7 +129,7 @@
               <el-button
                 size="small"
                 :icon="RefreshRight"
-                @click="refreshUsers"
+                @click="refreshPermissions"
                 :loading="loading"
                 circle
               />
@@ -142,7 +140,7 @@
       
       <el-table
         v-loading="loading"
-        :data="userList"
+        :data="permissionList"
         @selection-change="handleSelectionChange"
         stripe
         border
@@ -151,67 +149,69 @@
       >
         <el-table-column type="selection" width="50" align="center" />
         
-        <!-- 用户信息列 -->
-        <el-table-column prop="username" label="用户信息" min-width="200" show-overflow-tooltip>
+        <!-- 权限信息列 -->
+        <el-table-column prop="name" label="权限信息" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
-            <div class="user-info-cell">
-              <div class="user-avatar">
+            <div class="permission-info-cell">
+              <div class="permission-avatar">
                 <el-avatar 
-                  :src="row.avatar" 
                   :size="40"
-                  :style="{ backgroundColor: getAvatarColor(row.username) }"
+                  :style="{ backgroundColor: getPermissionColor(row.type) }"
                 >
-                  {{ row.nickname?.charAt(0) || row.username?.charAt(0) }}
+                  {{ getTypeIcon(row.type) }}
                 </el-avatar>
               </div>
-              <div class="user-details">
-                <div class="user-name">
-                  <span class="username">{{ row.username }}</span>
+              <div class="permission-details">
+                <div class="permission-name">
+                  <span class="name">{{ row.name }}</span>
                   <el-tag v-if="row.isSystem" type="danger" size="small" effect="plain">
-                    系统用户
+                    系统权限
                   </el-tag>
                 </div>
-                <div class="user-meta">
-                  <span class="nickname">{{ row.nickname || '-' }}</span>
+                <div class="permission-meta">
+                  <span class="code">{{ row.code }}</span>
                 </div>
               </div>
             </div>
           </template>
         </el-table-column>
         
-        <!-- 联系信息列 -->
-        <el-table-column prop="email" label="联系信息" width="200" show-overflow-tooltip>
+        <!-- 权限类型列 -->
+        <el-table-column prop="type" label="类型" width="100" align="center">
           <template #default="{ row }">
-            <div class="contact-info">
-              <div v-if="row.email" class="email">
-                <el-icon><Message /></el-icon>
-                {{ row.email }}
+            <el-tag
+              :type="getTypeTagType(row.type)"
+              size="small"
+              effect="light"
+            >
+              {{ getTypeLabel(row.type) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        
+        <!-- 资源信息列 -->
+        <el-table-column prop="resource" label="资源信息" width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="resource-info">
+              <div v-if="row.resource" class="resource-item">
+                <el-tag type="info" size="small" effect="plain">
+                  {{ row.resource }}
+                </el-tag>
               </div>
-              <div v-if="row.phone" class="phone">
-                <el-icon><Phone /></el-icon>
-                {{ row.phone }}
+              <div v-if="row.action" class="action-item">
+                <el-tag type="success" size="small" effect="plain">
+                  {{ row.action }}
+                </el-tag>
               </div>
-              <span v-if="!row.email && !row.phone" class="empty-value">-</span>
+              <span v-if="!row.resource && !row.action" class="empty-value">-</span>
             </div>
           </template>
         </el-table-column>
         
-        <!-- 角色列 -->
-        <el-table-column prop="roles" label="角色" width="180">
+        <!-- 描述列 -->
+        <el-table-column prop="description" label="描述" width="200" show-overflow-tooltip>
           <template #default="{ row }">
-            <div class="roles-container">
-              <el-tag 
-                v-for="role in getUserRoles(row.id)" 
-                :key="role.id"
-                :type="role.isSystem ? 'danger' : 'primary'"
-                size="small"
-                effect="light"
-                class="role-tag"
-              >
-                {{ role.name }}
-              </el-tag>
-              <span v-if="getUserRoles(row.id).length === 0" class="empty-value">未分配</span>
-            </div>
+            <span class="description-text">{{ row.description || '-' }}</span>
           </template>
         </el-table-column>
         
@@ -229,18 +229,10 @@
           </template>
         </el-table-column>
         
-        <!-- 最后登录列 -->
-        <el-table-column prop="lastLoginAt" label="最后登录" width="160" align="center">
+        <!-- 排序列 -->
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center">
           <template #default="{ row }">
-            <div class="login-info">
-              <div v-if="row.lastLoginAt" class="login-time">
-                {{ formatDateTime(row.lastLoginAt) }}
-              </div>
-              <div v-if="row.lastLoginIp" class="login-ip">
-                {{ row.lastLoginIp }}
-              </div>
-              <span v-if="!row.lastLoginAt" class="empty-value">从未登录</span>
-            </div>
+            <span class="sort-order">{{ row.sortOrder }}</span>
           </template>
         </el-table-column>
         
@@ -255,7 +247,7 @@
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-tooltip content="编辑用户" placement="top">
+              <el-tooltip content="编辑权限" placement="top">
                 <el-button
                   type="primary"
                   link
@@ -264,26 +256,25 @@
                   @click="handleEdit(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="分配角色" placement="top">
+              <el-tooltip content="复制权限" placement="top">
                 <el-button
-                  type="warning"
+                  type="success"
                   link
                   size="small"
-                  :icon="Key"
-                  @click="handleAssignRoles(row)"
+                  :icon="CopyDocument"
+                  @click="handleCopy(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="重置密码" placement="top">
+              <el-tooltip content="查看详情" placement="top">
                 <el-button
                   type="info"
                   link
                   size="small"
-                  :icon="Lock"
-                  @click="handleResetPassword(row)"
-                  :disabled="row.isSystem"
+                  :icon="View"
+                  @click="handleView(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="删除用户" placement="top">
+              <el-tooltip content="删除权限" placement="top">
                 <el-button
                   type="danger"
                   link
@@ -313,26 +304,23 @@
       </div>
     </el-card>
 
-    <!-- 用户表单弹窗 -->
-    <UserForm
+    <!-- 权限表单弹窗 -->
+    <PermissionForm
       v-model:visible="formVisible"
       :form-data="formData"
-      :roles="roles"
       @success="handleFormSuccess"
     />
 
-    <!-- 角色分配弹窗 -->
-    <RoleAssignDialog
-      v-model:visible="roleAssignVisible"
-      :user-data="selectedUser"
-      :roles="roles"
-      @success="handleRoleAssignSuccess"
+    <!-- 权限详情弹窗 -->
+    <PermissionDetail
+      v-model:visible="detailVisible"
+      :permission-data="selectedPermission"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Plus, 
@@ -340,39 +328,35 @@ import {
   Search, 
   Edit, 
   Delete, 
-  UserFilled,
+  Key,
   List,
   InfoFilled,
   Check,
   Close,
   Download,
-  Message,
-  Phone,
-  Key,
-  Lock
+  CopyDocument,
+  View
 } from '@element-plus/icons-vue'
-import { userApi, roleApi } from '@/api'
-import type { User, Role, PageParams } from '@/api/types'
-import UserForm from './components/UserForm.vue'
-import RoleAssignDialog from './components/RoleAssignDialog.vue'
+import { permissionApi } from '@/api'
+import type { Permission, PermissionQueryParams } from '@/api/types'
+import PermissionForm from './components/PermissionForm.vue'
+import PermissionDetail from './components/PermissionDetail.vue'
 import { formatDateTime } from '@/utils/date'
 
 // 响应式数据
 const loading = ref(false)
-const userList = ref<User[]>([])
-const roles = ref<Role[]>([])
-const userRoles = ref<Record<number, Role[]>>({})
-const selectedRows = ref<User[]>([])
+const permissionList = ref<Permission[]>([])
+const selectedRows = ref<Permission[]>([])
 const formVisible = ref(false)
-const roleAssignVisible = ref(false)
-const formData = ref<Partial<User>>({})
-const selectedUser = ref<User | null>(null)
+const detailVisible = ref(false)
+const formData = ref<Partial<Permission>>({})
+const selectedPermission = ref<Permission | null>(null)
 
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
+  type: '',
   status: 0,
-  roleId: 0,
   page: 1,
   pageSize: 20
 })
@@ -384,117 +368,135 @@ const pagination = reactive({
   total: 0
 })
 
-// 获取用户头像颜色
-const getAvatarColor = (username: string): string => {
-  const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#f56565', '#38a169']
-  const index = username.charCodeAt(0) % colors.length
-  return colors[index]
+// 获取权限类型颜色
+const getPermissionColor = (type: string): string => {
+  const colorMap: Record<string, string> = {
+    api: '#409eff',
+    page: '#67c23a',
+    button: '#e6a23c',
+    data: '#909399'
+  }
+  return colorMap[type] || '#909399'
 }
 
-// 获取用户角色
-const getUserRoles = (userId: number): Role[] => {
-  return userRoles.value[userId] || []
+// 获取类型图标
+const getTypeIcon = (type: string): string => {
+  const iconMap: Record<string, string> = {
+    api: 'API',
+    page: '页面',
+    button: '按钮',
+    data: '数据'
+  }
+  return iconMap[type] || type.charAt(0).toUpperCase()
 }
 
-// 获取用户列表
-const fetchUsers = async () => {
+// 获取类型标签
+const getTypeLabel = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    api: 'API接口',
+    page: '页面权限',
+    button: '按钮权限',
+    data: '数据权限'
+  }
+  return typeMap[type] || type
+}
+
+// 获取类型标签样式
+const getTypeTagType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    api: 'primary',
+    page: 'success',
+    button: 'warning',
+    data: 'info'
+  }
+  return typeMap[type] || 'default'
+}
+
+// 获取权限列表
+const fetchPermissions = async () => {
   try {
     loading.value = true
-    const params: PageParams & { keyword?: string; status?: number; roleId?: number } = {
+    const params: PermissionQueryParams = {
       page: pagination.page,
-      page_size: pagination.pageSize, // 修改为Go后端期望的命名
+      page_size: pagination.pageSize,
       keyword: searchForm.keyword || undefined,
-      status: searchForm.status === 0 ? undefined : searchForm.status,
-      roleId: searchForm.roleId === 0 ? undefined : searchForm.roleId
+      type: searchForm.type || undefined,
+      status: searchForm.status === 0 ? undefined : searchForm.status
     }
     
-    const { data } = await userApi.getUsers(params)
-    userList.value = data.list
+    const { data } = await permissionApi.getPermissions(params)
+    permissionList.value = data.list
     pagination.total = data.total
-    
-    // 获取每个用户的角色信息
-    await fetchUserRoles()
   } catch (error) {
-    ElMessage.error('获取用户列表失败')
+    ElMessage.error('获取权限列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 获取用户角色信息
-const fetchUserRoles = async () => {
-  try {
-    const promises = userList.value.map(async (user) => {
-      try {
-        // 这里假设有获取用户角色的API，如果没有，可以从用户信息中提取
-        // const { data } = await userApi.getUserRoles(user.id)
-        // 临时使用模拟数据
-        userRoles.value[user.id] = []
-      } catch (error) {
-        userRoles.value[user.id] = []
-      }
-    })
-    await Promise.all(promises)
-  } catch (error) {
-    console.error('获取用户角色失败:', error)
-  }
-}
-
-// 获取角色列表
-const fetchRoles = async () => {
-  try {
-    const params = { page: 1, page_size: 100 }
-    const { data } = await roleApi.getRoles(params)
-    roles.value = data.list
-  } catch (error) {
-    ElMessage.error('获取角色列表失败')
-  }
-}
-
-// 刷新用户列表
-const refreshUsers = () => {
-  fetchUsers()
-  fetchRoles()
+// 刷新权限列表
+const refreshPermissions = () => {
+  fetchPermissions()
 }
 
 // 搜索
 const handleSearch = () => {
   pagination.page = 1
-  fetchUsers()
+  fetchPermissions()
 }
 
 // 重置搜索
 const handleResetSearch = () => {
   Object.assign(searchForm, {
     keyword: '',
+    type: '',
     status: 0,
-    roleId: 0,
     page: 1,
     pageSize: 20
   })
   handleSearch()
 }
 
-// 添加用户
+// 添加权限
 const handleAdd = () => {
   formData.value = {
     status: 1,
+    isSystem: false,
+    sortOrder: 100,
+    type: 'api'
+  }
+  formVisible.value = true
+}
+
+// 编辑权限
+const handleEdit = (row: Permission) => {
+  formData.value = { ...row }
+  formVisible.value = true
+}
+
+// 复制权限
+const handleCopy = (row: Permission) => {
+  formData.value = {
+    ...row,
+    id: undefined,
+    name: `${row.name}_副本`,
+    code: `${row.code}_copy`,
     isSystem: false
   }
   formVisible.value = true
 }
 
-// 编辑用户
-const handleEdit = (row: User) => {
-  formData.value = { ...row }
-  formVisible.value = true
+// 查看详情
+const handleView = (row: Permission) => {
+  selectedPermission.value = row
+  detailVisible.value = true
 }
 
-// 删除用户
-const handleDelete = async (row: User) => {
+// 删除权限
+const handleDelete = async (row: Permission) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除用户"${row.username}"吗？此操作不可恢复！`,
+      `确定要删除权限"${row.name}"吗？此操作不可恢复！`,
       '删除确认',
       {
         confirmButtonText: '确定删除',
@@ -504,9 +506,9 @@ const handleDelete = async (row: User) => {
       }
     )
     
-    await userApi.deleteUser(row.id)
+    await permissionApi.deletePermission(row.id)
     ElMessage.success('删除成功')
-    refreshUsers()
+    refreshPermissions()
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')
@@ -515,11 +517,11 @@ const handleDelete = async (row: User) => {
 }
 
 // 状态改变
-const handleStatusChange = async (row: User) => {
+const handleStatusChange = async (row: Permission) => {
   const oldStatus = row.status
   try {
-    await userApi.updateUser(row.id, { status: row.status })
-    ElMessage.success(`用户已${row.status === 1 ? '启用' : '禁用'}`)
+    await permissionApi.updatePermissionStatus(row.id, { status: row.status })
+    ElMessage.success(`权限已${row.status === 1 ? '启用' : '禁用'}`)
   } catch (error) {
     // 恢复状态
     row.status = oldStatus
@@ -527,37 +529,8 @@ const handleStatusChange = async (row: User) => {
   }
 }
 
-// 分配角色
-const handleAssignRoles = (row: User) => {
-  selectedUser.value = row
-  roleAssignVisible.value = true
-}
-
-// 重置密码
-const handleResetPassword = async (row: User) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要重置用户"${row.username}"的密码吗？`,
-      '重置密码',
-      {
-        confirmButtonText: '确定重置',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    // 假设有重置密码的API
-    // await userApi.resetPassword(row.id)
-    ElMessage.success('密码重置成功，新密码已发送到用户邮箱')
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('密码重置失败')
-    }
-  }
-}
-
-// 导出用户
-const exportUsers = async () => {
+// 导出权限
+const exportPermissions = async () => {
   try {
     ElMessage.info('导出功能开发中...')
   } catch (error) {
@@ -566,7 +539,7 @@ const exportUsers = async () => {
 }
 
 // 选择变化
-const handleSelectionChange = (selection: User[]) => {
+const handleSelectionChange = (selection: Permission[]) => {
   selectedRows.value = selection
 }
 
@@ -574,10 +547,9 @@ const handleSelectionChange = (selection: User[]) => {
 const batchEnable = async () => {
   const ids = selectedRows.value.map(row => row.id)
   try {
-    // 假设有批量更新状态的API
-    // await userApi.batchUpdateUserStatus({ ids, status: 1 })
+    await permissionApi.batchUpdatePermissionStatus({ ids, status: 1 })
     ElMessage.success('批量启用成功')
-    refreshUsers()
+    refreshPermissions()
   } catch (error) {
     ElMessage.error('批量启用失败')
   }
@@ -587,9 +559,9 @@ const batchEnable = async () => {
 const batchDisable = async () => {
   const ids = selectedRows.value.map(row => row.id)
   try {
-    // await userApi.batchUpdateUserStatus({ ids, status: 2 })
+    await permissionApi.batchUpdatePermissionStatus({ ids, status: 2 })
     ElMessage.success('批量禁用成功')
-    refreshUsers()
+    refreshPermissions()
   } catch (error) {
     ElMessage.error('批量禁用失败')
   }
@@ -599,7 +571,7 @@ const batchDisable = async () => {
 const batchDelete = async () => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedRows.value.length} 个用户吗？此操作不可恢复！`,
+      `确定要删除选中的 ${selectedRows.value.length} 个权限吗？此操作不可恢复！`,
       '批量删除确认',
       {
         confirmButtonText: '确定删除',
@@ -608,10 +580,10 @@ const batchDelete = async () => {
       }
     )
     
-    const promises = selectedRows.value.map(row => userApi.deleteUser(row.id))
+    const promises = selectedRows.value.map(row => permissionApi.deletePermission(row.id))
     await Promise.all(promises)
     ElMessage.success('批量删除成功')
-    refreshUsers()
+    refreshPermissions()
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error('批量删除失败')
@@ -623,32 +595,27 @@ const batchDelete = async () => {
 const handlePageSizeChange = (size: number) => {
   pagination.pageSize = size
   pagination.page = 1
-  fetchUsers()
+  fetchPermissions()
 }
 
 const handleCurrentChange = (page: number) => {
   pagination.page = page
-  fetchUsers()
+  fetchPermissions()
 }
 
 // 表单成功回调
 const handleFormSuccess = () => {
-  refreshUsers()
-}
-
-// 角色分配成功回调
-const handleRoleAssignSuccess = () => {
-  fetchUserRoles()
+  refreshPermissions()
 }
 
 // 初始化
 onMounted(() => {
-  refreshUsers()
+  refreshPermissions()
 })
 </script>
 
 <style lang="scss" scoped>
-.user-management {
+.permission-management {
   padding: 24px;
   background-color: #f5f6fa;
   min-height: calc(100vh - 64px);
@@ -888,94 +855,77 @@ onMounted(() => {
         }
       }
 
-      // 用户信息单元格
-      .user-info-cell {
+      // 权限信息单元格
+      .permission-info-cell {
         display: flex;
         align-items: center;
         gap: 12px;
         padding: 8px 0;
 
-        .user-avatar {
+        .permission-avatar {
           flex-shrink: 0;
         }
 
-        .user-details {
+        .permission-details {
           flex: 1;
           min-width: 0;
 
-          .user-name {
+          .permission-name {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 4px;
 
-            .username {
+            .name {
               font-weight: 500;
               color: #303133;
               font-size: 14px;
             }
           }
 
-          .user-meta {
-            .nickname {
+          .permission-meta {
+            .code {
               font-size: 12px;
               color: #909399;
+              font-family: 'Monaco', 'Consolas', monospace;
             }
           }
         }
       }
 
-      // 联系信息
-      .contact-info {
-        .email, .phone {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-bottom: 2px;
-          font-size: 13px;
-          color: #606266;
+      // 资源信息
+      .resource-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
 
-          .el-icon {
-            font-size: 12px;
-            color: #909399;
+        .resource-item,
+        .action-item {
+          .el-tag {
+            margin: 0;
           }
         }
       }
 
-      // 角色容器
-      .roles-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-
-        .role-tag {
-          margin: 0;
-        }
+      .description-text {
+        color: #606266;
+        font-size: 13px;
       }
 
-      // 登录信息
-      .login-info {
-        .login-time {
-          font-size: 12px;
-          color: #606266;
-          margin-bottom: 2px;
-        }
+      .sort-order {
+        font-weight: 500;
+        color: #606266;
+      }
 
-        .login-ip {
-          font-size: 11px;
-          color: #909399;
-        }
+      .time-text {
+        font-size: 12px;
+        color: #909399;
       }
 
       .empty-value {
         color: #c0c4cc;
         font-style: italic;
         font-size: 12px;
-      }
-
-      .time-text {
-        font-size: 12px;
-        color: #909399;
       }
 
       // 操作按钮
@@ -1024,7 +974,7 @@ onMounted(() => {
 
 // 响应式设计优化
 @media (max-width: 1200px) {
-  .user-management {
+  .permission-management {
     padding: 16px;
 
     .page-header {
@@ -1040,7 +990,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .user-management {
+  .permission-management {
     padding: 12px;
 
     .page-header {
