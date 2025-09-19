@@ -69,3 +69,14 @@ func (t *Tenant) BeforeCreate(tx *gorm.DB) error {
 	}
 	return nil
 }
+
+// SystemTenantId 系统租户ID
+var SystemTenantId = uint64(1)
+
+// TenantStatus 租户状态 1-启用 2-禁用 3-试用 4-过期
+const (
+	TenantStatusActive   = 1
+	TenantStatusDisabled = 2
+	TenantStatusTrial    = 3
+	TenantStatusExpired  = 4
+)

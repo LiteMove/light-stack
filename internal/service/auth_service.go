@@ -14,9 +14,9 @@ import (
 // AuthService 认证服务接口
 type AuthService interface {
 	// 用户登录
-	Login(req *LoginRequest) (*LoginResponse, error)
+	Login(tenantID uint64, req *LoginRequest) (*LoginResponse, error)
 	// 用户注册
-	Register(req *RegisterRequest) (*model.UserProfile, error)
+	Register(tenantID uint64, req *RegisterRequest) (*model.UserProfile, error)
 	// 刷新token
 	RefreshToken(tokenString string) (*TokenResponse, error)
 	// 验证token
@@ -53,12 +53,10 @@ func NewAuthService(userRepo repository.UserRepository, roleRepo repository.Role
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
-	TenantID uint64 `json:"tenant_id"` // 租户ID，0表示系统租户
 }
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-	TenantID uint64   `json:"tenant_id"` // 租户ID，0表示系统租户
 	Username string   `json:"username" validate:"required,min=3,max=50"`
 	Email    string   `json:"email" validate:"email,max=100"`
 	Password string   `json:"password" validate:"required,min=6"`
@@ -88,7 +86,7 @@ type TokenResponse struct {
 }
 
 // Login 用户登录
-func (s *authService) Login(req *LoginRequest) (*LoginResponse, error) {
+func (s *authService) Login(tenantID uint64, req *LoginRequest) (*LoginResponse, error) {
 	// 参数验证
 	if strings.TrimSpace(req.Username) == "" {
 		return nil, errors.New("用户名不能为空")
@@ -100,16 +98,15 @@ func (s *authService) Login(req *LoginRequest) (*LoginResponse, error) {
 	// 获取用户信息（包含角色）
 	var user *model.User
 	var err error
-
 	// 支持用户名或邮箱登录
 	if strings.Contains(req.Username, "@") {
-		user, err = s.userRepo.GetByEmail(req.TenantID, req.Username)
+		user, err = s.userRepo.GetByEmail(tenantID, req.Username)
 		if err == nil {
 			// 加载角色信息
 			user, err = s.userRepo.GetByIDWithRoles(user.ID)
 		}
 	} else {
-		user, err = s.userRepo.GetByUsernameWithRoles(req.TenantID, req.Username)
+		user, err = s.userRepo.GetByUsernameWithRoles(tenantID, req.Username)
 	}
 
 	if err != nil {
@@ -177,14 +174,14 @@ func (s *authService) Login(req *LoginRequest) (*LoginResponse, error) {
 }
 
 // Register 用户注册
-func (s *authService) Register(req *RegisterRequest) (*model.UserProfile, error) {
+func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.UserProfile, error) {
 	// 参数验证
 	if err := s.validateRegisterRequest(req); err != nil {
 		return nil, err
 	}
 
 	// 检查用户名是否已存在
-	exists, err := s.userRepo.UsernameExists(req.TenantID, req.Username)
+	exists, err := s.userRepo.UsernameExists(tenantID, req.Username)
 	if err != nil {
 		logger.Error("Failed to check username existence:", err)
 		return nil, errors.New("注册失败")
@@ -195,7 +192,7 @@ func (s *authService) Register(req *RegisterRequest) (*model.UserProfile, error)
 
 	// 检查邮箱是否已存在
 	if req.Email != "" {
-		exists, err = s.userRepo.EmailExists(req.TenantID, req.Email)
+		exists, err = s.userRepo.EmailExists(tenantID, req.Email)
 		if err != nil {
 			logger.Error("Failed to check email existence:", err)
 			return nil, errors.New("注册失败")
@@ -214,7 +211,7 @@ func (s *authService) Register(req *RegisterRequest) (*model.UserProfile, error)
 
 	// 创建用户
 	user := &model.User{
-		TenantID: req.TenantID,
+		TenantID: tenantID,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashedPassword,

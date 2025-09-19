@@ -23,10 +23,6 @@ request.interceptors.request.use(
     const userStore = useUserStore()
     const token = userStore.getToken()
 
-    // 调试：打印token的详细信息
-    console.log('Request interceptor - token type:', typeof token)
-    console.log('Request interceptor - token value:', token)
-    console.log('Request interceptor - token JSON:', JSON.stringify(token))
 
     // 更严格的token验证和处理
     if (token) {
@@ -51,9 +47,8 @@ request.interceptors.request.use(
       // 确保token字符串有效
       if (tokenString && tokenString.trim() && tokenString !== 'undefined' && tokenString !== 'null') {
         config.headers.Authorization = `Bearer ${tokenString.trim()}`
-        console.log('Authorization header set:', config.headers.Authorization)
       } else {
-        console.warn('Token string is empty or invalid:', tokenString)
+        console.log('Token is empty or invalid after processing:', tokenString)
       }
     } else {
       console.log('No token available')
@@ -77,7 +72,6 @@ request.interceptors.response.use(
     }
 
     // 其他状态码都是错误
-    ElMessage.error(data.message || '请求失败')
     return Promise.reject(new Error(data.message || '请求失败'))
   },
   (error) => {

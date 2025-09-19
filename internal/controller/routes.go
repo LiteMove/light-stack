@@ -48,6 +48,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// API 分组
 	api := r.Group("/api")
+	api.Use(middleware.TenantMiddleware(tenantService))
 	{
 		// 健康检查
 		api.GET("/health", healthController.Check)

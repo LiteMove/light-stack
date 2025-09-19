@@ -31,15 +31,11 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		response.BadRequest(ctx, "参数格式错误")
 		return
 	}
+	tenantId := ctx.GetUint64("tenant_id")
 
-	// 默认租户ID为0（系统租户）
-	if req.TenantID == 0 {
-		req.TenantID = 0
-	}
-
-	loginResp, err := c.authService.Login(&req)
+	loginResp, err := c.authService.Login(tenantId, &req)
 	if err != nil {
-		response.Error(ctx, 401, err.Error())
+		response.Unauthorized(ctx, err.Error())
 		return
 	}
 
@@ -55,11 +51,8 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	}
 
 	// 默认租户ID为0（系统租户）
-	if req.TenantID == 0 {
-		req.TenantID = 0
-	}
-
-	user, err := c.authService.Register(&req)
+	tenantId := ctx.GetUint64("tenant_id")
+	user, err := c.authService.Register(tenantId, &req)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return

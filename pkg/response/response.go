@@ -42,17 +42,32 @@ func BadRequest(c *gin.Context, message string) {
 
 // Unauthorized 401错误
 func Unauthorized(c *gin.Context, message string) {
-	Error(c, 401, message)
+	c.JSON(http.StatusUnauthorized, Response{
+		Code:      401,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
 }
 
 // Forbidden 403错误
 func Forbidden(c *gin.Context, message string) {
-	Error(c, 403, message)
+	c.JSON(http.StatusForbidden, Response{
+		Code:      403,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
 }
 
 // NotFound 404错误
 func NotFound(c *gin.Context, message string) {
-	Error(c, 404, message)
+	c.JSON(http.StatusNotFound, Response{
+		Code:      404,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
 }
 
 // InternalServerError 500错误

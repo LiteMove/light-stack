@@ -22,8 +22,7 @@ export const useUserStore = defineStore('user', () => {
 
   // 设置token
   const setToken = (newToken: string) => {
-    console.log('setToken called with:', newToken, 'Type:', typeof newToken)
-    
+
     // 确保输入是有效的字符串
     if (!newToken || typeof newToken !== 'string') {
       console.error('setToken: Invalid token type:', typeof newToken, newToken)
@@ -38,18 +37,15 @@ export const useUserStore = defineStore('user', () => {
     
     token.value = tokenString
     localStorage.setItem('token', tokenString)
-    console.log('Token stored in localStorage:', localStorage.getItem('token'))
   }
 
   // 获取token
   const getToken = (): string => {
-    console.log('getToken called, current token.value:', token.value, 'Type:', typeof token.value)
-    
+
     // 如果token为空，从本地存储中获取
     if (!token.value) {
       const storedToken = localStorage.getItem('token') || ''
-      console.log('Retrieved from localStorage:', storedToken, 'Type:', typeof storedToken)
-      
+
       // 确保从localStorage获取的也是有效字符串
       if (storedToken && typeof storedToken === 'string') {
         token.value = storedToken.trim()
@@ -60,8 +56,7 @@ export const useUserStore = defineStore('user', () => {
     
     // 最终验证返回值
     const returnValue = token.value || ''
-    console.log('getToken returning:', returnValue, 'Type:', typeof returnValue)
-    
+
     // 确保返回值一定是字符串
     return String(returnValue)
   }

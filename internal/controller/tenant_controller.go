@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/LiteMove/light-stack/internal/utils"
 	"strconv"
 
 	"github.com/LiteMove/light-stack/internal/model"
@@ -60,13 +61,13 @@ type UpdateTenantStatusRequest struct {
 func (c *TenantController) CreateTenant(ctx *gin.Context) {
 	var req CreateTenantRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "请求参数格式错误: "+err.Error())
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
 		return
 	}
 
 	// 参数验证
 	if err := c.validator.Struct(&req); err != nil {
-		response.Error(ctx, 400, "参数验证失败: "+err.Error())
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
 		return
 	}
 
@@ -80,13 +81,17 @@ func (c *TenantController) CreateTenant(ctx *gin.Context) {
 
 	// 处理过期时间
 	if req.ExpiredAt != "" {
-		// TODO: 解析时间字符串
-		// 这里简化处理，生产环境需要正确解析时间格式
+		time, err := utils.ParseToTime(req.ExpiredAt)
+		if err != nil {
+			response.BadRequest(ctx, "无法解析过期时间: "+err.Error())
+			return
+		}
+		tenant.ExpiredAt = time
 	}
 
 	// 调用服务创建租户
 	if err := c.tenantService.CreateTenant(tenant); err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -101,7 +106,7 @@ func (c *TenantController) CreateTenant(ctx *gin.Context) {
 func (c *TenantController) GetTenants(ctx *gin.Context) {
 	var req TenantListRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		response.Error(ctx, 400, "请求参数格式错误: "+err.Error())
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
 		return
 	}
 
@@ -115,14 +120,14 @@ func (c *TenantController) GetTenants(ctx *gin.Context) {
 
 	// 参数验证
 	if err := c.validator.Struct(&req); err != nil {
-		response.Error(ctx, 400, "参数验证失败: "+err.Error())
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
 		return
 	}
 
 	// 调用服务获取租户列表
 	tenants, total, err := c.tenantService.GetTenantList(req.Page, req.PageSize, req.Keyword, req.Status)
 	if err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -141,14 +146,14 @@ func (c *TenantController) GetTenant(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "租户ID格式错误")
+		response.BadRequest(ctx, "租户ID格式错误")
 		return
 	}
 
 	// 调用服务获取租户
 	tenant, err := c.tenantService.GetTenant(id)
 	if err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -161,26 +166,26 @@ func (c *TenantController) UpdateTenant(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "租户ID格式错误")
+		response.BadRequest(ctx, "租户ID格式错误")
 		return
 	}
 
 	var req UpdateTenantRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "请求参数格式错误: "+err.Error())
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
 		return
 	}
 
 	// 参数验证
 	if err := c.validator.Struct(&req); err != nil {
-		response.Error(ctx, 400, "参数验证失败: "+err.Error())
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
 		return
 	}
 
 	// 获取原租户信息
 	existingTenant, err := c.tenantService.GetTenant(id)
 	if err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -192,13 +197,17 @@ func (c *TenantController) UpdateTenant(ctx *gin.Context) {
 
 	// 处理过期时间
 	if req.ExpiredAt != "" {
-		// TODO: 解析时间字符串
-		// 这里简化处理，生产环境需要正确解析时间格式
+		time, err := utils.ParseToTime(req.ExpiredAt)
+		if err != nil {
+			response.BadRequest(ctx, "过期时间格式错误")
+			return
+		}
+		existingTenant.ExpiredAt = time
 	}
 
 	// 调用服务更新租户
 	if err := c.tenantService.UpdateTenant(existingTenant); err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -215,13 +224,17 @@ func (c *TenantController) DeleteTenant(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "租户ID格式错误")
+		response.BadRequest(ctx, "租户ID格式错误")
 		return
 	}
-
+	// 禁止删除系统租户
+	if id == model.SystemTenantId {
+		response.BadRequest(ctx, "禁止删除系统租户")
+		return
+	}
 	// 调用服务删除租户
 	if err := c.tenantService.DeleteTenant(id); err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -236,25 +249,30 @@ func (c *TenantController) UpdateTenantStatus(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "租户ID格式错误")
+		response.BadRequest(ctx, "租户ID格式错误")
 		return
 	}
 
 	var req UpdateTenantStatusRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "请求参数格式错误: "+err.Error())
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
 		return
 	}
 
 	// 参数验证
 	if err := c.validator.Struct(&req); err != nil {
-		response.Error(ctx, 400, "参数验证失败: "+err.Error())
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
+		return
+	}
+	// 禁止禁用系统租户
+	if id == model.SystemTenantId && req.Status != model.TenantStatusActive {
+		response.BadRequest(ctx, "禁止禁用系统租户")
 		return
 	}
 
 	// 调用服务更新状态
 	if err := c.tenantService.UpdateTenantStatus(id, req.Status); err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -267,14 +285,14 @@ func (c *TenantController) UpdateTenantStatus(ctx *gin.Context) {
 func (c *TenantController) CheckDomain(ctx *gin.Context) {
 	domain := ctx.Query("domain")
 	if domain == "" {
-		response.Error(ctx, 400, "域名参数不能为空")
+		response.BadRequest(ctx, "域名参数不能为空")
 		return
 	}
 
 	// 调用服务检查域名
 	exists, err := c.tenantService.CheckDomainExists(domain)
 	if err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
@@ -288,14 +306,14 @@ func (c *TenantController) CheckDomain(ctx *gin.Context) {
 func (c *TenantController) CheckName(ctx *gin.Context) {
 	name := ctx.Query("name")
 	if name == "" {
-		response.Error(ctx, 400, "名称参数不能为空")
+		response.BadRequest(ctx, "名称参数不能为空")
 		return
 	}
 
 	// 调用服务检查名称
 	exists, err := c.tenantService.CheckNameExists(name)
 	if err != nil {
-		response.Error(ctx, 500, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 
