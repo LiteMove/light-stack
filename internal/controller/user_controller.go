@@ -98,7 +98,6 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 
 	// 创建用户对象
 	user := &model.User{
-		TenantID: tenantID,
 		Username: req.Username,
 		Nickname: req.Nickname,
 		Email:    req.Email,
@@ -107,6 +106,7 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		Status:   req.Status,
 		IsSystem: false,
 	}
+	user.TenantID = tenantID
 
 	// 调用服务创建用户
 	if err := c.userService.CreateUser(user); err != nil {

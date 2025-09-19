@@ -8,23 +8,19 @@ import (
 
 // User 用户模型
 type User struct {
-	ID            uint64         `json:"id" gorm:"primarykey"`
-	TenantID      uint64         `json:"tenant_id" gorm:"not null;default:1;uniqueIndex:uk_tenant_username;uniqueIndex:uk_tenant_email;uniqueIndex:uk_tenant_phone;index:idx_tenant_id"`
-	Username      string         `json:"username" gorm:"not null;size:50;uniqueIndex:uk_tenant_username" validate:"required,min=3,max=50"`
-	Password      string         `json:"-" gorm:"not null;size:255" validate:"required,min=6"`
-	Nickname      string         `json:"nickname" gorm:"size:100" validate:"max=100"`
-	Email         string         `json:"email" gorm:"size:100;uniqueIndex:uk_tenant_email" validate:"email,max=100"`
-	Phone         string         `json:"phone" gorm:"size:20;uniqueIndex:uk_tenant_phone" validate:"max=20"`
-	Avatar        string         `json:"avatar" gorm:"size:255"`
-	Status        int            `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3"`
-	IsSystem      bool           `json:"is_system" gorm:"not null;default:false;index"`
-	LastLoginAt   *time.Time     `json:"last_login_at"`
-	LastLoginIP   string         `json:"last_login_ip" gorm:"size:45"`
-	LoginFailures int            `json:"login_failures" gorm:"not null;default:0"`
-	LockedUntil   *time.Time     `json:"locked_until"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+	TenantBaseModel
+	Username      string     `json:"username" gorm:"not null;size:50;uniqueIndex:uk_tenant_username" validate:"required,min=3,max=50"`
+	Password      string     `json:"-" gorm:"not null;size:255" validate:"required,min=6"`
+	Nickname      string     `json:"nickname" gorm:"size:100" validate:"max=100"`
+	Email         string     `json:"email" gorm:"size:100;uniqueIndex:uk_tenant_email" validate:"email,max=100"`
+	Phone         string     `json:"phone" gorm:"size:20;uniqueIndex:uk_tenant_phone" validate:"max=20"`
+	Avatar        string     `json:"avatar" gorm:"size:255"`
+	Status        int        `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3"`
+	IsSystem      bool       `json:"is_system" gorm:"not null;default:false;index"`
+	LastLoginAt   *time.Time `json:"last_login_at"`
+	LastLoginIP   string     `json:"last_login_ip" gorm:"size:45"`
+	LoginFailures int        `json:"login_failures" gorm:"not null;default:0"`
+	LockedUntil   *time.Time `json:"locked_until"`
 
 	// 关联关系
 	Roles  []Role  `json:"roles,omitempty" gorm:"many2many:user_roles;"`

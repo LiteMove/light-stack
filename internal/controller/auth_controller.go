@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/LiteMove/light-stack/internal/middleware"
 	"strconv"
 	"strings"
 
@@ -31,9 +32,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		response.BadRequest(ctx, "参数格式错误")
 		return
 	}
-	tenantId := ctx.GetUint64("tenant_id")
+	// 从上下文获取租户ID
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		tenantID = uint64(1) // 默认系统租户
+	}
 
-	loginResp, err := c.authService.Login(tenantId, &req)
+	loginResp, err := c.authService.Login(tenantID, &req)
 	if err != nil {
 		response.Unauthorized(ctx, err.Error())
 		return
@@ -50,9 +55,12 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 
-	// 默认租户ID为0（系统租户）
-	tenantId := ctx.GetUint64("tenant_id")
-	user, err := c.authService.Register(tenantId, &req)
+	// 从上下文获取租户ID
+	tenantID, exists := middleware.GetTenantIDFromContext(ctx)
+	if !exists {
+		tenantID = uint64(1) // 默认系统租户
+	}
+	user, err := c.authService.Register(tenantID, &req)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return

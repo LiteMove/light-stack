@@ -211,7 +211,6 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 
 	// 创建用户
 	user := &model.User{
-		TenantID: tenantID,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashedPassword,
@@ -219,6 +218,7 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 		Phone:    req.Phone,
 		Status:   1, // 启用状态
 	}
+	user.TenantID = tenantID
 
 	if err := s.userRepo.Create(user); err != nil {
 		logger.Error("Failed to create user:", err)

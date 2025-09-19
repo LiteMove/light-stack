@@ -16,9 +16,8 @@ type Role struct {
 	SortOrder   int    `json:"sort_order" gorm:"not null;default:0"`
 
 	// 关联关系
-	Users  []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
-	Menus  []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
-	Tenant Tenant `json:"tenant,omitempty" gorm:"foreignKey:TenantID"`
+	Users []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
+	Menus []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
 }
 
 // TableName 指定表名
