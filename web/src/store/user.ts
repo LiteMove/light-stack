@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { menuApi, authApi } from '@/api'
 import type { Menu } from '@/api/types'
+import { useTenantStore } from './tenant'
 
 export interface UserInfo {
   id: number
@@ -71,6 +72,12 @@ export const useUserStore = defineStore('user', () => {
   const setUserInfo = (info: UserInfo) => {
     userInfo.value = info
     permissions.value = info.permissions || []
+    console.log('User info set:', info)
+    // 检查是否为超级管理员
+    const tenantStore = useTenantStore()
+    const isSuperAdmin = info.roles?.includes('super_admin') || info.roles?.includes('admin')
+    tenantStore.setIsSuperAdmin(isSuperAdmin)
+    
     // 将用户信息持久化到本地存储
     localStorage.setItem('userInfo', JSON.stringify(info))
   }
@@ -82,8 +89,7 @@ export const useUserStore = defineStore('user', () => {
       if (storedUserInfo) {
         try {
           const parsedUserInfo = JSON.parse(storedUserInfo)
-          userInfo.value = parsedUserInfo
-          permissions.value = parsedUserInfo.permissions || []
+          setUserInfo(parsedUserInfo) // 使用 setUserInfo 来正确设置超级管理员状态
         } catch (error) {
           console.error('Failed to parse stored user info:', error)
         }
@@ -161,6 +167,9 @@ export const useUserStore = defineStore('user', () => {
   const logout = () => {
     clearToken()
     clearUserInfo()
+    // 清除租户数据
+    const tenantStore = useTenantStore()
+    tenantStore.clearTenantData()
   }
 
   return {

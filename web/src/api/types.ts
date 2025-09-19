@@ -43,6 +43,7 @@ export interface LoginResponse {
 export interface User {
   id: number
   tenantId: number
+  tenantName?: string // 租户名称，用于显示
   username: string
   nickname: string
   email: string

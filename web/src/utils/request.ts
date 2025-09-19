@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { AxiosResponse, AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store'
+import { useTenantStore } from '@/store/tenant'
 import router from '@/router'
 
 // 获取环境变量配置
@@ -21,8 +22,8 @@ const request = axios.create({
 request.interceptors.request.use(
   (config) => {
     const userStore = useUserStore()
+    const tenantStore = useTenantStore()
     const token = userStore.getToken()
-
 
     // 更严格的token验证和处理
     if (token) {
@@ -52,6 +53,21 @@ request.interceptors.request.use(
       }
     } else {
       console.log('No token available')
+    }
+
+    // 添加租户ID到请求头
+    const currentTenant = tenantStore.getCurrentTenant()
+    if (currentTenant) {
+      config.headers['X-Tenant-ID'] = currentTenant.id.toString()
+      console.log('Added tenant ID to request:', currentTenant.id)
+    } else {
+      // 如果是超级管理员但没有选择租户，在某些请求中可能需要特殊处理
+      const isSuperAdmin = tenantStore.checkIsSuperAdmin()
+      if (isSuperAdmin) {
+        console.log('Super admin without tenant selection')
+        // 可以选择性地添加一个特殊标头来标识这是超级管理员请求
+        config.headers['X-Super-Admin'] = 'true'
+      }
     }
 
     return config

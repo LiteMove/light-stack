@@ -133,17 +133,10 @@ const handleLogin = async () => {
   try {
     await loginFormRef.value.validate()
     loading.value = true
-
     const response = await authApi.login(loginForm)
-    console.log('Login response:', response)
-    console.log('Login response.data:', response.data)
-    
     // 更安全的解构方式
     const responseData = response.data || response
-    console.log('Response data:', responseData)
-    
     let token, user
-    
     // 检查token和user的提取
     if (responseData.token && responseData.user) {
       token = responseData.token
@@ -158,19 +151,16 @@ const handleLogin = async () => {
       return
     }
     
-    console.log('Extracted token:', token, 'Type:', typeof token)
-    console.log('Extracted user:', user)
     // 保存token和用户信息
     userStore.setToken(token.access_token.trim())
-    console.log('Token saved, retrieving to verify:', userStore.getToken())
     userStore.setUserInfo({
       id: user.id,
       username: user.username,
       nickname: user.nickname,
       email: user.email,
       avatar: user.avatar,
-      roles: [], // 后续从API获取
-      permissions: [] // 后续从API获取
+      roles: user.role_codes || [],
+      permissions: user.permissions || []
     })
 
     ElMessage.success('登录成功')

@@ -6,8 +6,19 @@
         <h2 class="page-title">
           <el-icon class="title-icon"><UserFilled /></el-icon>
           用户管理
+          <!-- 当前租户显示 -->
+          <el-tag v-if="isSuperAdmin && currentTenant" type="primary" effect="light" size="default" class="tenant-indicator">
+            <el-icon><OfficeBuilding /></el-icon>
+            {{ currentTenant.name }}
+          </el-tag>
+          <el-tag v-else-if="isSuperAdmin && !currentTenant" type="warning" effect="light" size="default" class="tenant-indicator">
+            <el-icon><Warning /></el-icon>
+            请选择租户
+          </el-tag>
         </h2>
-        <p class="page-desc">管理系统用户信息、权限分配和状态控制</p>
+        <p class="page-desc">
+          {{ isSuperAdmin && currentTenant ? `管理租户 "${currentTenant.name}" 的用户信息、权限分配和状态控制` : isSuperAdmin ? '请先选择要管理的租户' : '管理系统用户信息、权限分配和状态控制' }}
+        </p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="Plus" @click="handleAdd" size="default">
@@ -125,6 +136,11 @@
             <el-tag type="info" size="small" class="total-count">
               共 {{ pagination.total }} 个用户
             </el-tag>
+            <!-- 租户过滤提示 -->
+            <el-tag v-if="isSuperAdmin && currentTenant" type="primary" size="small" effect="plain" class="filter-indicator">
+              <el-icon><OfficeBuilding /></el-icon>
+              {{ currentTenant.name }}
+            </el-tag>
           </div>
           <div class="table-actions">
             <el-tooltip content="刷新数据" placement="top">
@@ -140,15 +156,28 @@
         </div>
       </template>
       
-      <el-table
-        v-loading="loading"
-        :data="userList"
-        @selection-change="handleSelectionChange"
-        stripe
-        border
-        style="width: 100%"
-        :header-row-style="{ backgroundColor: '#f8f9fa' }"
-      >
+      <!-- 未选择租户提示 -->
+      <div v-if="isSuperAdmin && !currentTenant" class="no-tenant-selected">
+        <div class="empty-state">
+          <el-icon class="empty-icon"><Warning /></el-icon>
+          <h3 class="empty-title">请选择租户</h3>
+          <p class="empty-description">
+            作为超级管理员，您需要先在页面右上角选择要管理的租户，然后才能查看和管理该租户的用户数据。
+          </p>
+        </div>
+      </div>
+      
+      <!-- 正常表格显示 -->
+      <div v-else>
+        <el-table
+          v-loading="loading"
+          :data="userList"
+          @selection-change="handleSelectionChange"
+          stripe
+          border
+          style="width: 100%"
+          :header-row-style="{ backgroundColor: '#f8f9fa' }"
+        >
         <el-table-column type="selection" width="50" align="center" />
         
         <!-- 用户信息列 -->
@@ -311,6 +340,7 @@
           background
         />
       </div>
+      </div>
     </el-card>
 
     <!-- 用户表单弹窗 -->
@@ -332,7 +362,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Plus, 
@@ -349,13 +379,20 @@ import {
   Message,
   Phone,
   Key,
-  Lock
+  Lock,
+  OfficeBuilding,
+  Warning
 } from '@element-plus/icons-vue'
 import { userApi, roleApi } from '@/api'
 import type { User, Role, PageParams } from '@/api/types'
 import UserForm from './components/UserForm.vue'
 import RoleAssignDialog from './components/RoleAssignDialog.vue'
 import { formatDateTime } from '@/utils/date'
+import { useTenantStore, useUserStore } from '@/store'
+
+// Store实例
+const tenantStore = useTenantStore()
+const userStore = useUserStore()
 
 // 响应式数据
 const loading = ref(false)
@@ -367,6 +404,10 @@ const formVisible = ref(false)
 const roleAssignVisible = ref(false)
 const formData = ref<Partial<User>>({})
 const selectedUser = ref<User | null>(null)
+
+// 计算属性
+const isSuperAdmin = computed(() => tenantStore.checkIsSuperAdmin())
+const currentTenant = computed(() => tenantStore.getCurrentTenant())
 
 // 搜索表单
 const searchForm = reactive({
@@ -398,16 +439,25 @@ const getUserRoles = (userId: number): Role[] => {
 
 // 获取用户列表
 const fetchUsers = async () => {
+  // 如果是超级管理员但没有选择租户，不加载数据
+  if (isSuperAdmin.value && !currentTenant.value) {
+    ElMessage.warning('请先选择要管理的租户')
+    userList.value = []
+    pagination.total = 0
+    return
+  }
+  
   try {
     loading.value = true
     const params: PageParams & { keyword?: string; status?: number; roleId?: number } = {
       page: pagination.page,
-      page_size: pagination.pageSize, // 修改为Go后端期望的命名
+      page_size: pagination.pageSize,
       keyword: searchForm.keyword || undefined,
       status: searchForm.status === 0 ? undefined : searchForm.status,
       roleId: searchForm.roleId === 0 ? undefined : searchForm.roleId
     }
     
+    // 租户ID现在通过请求头自动添加，不需要在参数中指定
     const { data } = await userApi.getUsers(params)
     userList.value = data.list
     pagination.total = data.total
@@ -645,6 +695,17 @@ const handleRoleAssignSuccess = () => {
 onMounted(() => {
   refreshUsers()
 })
+
+// 监听租户变化，自动刷新用户列表
+const stopTenantWatcher = tenantStore.$subscribe((mutation, state) => {
+  // 当租户发生变化时，重新获取用户列表
+  fetchUsers()
+})
+
+// 组件销毁时停止监听
+onUnmounted(() => {
+  stopTenantWatcher()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -674,9 +735,23 @@ onMounted(() => {
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
 
         .title-icon {
           font-size: 32px;
+        }
+
+        .tenant-indicator {
+          margin-left: 8px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          font-weight: 500;
+          
+          .el-icon {
+            font-size: 14px;
+          }
         }
       }
 
@@ -841,6 +916,17 @@ onMounted(() => {
           color: #1976d2;
           border: 1px solid #bbdefb;
         }
+
+        .filter-indicator {
+          margin-left: 8px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          
+          .el-icon {
+            font-size: 12px;
+          }
+        }
       }
 
       .table-actions {
@@ -920,6 +1006,23 @@ onMounted(() => {
             .nickname {
               font-size: 12px;
               color: #909399;
+              margin-bottom: 2px;
+            }
+
+            .tenant-info {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 11px;
+              color: #409eff;
+              
+              .el-icon {
+                font-size: 10px;
+              }
+              
+              .tenant-name {
+                font-weight: 500;
+              }
             }
           }
         }
@@ -995,6 +1098,36 @@ onMounted(() => {
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
+        }
+      }
+    }
+
+    // 空状态样式
+    .no-tenant-selected {
+      padding: 60px 20px;
+      text-align: center;
+      
+      .empty-state {
+        .empty-icon {
+          font-size: 64px;
+          color: #e6a23c;
+          margin-bottom: 16px;
+        }
+        
+        .empty-title {
+          margin: 0 0 12px 0;
+          font-size: 18px;
+          font-weight: 500;
+          color: #303133;
+        }
+        
+        .empty-description {
+          margin: 0;
+          color: #606266;
+          font-size: 14px;
+          line-height: 1.6;
+          max-width: 400px;
+          margin: 0 auto;
         }
       }
     }

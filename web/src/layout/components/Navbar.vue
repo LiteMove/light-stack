@@ -10,6 +10,9 @@
     </div>
 
     <div class="navbar-right">
+      <!-- 租户切换器 -->
+      <TenantSwitcher class="tenant-switcher" />
+      
       <el-dropdown trigger="click" @command="handleCommand">
         <div class="avatar-container">
           <el-avatar
@@ -53,6 +56,7 @@ import { CaretBottom, User, Setting, SwitchButton } from '@element-plus/icons-vu
 import { useAppStore, useUserStore } from '@/store'
 import Hamburger from './Hamburger.vue'
 import Breadcrumb from './Breadcrumb.vue'
+import TenantSwitcher from '@/components/TenantSwitcher.vue'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -130,6 +134,11 @@ const handleLogout = async () => {
 .navbar-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.tenant-switcher {
+  margin-right: 8px;
 }
 
 .avatar-container {
