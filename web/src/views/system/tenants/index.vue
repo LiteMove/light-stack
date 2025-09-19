@@ -64,7 +64,7 @@
               </el-select>
             </el-form-item>
 
-            <el-form-item>
+            <el-form-item class="search-actions">
               <el-button type="primary" :icon="Search" @click="handleSearch">
                 搜索
               </el-button>
@@ -493,131 +493,318 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .tenant-management {
-  padding: 20px;
-  background-color: #f5f5f5;
-  min-height: 100vh;
+  padding: 24px;
+  background-color: #f5f6fa;
+  min-height: calc(100vh - 64px);
 }
 
+// 页面头部样式
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
-  background: white;
+  margin-bottom: 24px;
   padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+
+  .header-left {
+    color: white;
+
+    .page-title {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title-icon {
+        font-size: 32px;
+      }
+    }
+
+    .page-desc {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    
+    .el-button {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(10px);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      &.el-button--primary {
+        background: rgba(255, 255, 255, 0.2);
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+  }
 }
 
-.header-left {
-  flex: 1;
-}
-
-.page-title {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.title-icon {
-  font-size: 28px;
-  color: #3b82f6;
-}
-
-.page-desc {
-  margin: 0;
-  color: #6b7280;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
+// 工具栏样式
 .toolbar-card {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e4e7ed;
+
+  :deep(.el-card__body) {
+    padding: 20px;
+  }
+
+  .toolbar-content {
+    .search-section {
+      margin-bottom: 16px;
+
+      .search-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 16px;
+
+        .search-item {
+          margin-bottom: 0;
+          margin-right: 0;
+
+          :deep(.el-form-item__label) {
+            color: #606266;
+            font-weight: 500;
+            font-size: 13px;
+          }
+        }
+
+        .search-actions {
+          margin-bottom: 0;
+          margin-right: 0;
+          display: flex;
+          gap: 12px;
+
+          .el-button {
+            border-radius: 6px;
+            transition: all 0.2s ease;
+
+            &:hover {
+              transform: translateY(-1px);
+            }
+          }
+        }
+      }
+    }
+
+    .batch-section {
+      padding: 16px;
+      background: linear-gradient(90deg, #e3f2fd 0%, #f3e5f5 100%);
+      border-radius: 8px;
+      border: 1px solid #bbdefb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+
+      .batch-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #1976d2;
+        font-weight: 500;
+
+        .info-icon {
+          font-size: 18px;
+          color: #2196f3;
+        }
+
+        .selected-count {
+          color: #1565c0;
+          font-size: 16px;
+        }
+      }
+
+      .batch-actions {
+        display: flex;
+        gap: 8px;
+      }
+    }
+  }
 }
 
-.toolbar-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.search-section {
-  flex: 1;
-}
-
-.search-form {
-  margin: 0;
-}
-
-.search-item {
-  margin-right: 16px;
-  margin-bottom: 0;
-}
-
-.batch-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  background-color: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-.batch-info {
-  color: #475569;
-  font-size: 14px;
-}
-
-.batch-actions {
-  display: flex;
-  gap: 8px;
-}
-
+// 表格卡片样式
 .table-card {
-  background: white;
-  border-radius: 8px;
-}
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
 
-.tenant-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  :deep(.el-card__body) {
+    padding: 0;
+  }
 
-.name-text {
-  font-weight: 500;
-}
+  :deep(.el-card__header) {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+  }
 
-.domain-info {
-  font-family: 'Monaco', 'Consolas', monospace;
-  font-size: 13px;
-}
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-.table-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+    .table-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #303133;
 
-.pagination-wrapper {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
+      .title-icon {
+        color: #409eff;
+        font-size: 16px;
+      }
+
+      .total-count {
+        margin-left: 8px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+      }
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 8px;
+
+      .el-button {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+
+  // 表格样式优化
+  .el-table {
+    border: none;
+    
+    // 表头样式
+    :deep(.el-table__header-wrapper) {
+      .el-table__header {
+        th {
+          background: #f8f9fa;
+          color: #495057;
+          font-weight: 600;
+          font-size: 14px;
+          border-bottom: 2px solid #dee2e6;
+        }
+      }
+    }
+
+    // 行样式
+    :deep(.el-table__body) {
+      tr {
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background-color: #f8f9ff;
+        }
+      }
+    }
+
+    // 租户名称单元格
+    .tenant-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .name-text {
+        font-weight: 500;
+        color: #303133;
+        font-size: 14px;
+      }
+    }
+
+    // 域名信息
+    .domain-info {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 13px;
+    }
+
+    // 操作按钮
+    .table-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+
+      .el-button {
+        padding: 4px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+
+    .empty-value {
+      color: #c0c4cc;
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    .time-text {
+      font-size: 12px;
+      color: #909399;
+    }
+  }
+
+  // 分页样式
+  .pagination-wrapper {
+    padding: 20px;
+    background: #fafafa;
+    border-top: 1px solid #e4e7ed;
+    display: flex;
+    justify-content: center;
+
+    :deep(.el-pagination) {
+      .el-pager li {
+        border-radius: 6px;
+        margin: 0 2px;
+      }
+      
+      .btn-prev,
+      .btn-next {
+        border-radius: 6px;
+      }
+    }
+  }
 }
 
 .text-gray {
@@ -630,5 +817,99 @@ onMounted(() => {
 
 .ml-2 {
   margin-left: 8px;
+}
+
+// 响应式设计优化
+@media (max-width: 1200px) {
+  .tenant-management {
+    padding: 16px;
+
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+
+      .header-actions {
+        justify-content: flex-end;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .tenant-management {
+    padding: 12px;
+
+    .page-header {
+      padding: 20px 16px;
+      
+      .header-left {
+        .page-title {
+          font-size: 24px;
+        }
+      }
+
+      .header-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+        
+        .el-button {
+          flex: 1;
+          min-width: 100px;
+        }
+      }
+    }
+
+    .toolbar-card {
+      :deep(.el-card__body) {
+        padding: 16px;
+      }
+
+      .toolbar-content {
+        .search-section {
+          .search-form {
+            flex-direction: column;
+            align-items: stretch;
+
+            .search-item {
+              width: 100%;
+              margin-bottom: 12px;
+              margin-right: 0;
+
+              :deep(.el-input),
+              :deep(.el-select) {
+                width: 100% !important;
+              }
+            }
+
+            .search-actions {
+              justify-content: center;
+              
+              .el-button {
+                flex: 1;
+              }
+            }
+          }
+        }
+
+        .batch-section {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+
+          .batch-actions {
+            justify-content: center;
+          }
+        }
+      }
+    }
+
+    // 移动端表格滚动
+    .table-card {
+      .el-table {
+        min-width: 1000px;
+      }
+    }
+  }
 }
 </style>
