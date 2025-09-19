@@ -48,6 +48,9 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// API 分组
 	api := r.Group("/api")
+	// 可选登录中间件，不强制登录
+	api.Use(middleware.OptionalJWTAuthMiddleware())
+	// 租户中间件，根据域名识别租户
 	api.Use(middleware.TenantMiddleware(tenantService))
 	{
 		// 健康检查

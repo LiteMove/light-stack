@@ -138,19 +138,12 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*LoginResponse,
 	}
 
 	// 生成JWT token，使用主要角色
-	var primaryRole string = "user"
-	if len(user.Roles) > 0 {
-		primaryRole = user.Roles[0].Code // 使用第一个角色作为主要角色
-		// 如果有超级管理员角色，优先使用
-		for _, role := range user.Roles {
-			if role.Code == "super_admin" {
-				primaryRole = role.Code
-				break
-			}
-		}
+	var userRoles []string
+	for _, role := range user.Roles {
+		userRoles = append(userRoles, role.Code)
 	}
 
-	token, err := jwt.GenerateToken(user.ID, user.Username, primaryRole)
+	token, err := jwt.GenerateToken(user.ID, user.Username, userRoles)
 	if err != nil {
 		logger.WithField("user_id", user.ID).Error("Failed to generate token:", err)
 		return nil, errors.New("登录失败")
@@ -265,19 +258,13 @@ func (s *authService) RefreshToken(tokenString string) (*TokenResponse, error) {
 		return nil, errors.New("账户已被禁用")
 	}
 
-	// 生成新token，使用当前的主要角色
-	var primaryRole string = "user"
-	if len(user.Roles) > 0 {
-		primaryRole = user.Roles[0].Code
-		for _, role := range user.Roles {
-			if role.Code == "super_admin" {
-				primaryRole = role.Code
-				break
-			}
-		}
+	// 生成新token
+	var userRoles []string
+	for _, role := range user.Roles {
+		userRoles = append(userRoles, role.Code)
 	}
 
-	newToken, err := jwt.GenerateToken(user.ID, user.Username, primaryRole)
+	newToken, err := jwt.GenerateToken(user.ID, user.Username, userRoles)
 	if err != nil {
 		logger.WithField("user_id", user.ID).Error("Failed to refresh token:", err)
 		return nil, errors.New("刷新token失败")

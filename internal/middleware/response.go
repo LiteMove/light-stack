@@ -80,7 +80,13 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// 将用户信息存储到上下文中
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
-		c.Set("user_role", claims.Role)
+		c.Set("user_roles", claims.Roles)
+		for _, role := range claims.Roles {
+			if role == "super_admin" {
+				c.Set("is_super_admin", true)
+				break
+			}
+		}
 
 		c.Next()
 	}
@@ -89,16 +95,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 // AdminAuthMiddleware 管理员权限中间件
 func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 获取用户角色
-		userRole, exists := c.Get("user_role")
-		if !exists {
-			response.Unauthorized(c, "未授权")
-			c.Abort()
-			return
-		}
+		isAdmin := c.GetBool("is_super_admin")
 
-		// 检查是否为管理员
-		if userRole.(string) != "super_admin" {
+		if !isAdmin {
 			response.Forbidden(c, "需要管理员权限")
 			c.Abort()
 			return
@@ -142,8 +141,13 @@ func OptionalJWTAuthMiddleware() gin.HandlerFunc {
 		// 将用户信息存储到上下文中
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
-		c.Set("user_role", claims.Role)
-
+		c.Set("user_roles", claims.Roles)
+		for _, role := range claims.Roles {
+			if role == "super_admin" {
+				c.Set("is_super_admin", true)
+				break
+			}
+		}
 		c.Next()
 	}
 }

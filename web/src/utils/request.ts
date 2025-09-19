@@ -57,6 +57,7 @@ request.interceptors.request.use(
 
     // 添加租户ID到请求头
     const currentTenant = tenantStore.getCurrentTenant()
+
     if (currentTenant) {
       config.headers['X-Tenant-ID'] = currentTenant.id.toString()
       console.log('Added tenant ID to request:', currentTenant.id)

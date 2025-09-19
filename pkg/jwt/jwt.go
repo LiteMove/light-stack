@@ -10,14 +10,14 @@ import (
 
 // Claims JWT声明结构
 type Claims struct {
-	UserID   uint64 `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	UserID   uint64   `json:"user_id"`
+	Username string   `json:"username"`
+	Roles    []string `json:"roles"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成JWT token
-func GenerateToken(userID uint64, username, role string) (string, error) {
+func GenerateToken(userID uint64, username string, roles []string) (string, error) {
 	cfg := config.Get()
 	if cfg == nil {
 		return "", errors.New("config not initialized")
@@ -27,7 +27,7 @@ func GenerateToken(userID uint64, username, role string) (string, error) {
 	claims := Claims{
 		UserID:   userID,
 		Username: username,
-		Role:     role,
+		Roles:    roles,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWT.ExpiresIn) * time.Second)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -95,5 +95,5 @@ func RefreshToken(tokenString string) (string, error) {
 	}
 
 	// 生成新token
-	return GenerateToken(claims.UserID, claims.Username, claims.Role)
+	return GenerateToken(claims.UserID, claims.Username, claims.Roles)
 }
