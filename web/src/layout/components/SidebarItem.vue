@@ -10,7 +10,7 @@
         <span>{{ item.meta?.title }}</span>
       </template>
       <sidebar-item
-        v-for="child in item.children"
+        v-for="child in showingChildren"
         :key="child.path"
         :item="child"
         :base-path="resolvePath(child.path)"
@@ -19,7 +19,7 @@
 
     <!-- 没有子菜单或只有一个子菜单 -->
     <el-menu-item
-      v-else
+      v-else-if="!hasChildren || hasOneShowingChild"
       :index="resolvePath(onlyOneChild.path)"
     >
       <menu-icon :icon="onlyOneChild.meta?.icon || item.meta?.icon" />
@@ -58,10 +58,14 @@ const onlyOneChild = computed(() => {
   if (hasOneShowingChild.value) {
     return showingChildren.value[0]
   }
+  // 如果没有显示的子菜单，返回当前菜单项作为单独项目
   return { ...props.item, path: '' }
 })
 
 const resolvePath = (routePath: string) => {
+  if (!routePath) {
+    return props.basePath
+  }
   if (routePath.startsWith('/')) {
     return routePath
   }

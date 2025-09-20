@@ -27,29 +27,11 @@ request.interceptors.request.use(
 
     // 更严格的token验证和处理
     if (token) {
-      let tokenString = ''
-      
-      // 如果token是对象，尝试提取字符串值
-      if (typeof token === 'object' && token !== null) {
-        // 如果token是一个包含token字段的对象
-        if ('access_token' in token) {
-          tokenString = String(token.access_token)
-        } else {
-          console.error('Token is an object but does not contain token field:', token)
-          return config
-        }
-      } else if (typeof token === 'string') {
-        tokenString = token
-      } else {
-        console.error('Token is not a string or valid object:', token)
-        return config
-      }
-
       // 确保token字符串有效
-      if (tokenString && tokenString.trim() && tokenString !== 'undefined' && tokenString !== 'null') {
-        config.headers.Authorization = `Bearer ${tokenString.trim()}`
+      if (token && token.trim()) {
+        config.headers.Authorization = `Bearer ${token.trim()}`
       } else {
-        console.log('Token is empty or invalid after processing:', tokenString)
+        console.log('Token is empty or invalid after processing:', token)
       }
     } else {
       console.log('No token available')

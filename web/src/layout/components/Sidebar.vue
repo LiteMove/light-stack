@@ -33,12 +33,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAppStore } from '@/store'
+import { useAppStore, useUserStore } from '@/store'
 import { constantRoutes } from '@/router'
 import SidebarItem from './SidebarItem.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
+const userStore = useUserStore()
 
 const collapsed = computed(() => appStore.collapsed)
 
@@ -50,8 +51,19 @@ const activeMenu = computed(() => {
   return path
 })
 
-const routes = computed(() => {
+// 静态路由（登录页等）
+const staticRoutes = computed(() => {
   return constantRoutes.filter(route => !route.meta?.hidden)
+})
+
+// 动态路由（用户菜单）
+const dynamicRoutes = computed(() => {
+  return userStore.getDynamicRoutes()
+})
+
+// 合并所有路由
+const routes = computed(() => {
+  return [...staticRoutes.value, ...dynamicRoutes.value]
 })
 </script>
 

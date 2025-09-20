@@ -39,7 +39,7 @@ func RegisterRoutes(r *gin.Engine) {
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)
 	tenantService := service.NewTenantService(tenantRepo, userRepo)
-	authController := NewAuthController(authService, roleService)
+	authController := NewAuthController(authService, roleService, menuService)
 	userController := NewUserController(userService)
 	roleController := NewRoleController(roleService)
 	menuController := NewMenuController(menuService)
@@ -84,10 +84,6 @@ func RegisterRoutes(r *gin.Engine) {
 				user.PUT("/profile", authController.UpdateProfile)   // 更新用户信息
 				user.PUT("/password", authController.ChangePassword) // 修改密码
 				user.GET("/:id/roles", authController.GetUserRoles)  // 获取用户角色
-
-				// 用户菜单相关
-				user.GET("/menus", menuController.GetUserMenuTree)          // 获取用户菜单树
-				user.GET("/permissions", menuController.GetMenuPermissions) // 获取用户菜单权限
 			}
 
 			// 管理员相关路由（需要管理员权限）

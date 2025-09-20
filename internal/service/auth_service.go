@@ -14,7 +14,7 @@ import (
 // AuthService 认证服务接口
 type AuthService interface {
 	// 用户登录
-	Login(tenantID uint64, req *LoginRequest) (*LoginResponse, error)
+	Login(tenantID uint64, req *LoginRequest) (*TokenResponse, error)
 	// 用户注册
 	Register(tenantID uint64, req *RegisterRequest) (*model.UserProfile, error)
 	// 刷新token
@@ -74,11 +74,6 @@ type UpdateProfileRequest struct {
 	Phone    string `json:"phone" validate:"max=20"`
 }
 
-// LoginResponse 登录响应
-type LoginResponse struct {
-	Token TokenResponse `json:"token"`
-}
-
 // TokenResponse token响应
 type TokenResponse struct {
 	AccessToken string `json:"access_token"`
@@ -87,7 +82,7 @@ type TokenResponse struct {
 }
 
 // Login 用户登录
-func (s *authService) Login(tenantID uint64, req *LoginRequest) (*LoginResponse, error) {
+func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse, error) {
 	// 参数验证
 	if strings.TrimSpace(req.Username) == "" {
 		return nil, errors.New("用户名不能为空")
@@ -157,12 +152,10 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*LoginResponse,
 
 	logger.WithField("user_id", user.ID).Info("User logged in successfully")
 
-	return &LoginResponse{
-		Token: TokenResponse{
-			AccessToken: token,
-			TokenType:   "Bearer",
-			ExpiresIn:   3600, // 1小时
-		},
+	return &TokenResponse{
+		AccessToken: token,
+		TokenType:   "Bearer",
+		ExpiresIn:   3600, // 1小时
 	}, nil
 }
 
@@ -339,7 +332,7 @@ func (s *authService) ChangePassword(userID uint64, oldPassword, newPassword str
 	return nil
 }
 
-// GetUserProfile 获取用户信息
+// GetUserProfile 获取用户信息（不包含菜单和权限）
 func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) {
 	user, err := s.userRepo.GetByIDWithRoles(userID)
 	if err != nil {
@@ -348,19 +341,7 @@ func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) 
 
 	profile := user.ToProfile()
 
-	// 获取用户菜单
-	menus, err := s.menuRepo.GetUserMenus(userID)
-	if err != nil {
-		logger.WithField("user_id", userID).Warn("Failed to get user menus:", err)
-	} else {
-		menuProfiles := make([]model.MenuProfile, 0, len(menus))
-		for _, menu := range menus {
-			menuProfiles = append(menuProfiles, menu.ToProfile())
-		}
-		profile.Menus = menuProfiles
-	}
-
-	// 获取用户权限
+	// 获取用户权限（仅返回权限码数组）
 	permissions, err := s.menuRepo.GetUserPermissions(userID)
 	if err != nil {
 		logger.WithField("user_id", userID).Warn("Failed to get user permissions:", err)

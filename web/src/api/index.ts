@@ -1,7 +1,7 @@
 import { http } from '@/utils/request'
 import type {
   LoginParams,
-  LoginResponse,
+  TokenResponse,
   User,
   Role,
   Menu,
@@ -25,7 +25,7 @@ import type {
 // 认证相关API
 export const authApi = {
   // 登录
-  login(data: LoginParams): Promise<ApiResponse<LoginResponse>> {
+  login(data: LoginParams): Promise<ApiResponse<TokenResponse>> {
     return http.post('/v1/auth/login', data)
   },
 

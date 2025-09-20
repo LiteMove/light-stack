@@ -25,6 +25,8 @@ const iconComponent = computed(() => {
     return iconComp
   }
 
+  // 记录未找到的图标，但不影响渲染
+  console.warn(`Icon not found: ${props.icon}`)
   return null
 })
 </script>

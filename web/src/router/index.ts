@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import Layout from '@/layout/index.vue'
 import { useUserStore } from '@/store'
 
-// 静态路由
+// 静态路由（无需权限的基础路由）
 export const constantRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -32,53 +32,6 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: '/system',
-    component: Layout,
-    name: 'System',
-    meta: {
-      title: '系统管理',
-      icon: 'Setting'
-    },
-    children: [
-        {
-            path: '/system/tenants',
-            name: 'tenants',
-            component: () => import('@/views/system/tenants/index.vue'),
-            meta: {
-                title: '租户管理',
-                icon: 'User'
-            }
-        },
-      {
-        path: '/system/users',
-        name: 'Users',
-        component: () => import('@/views/system/users/index.vue'),
-        meta: {
-          title: '用户管理',
-          icon: 'User'
-        }
-      },
-      {
-        path: '/system/roles',
-        name: 'Roles',
-        component: () => import('@/views/system/roles/index.vue'),
-        meta: {
-          title: '角色管理',
-          icon: 'UserFilled'
-        }
-      },
-      {
-        path: '/system/menus',
-        name: 'Menus',
-        component: () => import('@/views/system/menus/index.vue'),
-        meta: {
-          title: '菜单管理',
-          icon: 'Menu'
-        }
-      }
-    ]
-  },
-  {
     path: '/404',
     name: '404',
     component: () => import('@/views/error/404.vue'),
@@ -102,16 +55,19 @@ const router = createRouter({
   scrollBehavior: () => ({ left: 0, top: 0 })
 })
 
+// 记录是否已添加动态路由
+let dynamicRoutesAdded = false
+
 // 全局前置守卫
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  
+
   // 如果访问登录页面，直接通过
   if (to.path === '/login') {
     next()
     return
   }
-  
+
   // 检查是否有token
   const token = userStore.getToken()
   if (!token) {
@@ -119,7 +75,7 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
     return
   }
-  
+
   // 确保用户数据已加载
   if (!userStore.userInfo) {
     try {
@@ -132,8 +88,38 @@ router.beforeEach(async (to, from, next) => {
       return
     }
   }
-  
+
+  // 添加动态路由（只添加一次）
+  if (!dynamicRoutesAdded && userStore.userMenus.length > 0) {
+    const dynamicRoutes = userStore.getDynamicRoutes()
+
+    // 添加动态路由到路由器
+    dynamicRoutes.forEach(route => {
+      router.addRoute(route)
+    })
+
+    dynamicRoutesAdded = true
+
+    // 如果当前路由是动态路由，需要重新导航
+    if (to.path !== '/' && to.path !== '/dashboard') {
+      next({ ...to, replace: true })
+      return
+    }
+  }
+
+  // 如果用户数据已加载但没有菜单（可能是权限问题），仍然允许访问基础页面
+  if (!userStore.userMenus.length && to.path !== '/' && to.path !== '/dashboard') {
+    console.warn('No user menus available, redirecting to dashboard')
+    next('/dashboard')
+    return
+  }
+
   next()
 })
+
+// 重置动态路由状态的方法
+export const resetDynamicRoutes = () => {
+  dynamicRoutesAdded = false
+}
 
 export default router

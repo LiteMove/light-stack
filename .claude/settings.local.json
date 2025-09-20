@@ -18,7 +18,8 @@
       "Bash(binserver.exe)",
       "Bash(make:*)",
       "Bash(taskkill:*)",
-      "Bash(bin/server.exe)"
+      "Bash(bin/server.exe)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

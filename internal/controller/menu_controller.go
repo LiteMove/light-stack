@@ -246,24 +246,6 @@ func (mc *MenuController) GetMenuTree(c *gin.Context) {
 	response.Success(c, tree)
 }
 
-// GetUserMenuTree 获取用户菜单树
-func (mc *MenuController) GetUserMenuTree(c *gin.Context) {
-	// 从上下文获取用户ID（由认证中间件注入）
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "用户ID不存在")
-		return
-	}
-
-	tree, err := mc.menuService.GetUserMenuTree(userID.(uint64))
-	if err != nil {
-		response.BadRequest(c, "获取用户菜单树失败")
-		return
-	}
-
-	response.Success(c, tree)
-}
-
 // GetRoleMenus 获取角色菜单
 func (mc *MenuController) GetRoleMenus(c *gin.Context) {
 	idStr := c.Param("id")
@@ -357,22 +339,4 @@ func (mc *MenuController) AssignMenusToRole(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"message": "分配菜单成功"})
-}
-
-// GetMenuPermissions 获取用户菜单权限
-func (mc *MenuController) GetMenuPermissions(c *gin.Context) {
-	// 从上下文获取用户ID（由认证中间件注入）
-	userId := c.GetUint64("user_id")
-	if userId == 0 {
-		response.Unauthorized(c, "用户ID不存在")
-		return
-	}
-
-	permissions, err := mc.menuService.GetMenuPermissions(userId)
-	if err != nil {
-		response.BadRequest(c, "获取菜单权限失败")
-		return
-	}
-
-	response.Success(c, gin.H{"permissions": permissions})
 }

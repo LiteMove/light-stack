@@ -134,25 +134,13 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
     const response = await authApi.login(loginForm)
-
-    // 后端现在只返回token信息
-    const responseData = response.data || response
-    let token
-
-    // 检查token的提取
-    if (responseData.token) {
-      token = responseData.token
-    } else if (responseData.data && responseData.data.token) {
-      // 如果数据在data字段里
-      token = responseData.data.token
-    } else {
-      console.error('Invalid response structure:', responseData)
-      ElMessage.error('登录响应格式错误')
+    console.log('登录响应:', response)
+    if (!response.data) {
+      ElMessage.error('登录失败')
       return
     }
-
     // 只保存token，用户信息将在路由守卫中获取
-    userStore.setToken(token.access_token.trim())
+    userStore.setToken(response.data.access_token.trim())
 
     ElMessage.success('登录成功')
     router.push('/')

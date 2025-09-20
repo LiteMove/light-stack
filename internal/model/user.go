@@ -34,23 +34,23 @@ func (User) TableName() string {
 
 // UserProfile 用户资料（不包含敏感信息）
 type UserProfile struct {
-	ID          uint64        `json:"id"`
-	TenantID    uint64        `json:"tenant_id"`
-	Username    string        `json:"username"`
-	Nickname    string        `json:"nickname"`
-	Email       *string       `json:"email"`
-	Phone       *string       `json:"phone"`
-	Avatar      string        `json:"avatar"`
-	Status      int           `json:"status"`
-	IsSystem    bool          `json:"is_system"`
-	LastLoginAt *time.Time    `json:"last_login_at"`
-	LastLoginIP string        `json:"last_login_ip"`
-	Roles       []RoleProfile `json:"roles,omitempty"`
-	RoleCodes   []string      `json:"role_codes,omitempty"`
-	Menus       []MenuProfile `json:"menus,omitempty"`
-	Permissions []string      `json:"permissions,omitempty"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
+	ID          uint64         `json:"id"`
+	TenantID    uint64         `json:"tenant_id"`
+	Username    string         `json:"username"`
+	Nickname    string         `json:"nickname"`
+	Email       *string        `json:"email"`
+	Phone       *string        `json:"phone"`
+	Avatar      string         `json:"avatar"`
+	Status      int            `json:"status"`
+	IsSystem    bool           `json:"is_system"`
+	LastLoginAt *time.Time     `json:"last_login_at"`
+	LastLoginIP string         `json:"last_login_ip"`
+	Roles       []RoleProfile  `json:"roles,omitempty"`
+	RoleCodes   []string       `json:"role_codes,omitempty"`
+	Permissions []string       `json:"permissions,omitempty"`
+	Menus       []MenuTreeNode `json:"menus,omitempty"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 // ToProfile 转换为用户资料

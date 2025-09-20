@@ -16,13 +16,17 @@ import (
 type AuthController struct {
 	authService service.AuthService
 	roleService service.RoleService
+	menuService service.MenuService
 }
 
 // NewAuthController 创建认证控制器
-func NewAuthController(authService service.AuthService, roleService service.RoleService) *AuthController {
+func NewAuthController(authService service.AuthService,
+	roleService service.RoleService,
+	menuService service.MenuService) *AuthController {
 	return &AuthController{
 		authService: authService,
 		roleService: roleService,
+		menuService: menuService,
 	}
 }
 
@@ -39,13 +43,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		tenantID = uint64(1) // 默认系统租户
 	}
 
-	loginResp, err := c.authService.Login(tenantID, &req)
+	tokenResp, err := c.authService.Login(tenantID, &req)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	response.Success(ctx, loginResp)
+	response.Success(ctx, tokenResp)
 }
 
 // Register 用户注册
@@ -109,7 +113,16 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 		response.BadRequest(ctx, err.Error())
 		return
 	}
-
+	profile.Menus, err = c.menuService.GetUserMenuTree(userId)
+	if err != nil {
+		response.BadRequest(ctx, "获取用户菜单树失败")
+		return
+	}
+	profile.Permissions, err = c.menuService.GetMenuPermissions(userId)
+	if err != nil {
+		response.BadRequest(ctx, "获取用户权限失败")
+		return
+	}
 	response.Success(ctx, profile)
 }
 

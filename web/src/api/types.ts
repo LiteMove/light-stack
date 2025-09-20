@@ -28,15 +28,10 @@ export interface LoginParams {
 }
 
 // 登录响应数据
-export interface LoginResponse {
-  token: string
-  user: {
-    id: number
-    username: string
-    nickname: string
-    email: string
-    avatar?: string
-  }
+export interface TokenResponse {
+    access_token: string
+    token_type: string
+    expires_in: number
 }
 
 // 用户信息
@@ -55,6 +50,10 @@ export interface User {
   lastLoginIp?: string
   createdAt: string
   updatedAt: string
+    role_codes: string[]
+    permissions: string[]
+    menus: Menu[]
+
 }
 
 // 角色信息

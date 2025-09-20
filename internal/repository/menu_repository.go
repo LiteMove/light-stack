@@ -155,11 +155,11 @@ func (r *menuRepository) GetUserMenus(userID uint64) ([]model.Menu, error) {
 func (r *menuRepository) GetUserPermissions(userID uint64) ([]string, error) {
 	var permissions []string
 	err := r.db.Table("menus").
-		Select("DISTINCT menus.permission_code").
+		Select("DISTINCT menus.code").
 		Joins("JOIN role_menu_permissions ON menus.id = role_menu_permissions.menu_id").
 		Joins("JOIN user_roles ON role_menu_permissions.role_id = user_roles.role_id").
 		Where("user_roles.user_id = ? AND menus.status = ? AND menus.permission_code != ''", userID, 1).
-		Pluck("permission_code", &permissions).Error
+		Pluck("code", &permissions).Error
 	return permissions, err
 }
 
