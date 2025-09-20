@@ -89,10 +89,12 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  console.log('userStore.userMenus:', userStore.userMenus)
   // 添加动态路由（只添加一次）
   if (!dynamicRoutesAdded && userStore.userMenus.length > 0) {
+      console.log('Adding dynamic routes...')
     const dynamicRoutes = userStore.getDynamicRoutes()
-
+    console.log('dynamicRoutes:', dynamicRoutes)
     // 添加动态路由到路由器
     dynamicRoutes.forEach(route => {
       router.addRoute(route)

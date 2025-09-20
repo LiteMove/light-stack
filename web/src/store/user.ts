@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {menuApi, authApi, userApi} from '@/api'
-import type {Menu, User} from '@/api/types'
+import type { Menu } from '@/api/types'
 import type { RouteRecordRaw } from 'vue-router'
 import { useTenantStore } from './tenant'
 import { resetDynamicRoutes } from '@/router'
@@ -15,6 +15,7 @@ export interface UserInfo {
   avatar?: string
   roles: string[]
   permissions: string[]
+    menus: Menu[]
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -75,6 +76,7 @@ export const useUserStore = defineStore('user', () => {
   const setUserInfo = (info: UserInfo) => {
     userInfo.value = info
     permissions.value = info.permissions || []
+    userMenus.value = info.menus || []
     console.log('User info set:', info)
     // 检查是否为超级管理员
     const tenantStore = useTenantStore()
@@ -114,6 +116,7 @@ export const useUserStore = defineStore('user', () => {
               }
 
               setUserInfo(userInfoData)
+
           } catch (error) {
               console.error('Failed to fetch user info:', error)
               throw error
@@ -128,14 +131,13 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
     permissions.value = []
     userMenus.value = []
-    menuPermissions.value = []
     localStorage.removeItem('userInfo')
     localStorage.removeItem('userMenus')
-    localStorage.removeItem('menuPermissions')
+    localStorage.removeItem('permissions')
   }
 
   // 获取用户菜单
-  const getUserMenus = async (): Promise<User> => {
+  const getUserMenus = async (): Promise<Menu[]> => {
     // 首先检查本地存储
     if (!userMenus.value.length) {
       const storedMenus = localStorage.getItem('userMenus')
@@ -156,25 +158,24 @@ export const useUserStore = defineStore('user', () => {
         userMenus.value = data.menus
         // 保存到本地存储
         localStorage.setItem('userMenus', JSON.stringify(data))
-        return data
+        return data.menus
       } catch (error) {
         console.error('Failed to fetch user menus:', error)
         return []
       }
     }
-
     return userMenus.value
   }
 
   // 获取菜单权限
-  const getMenuPermissions = async (): Promise<string[]> => {
+  const getPermissions = async (): Promise<string[]> => {
     // 首先检查本地存储
-    if (!menuPermissions.value.length) {
-      const storedPermissions = localStorage.getItem('menuPermissions')
+    if (!permissions.value.length) {
+      const storedPermissions = localStorage.getItem('permissions')
       if (storedPermissions) {
         try {
-          menuPermissions.value = JSON.parse(storedPermissions)
-          return menuPermissions.value
+            permissions.value = JSON.parse(storedPermissions)
+          return permissions.value
         } catch (error) {
           console.error('Failed to parse stored permissions:', error)
         }
@@ -182,12 +183,12 @@ export const useUserStore = defineStore('user', () => {
     }
 
     // 如果本地没有或解析失败，从API获取
-    if (!menuPermissions.value.length) {
+    if (!permissions.value.length) {
       try {
         const { data } = await authApi.getUserInfo()
-        menuPermissions.value = data.permissions
+        permissions.value = data.permissions
         // 保存到本地存储
-        localStorage.setItem('menuPermissions', JSON.stringify(data.permissions))
+        localStorage.setItem('permissions', JSON.stringify(data.permissions))
         return data.permissions
       } catch (error) {
         console.error('Failed to fetch menu permissions:', error)
@@ -195,17 +196,12 @@ export const useUserStore = defineStore('user', () => {
       }
     }
 
-    return menuPermissions.value
+    return permissions.value
   }
 
   // 检查权限
   const hasPermission = (permission: string): boolean => {
     return permissions.value.includes(permission) || menuPermissions.value.includes(permission)
-  }
-
-  // 检查菜单权限
-  const hasMenuPermission = (menuCode: string): boolean => {
-    return menuPermissions.value.includes(menuCode)
   }
 
   // 检查角色
@@ -219,14 +215,6 @@ export const useUserStore = defineStore('user', () => {
       try {
         // 获取用户基本信息
         await getUserInfo()
-        // 确保菜单已加载
-        if (!userMenus.value.length) {
-          await getUserMenus()
-        }
-        // 确保权限已加载
-        if (!menuPermissions.value.length) {
-          await getMenuPermissions()
-        }
       } catch (error) {
         console.error('Failed to init user data:', error)
         throw error
@@ -243,81 +231,6 @@ export const useUserStore = defineStore('user', () => {
     tenantStore.clearTenantData()
     // 重置动态路由状态
     resetDynamicRoutes()
-  }
-
-  // 构建菜单树
-  const buildMenuTree = (menus: Menu[]): Menu[] => {
-    if (!menus || menus.length === 0) {
-      return []
-    }
-
-    const menuMap = new Map<number, Menu>()
-    const roots: Menu[] = []
-
-    // 过滤掉隐藏的菜单和权限类型的菜单，只保留目录和菜单类型
-    const visibleMenus = menus.filter(menu =>
-      !menu.is_hidden &&
-      menu.status === 1 &&
-      (menu.type === 'directory' || menu.type === 'menu')
-    )
-
-    // 先排序菜单
-    const sortedMenus = [...visibleMenus].sort((a, b) => a.sort_order - b.sort_order)
-
-    // 将所有菜单按id存储到map中，并初始化children数组
-    sortedMenus.forEach(menu => {
-      menuMap.set(menu.id, { ...menu, children: [] })
-    })
-
-    // 构建树形结构
-    sortedMenus.forEach(menu => {
-      const menuItem = menuMap.get(menu.id)!
-      if (menu.parent_id === 0) {
-        roots.push(menuItem)
-      } else {
-        const parent = menuMap.get(menu.parent_id)
-        if (parent) {
-          parent.children = parent.children || []
-          parent.children.push(menuItem)
-        }
-      }
-    })
-
-    // 递归排序子菜单
-    const sortChildren = (items: Menu[]) => {
-      items.forEach(item => {
-        if (item.children && item.children.length > 0) {
-          item.children.sort((a, b) => a.sort_order - b.sort_order)
-          sortChildren(item.children)
-        }
-      })
-    }
-
-    sortChildren(roots)
-
-    // 过滤掉没有子菜单的目录类型菜单（除非它们有路径）
-    const filterEmptyDirectories = (items: Menu[]): Menu[] => {
-      return items.filter(item => {
-        // 如果有子菜单，递归过滤子菜单
-        if (item.children && item.children.length > 0) {
-          item.children = filterEmptyDirectories(item.children)
-        }
-
-        // 保留菜单类型的项目
-        if (item.type === 'menu') {
-          return true
-        }
-
-        // 对于目录类型，只有当它有子菜单或者有路径时才保留
-        if (item.type === 'directory') {
-          return (item.children && item.children.length > 0) || item.path
-        }
-
-        return false
-      })
-    }
-
-    return filterEmptyDirectories(roots)
   }
 
   // 将菜单转换为路由
@@ -383,13 +296,17 @@ export const useUserStore = defineStore('user', () => {
 
   // 获取动态路由
   const getDynamicRoutes = (): RouteRecordRaw[] => {
+      console.log('getDynamicRoutes')
     if (!userMenus.value.length) {
       return []
     }
 
-    // 构建菜单树
-    const menuTree = buildMenuTree(userMenus.value)
 
+
+
+    // 构建菜单树
+    const menuTree = userMenus.value
+      console.log('menuTree', menuTree)
     // 如果没有可用的菜单，返回空数组
     if (!menuTree.length) {
       return []
@@ -412,13 +329,11 @@ export const useUserStore = defineStore('user', () => {
     getUserInfo,
     clearUserInfo,
     getUserMenus,
-    getMenuPermissions,
+    getPermissions,
     hasPermission,
-    hasMenuPermission,
     hasRole,
     initUserData,
     logout,
-    buildMenuTree,
     getDynamicRoutes
   }
 })
