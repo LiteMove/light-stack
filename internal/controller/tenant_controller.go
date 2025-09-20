@@ -103,6 +103,16 @@ func (c *TenantController) CreateTenant(ctx *gin.Context) {
 	})
 }
 
+// GetSelectList 获取下拉租户列表
+func (c *TenantController) GetSelectList(ctx *gin.Context) {
+	tenants, err := c.tenantService.GetSelectList()
+	if err != nil {
+		response.InternalServerError(ctx, err.Error())
+		return
+	}
+	response.Success(ctx, tenants)
+}
+
 // GetTenants 获取租户列表
 func (c *TenantController) GetTenants(ctx *gin.Context) {
 	var req TenantListRequest

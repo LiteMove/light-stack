@@ -61,6 +61,13 @@ export const tenantApi = {
       params
     })
   },
+    // 获取租户下拉列表
+    getTenantSelectList(): Promise<ApiResponse<Tenant[]>> {
+      return request({
+        url: '/v1/admin/tenants/list',
+        method: 'get'
+      })
+    },
 
   // 获取租户详情
   getTenant(id: number): Promise<ApiResponse<Tenant>> {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+
 	"github.com/LiteMove/light-stack/internal/model"
 
 	"gorm.io/gorm"
@@ -29,6 +30,8 @@ type TenantRepository interface {
 	NameExists(name string) (bool, error)
 	// 检查租户是否有用户
 	HasUsers(id uint64) (bool, error)
+	// 获取启用的租户列表
+	GetSelectList() ([]*model.Tenant, error)
 }
 
 // tenantRepository 租户数据访问实现
@@ -148,4 +151,13 @@ func (r *tenantRepository) HasUsers(id uint64) (bool, error) {
 		Where("tenant_id = ?", id).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *tenantRepository) GetSelectList() ([]*model.Tenant, error) {
+	var tenants []*model.Tenant
+	err := r.db.Find(&tenants).Error
+	if err != nil {
+		return nil, err
+	}
+	return tenants, nil
 }

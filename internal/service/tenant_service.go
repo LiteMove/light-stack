@@ -29,12 +29,17 @@ type TenantService interface {
 
 	// 租户验证
 	ValidateTenant(domain string) (*model.Tenant, error)
+	GetSelectList() ([]*model.Tenant, error)
 }
 
 // tenantService 租户服务实现
 type tenantService struct {
 	tenantRepo repository.TenantRepository
 	userRepo   repository.UserRepository
+}
+
+func (s *tenantService) GetSelectList() ([]*model.Tenant, error) {
+	return s.tenantRepo.GetSelectList()
 }
 
 // NewTenantService 创建租户服务

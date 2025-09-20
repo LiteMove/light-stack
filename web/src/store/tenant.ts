@@ -61,14 +61,10 @@ export const useTenantStore = defineStore('tenant', () => {
     if (!checkIsSuperAdmin()) return []
 
     try {
-      const response = await tenantApi.getTenantList({
-        page: 1,
-        page_size: 20, // 获取所有租户
-        status: 1 // 只获取启用的租户
-      })
+      const response = await tenantApi.getTenantSelectList()
       
       if (response.data) {
-        tenantList.value = response.data.list || []
+        tenantList.value = response.data || []
       }
       return tenantList.value
     } catch (error) {

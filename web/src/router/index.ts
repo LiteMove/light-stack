@@ -76,49 +76,73 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-  // 确保用户数据已加载
-  if (!userStore.userInfo) {
-    try {
+  try {
+    // 确保用户数据已加载
+    if (!userStore.userInfo) {
       await userStore.initUserData()
-    } catch (error) {
-      console.error('Failed to init user data:', error)
-      // 初始化失败，清除token并跳转到登录页
-      userStore.logout()
-      next('/login')
+    }
+
+    // 确保菜单数据已加载
+    if (!userStore.userMenus.length) {
+      await userStore.getUserMenus()
+    }
+
+    console.log('userStore.userMenus:', userStore.userMenus)
+
+    // 检查是否需要添加动态路由
+    const needAddRoutes = userStore.userMenus.length > 0 && !dynamicRoutesAdded
+
+    if (needAddRoutes) {
+      console.log('Adding dynamic routes...')
+      const dynamicRoutes = userStore.getDynamicRoutes()
+      console.log('dynamicRoutes:', dynamicRoutes)
+
+      // 添加动态路由到路由器
+      dynamicRoutes.forEach(route => {
+        router.addRoute(route)
+      })
+
+      dynamicRoutesAdded = true
+      console.log('Dynamic routes added successfully')
+
+      // 如果当前要访问的路由是动态路由，重新导航
+      const isMatchingDynamicRoute = (routes: any[], targetPath: string): boolean => {
+        return routes.some(route => {
+          // 检查当前路由
+          if (route.path && targetPath.startsWith(route.path)) {
+            return true
+          }
+          // 递归检查子路由
+          if (route.children && route.children.length > 0) {
+            return isMatchingDynamicRoute(route.children, targetPath)
+          }
+          return false
+        })
+      }
+
+      if (isMatchingDynamicRoute(dynamicRoutes, to.path)) {
+        console.log('Redirecting to dynamic route:', to.path)
+        next({ ...to, replace: true })
+        return
+      }
+    }
+
+    // 如果用户数据已加载但没有菜单（可能是权限问题），仍然允许访问基础页面
+    if (!userStore.userMenus.length && to.path !== '/' && to.path !== '/dashboard') {
+      console.warn('No user menus available, redirecting to dashboard')
+      next('/dashboard')
       return
     }
-  }
 
-  console.log('userStore.userMenus:', userStore.userMenus)
+    next()
 
-  // 检查是否需要添加动态路由
-  const needAddRoutes = userStore.userMenus.length > 0 && !dynamicRoutesAdded
-
-  if (needAddRoutes) {
-    console.log('Adding dynamic routes...')
-    const dynamicRoutes = userStore.getDynamicRoutes()
-    console.log('dynamicRoutes:', dynamicRoutes)
-
-    // 添加动态路由到路由器
-    dynamicRoutes.forEach(route => {
-      router.addRoute(route)
-    })
-
-    dynamicRoutesAdded = true
-
-    // 重新导航到当前路径以确保动态路由可用
-    next({ ...to, replace: true })
+  } catch (error) {
+    console.error('Failed to init user data:', error)
+    // 初始化失败，清除token并跳转到登录页
+    userStore.logout()
+    next('/login')
     return
   }
-
-  // 如果用户数据已加载但没有菜单（可能是权限问题），仍然允许访问基础页面
-  if (!userStore.userMenus.length && to.path !== '/' && to.path !== '/dashboard') {
-    console.warn('No user menus available, redirecting to dashboard')
-    next('/dashboard')
-    return
-  }
-
-  next()
 })
 
 // 重置动态路由状态的方法

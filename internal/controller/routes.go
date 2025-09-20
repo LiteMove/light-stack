@@ -94,8 +94,9 @@ func RegisterRoutes(r *gin.Engine) {
 				// 租户管理
 				tenants := admin.Group("/tenants")
 				{
-					tenants.POST("", tenantController.CreateTenant)                 // 创建租户
-					tenants.GET("", tenantController.GetTenants)                    // 获取租户列表
+					tenants.POST("", tenantController.CreateTenant) // 创建租户
+					tenants.GET("", tenantController.GetTenants)
+					tenants.GET("/list", tenantController.GetSelectList)            // 获取租户列表
 					tenants.GET("/:id", tenantController.GetTenant)                 // 获取租户详情
 					tenants.PUT("/:id", tenantController.UpdateTenant)              // 更新租户
 					tenants.DELETE("/:id", tenantController.DeleteTenant)           // 删除租户
