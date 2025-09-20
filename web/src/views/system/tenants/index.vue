@@ -386,7 +386,7 @@ const handleDelete = async (row) => {
     ElMessage.success('删除成功')
     getTenantList()
   } catch (error) {
-    ElMessage.error('删除失败: ' + error.message)
+    console.error('删除失败:', error)
   }
 }
 
@@ -411,7 +411,8 @@ const toggleStatus = async (row) => {
     getTenantList()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(`${statusText}失败: ` + error.message)
+      // 错误信息已经在request拦截器中显示了，这里不需要再显示
+      console.error('状态更新失败:', error)
     }
   }
 }
@@ -447,7 +448,8 @@ const batchUpdateStatus = async (status) => {
     selectedRows.value = []
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(`批量${statusText}失败: ` + error.message)
+      // 错误信息已经在request拦截器中显示了，这里不需要再显示
+      console.error('批量状态更新失败:', error)
     }
   }
 }

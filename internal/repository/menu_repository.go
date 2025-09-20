@@ -20,6 +20,7 @@ type MenuRepository interface {
 	GetByParentID(parentID uint64) ([]model.Menu, error)
 	GetTree() ([]model.Menu, error)
 	GetUserMenus(userID uint64) ([]model.Menu, error)
+	GetUserPermissions(userID uint64) ([]string, error)
 	GetRoleMenus(roleID uint64) ([]model.Menu, error)
 
 	// 状态操作
@@ -148,6 +149,18 @@ func (r *menuRepository) GetUserMenus(userID uint64) ([]model.Menu, error) {
 		Order("menus.sort_order ASC, menus.id ASC").
 		Find(&menus).Error
 	return menus, err
+}
+
+// GetUserPermissions 获取用户权限代码
+func (r *menuRepository) GetUserPermissions(userID uint64) ([]string, error) {
+	var permissions []string
+	err := r.db.Table("menus").
+		Select("DISTINCT menus.permission_code").
+		Joins("JOIN role_menu_permissions ON menus.id = role_menu_permissions.menu_id").
+		Joins("JOIN user_roles ON role_menu_permissions.role_id = user_roles.role_id").
+		Where("user_roles.user_id = ? AND menus.status = ? AND menus.permission_code != ''", userID, 1).
+		Pluck("permission_code", &permissions).Error
+	return permissions, err
 }
 
 // GetRoleMenus 获取角色菜单

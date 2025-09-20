@@ -94,12 +94,37 @@ export const useUserStore = defineStore('user', () => {
           console.error('Failed to parse stored user info:', error)
         }
       } else {
-        // 从API获取用户信息
+        // 从API获取用户信息（包含菜单和权限）
         try {
           const { data } = await authApi.getUserInfo()
-          setUserInfo(data)
+
+          // 处理用户基本信息
+          const userInfoData = {
+            id: data.id,
+            username: data.username,
+            nickname: data.nickname,
+            email: data.email,
+            avatar: data.avatar,
+            roles: data.role_codes || [],
+            permissions: data.permissions || []
+          }
+
+          setUserInfo(userInfoData)
+
+          // 处理菜单信息
+          if (data.menus) {
+            userMenus.value = data.menus
+          }
+
+          // 处理权限信息
+          if (data.permissions) {
+            permissions.value = data.permissions
+            menuPermissions.value = data.permissions
+          }
+
         } catch (error) {
           console.error('Failed to fetch user info:', error)
+          throw error
         }
       }
     }
@@ -157,9 +182,8 @@ export const useUserStore = defineStore('user', () => {
   // 初始化用户数据
   const initUserData = async () => {
     if (getToken()) {
+      // 现在getUserInfo已经包含了菜单和权限信息
       await getUserInfo()
-      await getUserMenus()
-      await getMenuPermissions()
     }
   }
 

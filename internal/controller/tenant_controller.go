@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"github.com/LiteMove/light-stack/internal/utils"
 	"strconv"
+
+	"github.com/LiteMove/light-stack/internal/utils"
 
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/service"
@@ -91,7 +92,7 @@ func (c *TenantController) CreateTenant(ctx *gin.Context) {
 
 	// 调用服务创建租户
 	if err := c.tenantService.CreateTenant(tenant); err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -127,7 +128,7 @@ func (c *TenantController) GetTenants(ctx *gin.Context) {
 	// 调用服务获取租户列表
 	tenants, total, err := c.tenantService.GetTenantList(req.Page, req.PageSize, req.Keyword, req.Status)
 	if err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -185,7 +186,7 @@ func (c *TenantController) UpdateTenant(ctx *gin.Context) {
 	// 获取原租户信息
 	existingTenant, err := c.tenantService.GetTenant(id)
 	if err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -234,7 +235,7 @@ func (c *TenantController) DeleteTenant(ctx *gin.Context) {
 	}
 	// 调用服务删除租户
 	if err := c.tenantService.DeleteTenant(id); err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -272,7 +273,7 @@ func (c *TenantController) UpdateTenantStatus(ctx *gin.Context) {
 
 	// 调用服务更新状态
 	if err := c.tenantService.UpdateTenantStatus(id, req.Status); err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -292,7 +293,7 @@ func (c *TenantController) CheckDomain(ctx *gin.Context) {
 	// 调用服务检查域名
 	exists, err := c.tenantService.CheckDomainExists(domain)
 	if err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -313,7 +314,7 @@ func (c *TenantController) CheckName(ctx *gin.Context) {
 	// 调用服务检查名称
 	exists, err := c.tenantService.CheckNameExists(name)
 	if err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 

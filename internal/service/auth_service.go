@@ -39,13 +39,15 @@ type AuthService interface {
 type authService struct {
 	userRepo repository.UserRepository
 	roleRepo repository.RoleRepository
+	menuRepo repository.MenuRepository
 }
 
 // NewAuthService 创建认证服务实例
-func NewAuthService(userRepo repository.UserRepository, roleRepo repository.RoleRepository) AuthService {
+func NewAuthService(userRepo repository.UserRepository, roleRepo repository.RoleRepository, menuRepo repository.MenuRepository) AuthService {
 	return &authService{
 		userRepo: userRepo,
 		roleRepo: roleRepo,
+		menuRepo: menuRepo,
 	}
 }
 
@@ -74,8 +76,7 @@ type UpdateProfileRequest struct {
 
 // LoginResponse 登录响应
 type LoginResponse struct {
-	User  model.UserProfile `json:"user"`
-	Token TokenResponse     `json:"token"`
+	Token TokenResponse `json:"token"`
 }
 
 // TokenResponse token响应
@@ -157,7 +158,6 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*LoginResponse,
 	logger.WithField("user_id", user.ID).Info("User logged in successfully")
 
 	return &LoginResponse{
-		User: user.ToProfile(),
 		Token: TokenResponse{
 			AccessToken: token,
 			TokenType:   "Bearer",
@@ -347,6 +347,27 @@ func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) 
 	}
 
 	profile := user.ToProfile()
+
+	// 获取用户菜单
+	menus, err := s.menuRepo.GetUserMenus(userID)
+	if err != nil {
+		logger.WithField("user_id", userID).Warn("Failed to get user menus:", err)
+	} else {
+		menuProfiles := make([]model.MenuProfile, 0, len(menus))
+		for _, menu := range menus {
+			menuProfiles = append(menuProfiles, menu.ToProfile())
+		}
+		profile.Menus = menuProfiles
+	}
+
+	// 获取用户权限
+	permissions, err := s.menuRepo.GetUserPermissions(userID)
+	if err != nil {
+		logger.WithField("user_id", userID).Warn("Failed to get user permissions:", err)
+	} else {
+		profile.Permissions = permissions
+	}
+
 	return &profile, nil
 }
 

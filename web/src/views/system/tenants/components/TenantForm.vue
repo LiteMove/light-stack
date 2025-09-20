@@ -245,7 +245,8 @@ const handleSubmit = async () => {
 
     emit('success')
   } catch (error) {
-    ElMessage.error((isEdit.value ? '更新' : '创建') + '租户失败: ' + error.message)
+    // 错误信息已在响应拦截器中处理
+    console.error((isEdit.value ? '更新' : '创建') + '租户失败:', error)
   } finally {
     submitting.value = false
   }
@@ -263,7 +264,8 @@ const checkDomainAvailability = async () => {
     }
     return true
   } catch (error) {
-    ElMessage.error('检查域名失败: ' + error.message)
+    // 错误信息已在响应拦截器中处理
+    console.error('检查域名失败:', error)
     return false
   }
 }
@@ -280,7 +282,8 @@ const checkNameAvailability = async () => {
     }
     return true
   } catch (error) {
-    ElMessage.error('检查租户名称失败: ' + error.message)
+    // 错误信息已在响应拦截器中处理
+    console.error('检查租户名称失败:', error)
     return false
   }
 }

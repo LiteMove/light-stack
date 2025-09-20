@@ -113,7 +113,7 @@ func (mc *MenuController) CreateMenu(c *gin.Context) {
 	}
 
 	if err := mc.menuService.CreateMenu(menu); err != nil {
-		response.InternalServerError(c, "创建菜单失败")
+		response.BadRequest(c, "创建菜单失败")
 		return
 	}
 
@@ -143,7 +143,7 @@ func (mc *MenuController) GetMenus(c *gin.Context) {
 
 	menus, total, err := mc.menuService.GetMenuList(req.Page, req.PageSize, req.Name, req.Status)
 	if err != nil {
-		response.InternalServerError(c, "获取菜单列表失败")
+		response.BadRequest(c, "获取菜单列表失败")
 		return
 	}
 
@@ -211,7 +211,7 @@ func (mc *MenuController) UpdateMenu(c *gin.Context) {
 	}
 
 	if err := mc.menuService.UpdateMenu(menu); err != nil {
-		response.InternalServerError(c, "更新菜单失败")
+		response.BadRequest(c, "更新菜单失败")
 		return
 	}
 
@@ -228,7 +228,7 @@ func (mc *MenuController) DeleteMenu(c *gin.Context) {
 	}
 
 	if err := mc.menuService.DeleteMenu(id); err != nil {
-		response.InternalServerError(c, "删除菜单失败")
+		response.BadRequest(c, "删除菜单失败")
 		return
 	}
 
@@ -257,7 +257,7 @@ func (mc *MenuController) GetUserMenuTree(c *gin.Context) {
 
 	tree, err := mc.menuService.GetUserMenuTree(userID.(uint64))
 	if err != nil {
-		response.InternalServerError(c, "获取用户菜单树失败")
+		response.BadRequest(c, "获取用户菜单树失败")
 		return
 	}
 
@@ -275,7 +275,7 @@ func (mc *MenuController) GetRoleMenus(c *gin.Context) {
 
 	menus, err := mc.menuService.GetRoleMenus(roleID)
 	if err != nil {
-		response.InternalServerError(c, "获取角色菜单失败")
+		response.BadRequest(c, "获取角色菜单失败")
 		return
 	}
 
@@ -303,7 +303,7 @@ func (mc *MenuController) UpdateMenuStatus(c *gin.Context) {
 	}
 
 	if err := mc.menuService.UpdateMenuStatus(id, req.Status); err != nil {
-		response.InternalServerError(c, "更新菜单状态失败")
+		response.BadRequest(c, "更新菜单状态失败")
 		return
 	}
 
@@ -324,7 +324,7 @@ func (mc *MenuController) BatchUpdateMenuStatus(c *gin.Context) {
 	}
 
 	if err := mc.menuService.BatchUpdateMenuStatus(req.IDs, req.Status); err != nil {
-		response.InternalServerError(c, "批量更新菜单状态失败")
+		response.BadRequest(c, "批量更新菜单状态失败")
 		return
 	}
 
@@ -352,7 +352,7 @@ func (mc *MenuController) AssignMenusToRole(c *gin.Context) {
 	}
 
 	if err := mc.menuService.AssignMenusToRole(roleID, req.MenuIDs); err != nil {
-		response.InternalServerError(c, "分配菜单失败")
+		response.BadRequest(c, "分配菜单失败")
 		return
 	}
 
@@ -362,15 +362,15 @@ func (mc *MenuController) AssignMenusToRole(c *gin.Context) {
 // GetMenuPermissions 获取用户菜单权限
 func (mc *MenuController) GetMenuPermissions(c *gin.Context) {
 	// 从上下文获取用户ID（由认证中间件注入）
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userId := c.GetUint64("user_id")
+	if userId == 0 {
 		response.Unauthorized(c, "用户ID不存在")
 		return
 	}
 
-	permissions, err := mc.menuService.GetMenuPermissions(userID.(uint64))
+	permissions, err := mc.menuService.GetMenuPermissions(userId)
 	if err != nil {
-		response.InternalServerError(c, "获取菜单权限失败")
+		response.BadRequest(c, "获取菜单权限失败")
 		return
 	}
 

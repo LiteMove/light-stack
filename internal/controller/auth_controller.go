@@ -98,13 +98,13 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 // GetProfile 获取用户信息
 func (c *AuthController) GetProfile(ctx *gin.Context) {
 	// 从上下文中获取用户ID（由JWT中间件设置）
-	userID, exists := ctx.Get("user_id")
-	if !exists {
+	userId := ctx.GetUint64("user_id")
+	if userId == 0 {
 		response.Unauthorized(ctx, "未授权")
 		return
 	}
 
-	profile, err := c.authService.GetUserProfile(userID.(uint64))
+	profile, err := c.authService.GetUserProfile(userId)
 	if err != nil {
 		response.BadRequest(ctx, err.Error())
 		return

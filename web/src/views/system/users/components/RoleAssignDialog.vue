@@ -284,7 +284,8 @@ const handleSubmit = async () => {
     emit('success')
     handleClose()
   } catch (error: any) {
-    ElMessage.error(error.message || '角色分配失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('角色分配失败:', error)
   } finally {
     loading.value = false
   }

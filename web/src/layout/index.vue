@@ -40,6 +40,7 @@ const sidebarWidth = computed(() => {
   position: relative;
   height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
 
 .el-aside {
@@ -59,5 +60,30 @@ const sidebarWidth = computed(() => {
   padding: 20px;
   min-height: calc(100vh - 60px);
   overflow-y: auto;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .el-aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    height: 100vh;
+  }
+
+  .el-container[direction="vertical"] {
+    margin-left: 0;
+  }
+
+  .el-main {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .el-main {
+    padding: 5px;
+  }
 }
 </style>

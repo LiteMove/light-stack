@@ -134,34 +134,25 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
     const response = await authApi.login(loginForm)
-    // 更安全的解构方式
+
+    // 后端现在只返回token信息
     const responseData = response.data || response
-    let token, user
-    // 检查token和user的提取
-    if (responseData.token && responseData.user) {
+    let token
+
+    // 检查token的提取
+    if (responseData.token) {
       token = responseData.token
-      user = responseData.user
-    } else if (responseData.data && responseData.data.token && responseData.data.user) {
+    } else if (responseData.data && responseData.data.token) {
       // 如果数据在data字段里
       token = responseData.data.token
-      user = responseData.data.user
     } else {
       console.error('Invalid response structure:', responseData)
       ElMessage.error('登录响应格式错误')
       return
     }
-    
-    // 保存token和用户信息
+
+    // 只保存token，用户信息将在路由守卫中获取
     userStore.setToken(token.access_token.trim())
-    userStore.setUserInfo({
-      id: user.id,
-      username: user.username,
-      nickname: user.nickname,
-      email: user.email,
-      avatar: user.avatar,
-      roles: user.role_codes || [],
-      permissions: user.permissions || []
-    })
 
     ElMessage.success('登录成功')
     router.push('/')

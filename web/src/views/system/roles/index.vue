@@ -348,7 +348,8 @@ const fetchRoles = async () => {
     roleList.value = data.list
     pagination.total = data.total
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('获取角色列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -423,7 +424,8 @@ const handleDelete = async (row: Role) => {
     refreshRoles()
   } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      // 错误信息已在响应拦截器中处理
+      console.error('删除角色失败:', error)
     }
   }
 }
@@ -437,7 +439,8 @@ const handleStatusChange = async (row: Role) => {
   } catch (error) {
     // 恢复状态
     row.status = oldStatus
-    ElMessage.error('状态更新失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('状态更新失败:', error)
   }
 }
 
@@ -454,7 +457,8 @@ const exportRoles = async () => {
   try {
     ElMessage.info('导出功能开发中...')
   } catch (error) {
-    ElMessage.error('导出失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('导出失败:', error)
   }
 }
 
@@ -471,7 +475,8 @@ const batchEnable = async () => {
     ElMessage.success('批量启用成功')
     refreshRoles()
   } catch (error) {
-    ElMessage.error('批量启用失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('批量启用失败:', error)
   }
 }
 
@@ -483,7 +488,8 @@ const batchDisable = async () => {
     ElMessage.success('批量禁用成功')
     refreshRoles()
   } catch (error) {
-    ElMessage.error('批量禁用失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('批量禁用失败:', error)
   }
 }
 
@@ -506,7 +512,8 @@ const batchDelete = async () => {
     refreshRoles()
   } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error('批量删除失败')
+      // 错误信息已在响应拦截器中处理
+      console.error('批量删除失败:', error)
     }
   }
 }

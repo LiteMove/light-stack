@@ -379,7 +379,8 @@ const handleSubmit = async () => {
     emit('success')
     handleClose()
   } catch (error: any) {
-    ElMessage.error(error.message || '菜单权限配置保存失败')
+    // 错误信息已在响应拦截器中处理
+    console.error('菜单权限配置保存失败:', error)
   } finally {
     submitting.value = false
   }

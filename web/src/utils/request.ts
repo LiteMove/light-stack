@@ -88,7 +88,8 @@ request.interceptors.response.use(
       return data
     }
 
-    // 其他状态码都是错误
+    // 其他状态码都是错误，直接显示错误信息并抛出异常
+    ElMessage.error(data.message || '请求失败')
     return Promise.reject(new Error(data.message || '请求失败'))
   },
   (error) => {
@@ -97,27 +98,47 @@ request.interceptors.response.use(
     if (response) {
       const { status, data } = response
 
+      // 如果有响应体且包含具体错误信息，优先使用响应体中的信息
+      if (data && data.message) {
+        ElMessage.error(data.message)
+        // 抛出包含正确错误信息的新错误对象
+        return Promise.reject(new Error(data.message))
+      }
+
+      // 否则根据HTTP状态码显示通用错误信息
+      let errorMessage = ''
       switch (status) {
         case 401:
-          ElMessage.error('登录过期，请重新登录')
+          errorMessage = '登录过期，请重新登录'
+          ElMessage.error(errorMessage)
           const userStore = useUserStore()
           userStore.logout()
           router.push('/login')
           break
         case 403:
-          ElMessage.error('权限不足')
+          errorMessage = '权限不足'
+          ElMessage.error(errorMessage)
           break
         case 404:
-          ElMessage.error('请求的资源不存在')
+          errorMessage = '请求的资源不存在'
+          ElMessage.error(errorMessage)
           break
         case 500:
-          ElMessage.error('服务器内部错误')
+          errorMessage = '服务器内部错误'
+          ElMessage.error(errorMessage)
           break
         default:
-          ElMessage.error(data?.message || '网络错误')
+          errorMessage = '网络错误'
+          ElMessage.error(errorMessage)
+          break
       }
+
+      // 抛出包含正确错误信息的新错误对象
+      return Promise.reject(new Error(errorMessage))
     } else {
-      ElMessage.error('网络连接失败')
+      const errorMessage = '网络连接失败'
+      ElMessage.error(errorMessage)
+      return Promise.reject(new Error(errorMessage))
     }
 
     return Promise.reject(error)

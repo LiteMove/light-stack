@@ -34,7 +34,7 @@ func RegisterRoutes(r *gin.Engine) {
 	roleRepo := repository.NewRoleRepository(db)
 	menuRepo := repository.NewMenuRepository(db)
 	tenantRepo := repository.NewTenantRepository(db)
-	authService := service.NewAuthService(userRepo, roleRepo)
+	authService := service.NewAuthService(userRepo, roleRepo, menuRepo)
 	userService := service.NewUserService(userRepo, roleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)

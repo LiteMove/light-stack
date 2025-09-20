@@ -124,7 +124,7 @@ func (c *RoleController) GetRoles(ctx *gin.Context) {
 
 	roles, total, err := c.roleService.GetList(page, pageSize, status)
 	if err != nil {
-		response.InternalServerError(ctx, "获取角色列表失败")
+		response.BadRequest(ctx, "获取角色列表失败")
 		return
 	}
 

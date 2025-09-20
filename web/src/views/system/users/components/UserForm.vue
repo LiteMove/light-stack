@@ -457,7 +457,8 @@ const handleSubmit = async () => {
     emit('success')
     handleClose()
   } catch (error: any) {
-    ElMessage.error(error.message || (isEdit.value ? '更新失败' : '创建失败'))
+    // 错误信息已在响应拦截器中处理
+    console.error(isEdit.value ? '更新用户失败:' : '创建用户失败:', error)
   } finally {
     loading.value = false
   }
