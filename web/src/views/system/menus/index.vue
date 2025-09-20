@@ -688,7 +688,8 @@ onMounted(() => {
 .menu-management {
   padding: 24px;
   background-color: #f5f6fa;
-  min-height: calc(100vh - 64px);
+  height: 100%;
+  overflow-y: auto;
 
   // 页面头部样式
   .page-header {

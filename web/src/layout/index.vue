@@ -57,9 +57,9 @@ const sidebarWidth = computed(() => {
 
 .el-main {
   background-color: #f5f5f5;
-  padding: 20px;
-  min-height: calc(100vh - 60px);
-  overflow-y: auto;
+  padding: 0;
+  height: calc(100vh - 60px);
+  overflow: hidden;
 }
 
 /* 移动端适配 */

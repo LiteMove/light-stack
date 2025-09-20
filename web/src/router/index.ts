@@ -90,11 +90,15 @@ router.beforeEach(async (to, from, next) => {
   }
 
   console.log('userStore.userMenus:', userStore.userMenus)
-  // 添加动态路由（只添加一次）
-  if (!dynamicRoutesAdded && userStore.userMenus.length > 0) {
-      console.log('Adding dynamic routes...')
+
+  // 检查是否需要添加动态路由
+  const needAddRoutes = userStore.userMenus.length > 0 && !dynamicRoutesAdded
+
+  if (needAddRoutes) {
+    console.log('Adding dynamic routes...')
     const dynamicRoutes = userStore.getDynamicRoutes()
     console.log('dynamicRoutes:', dynamicRoutes)
+
     // 添加动态路由到路由器
     dynamicRoutes.forEach(route => {
       router.addRoute(route)
@@ -102,11 +106,9 @@ router.beforeEach(async (to, from, next) => {
 
     dynamicRoutesAdded = true
 
-    // 如果当前路由是动态路由，需要重新导航
-    if (to.path !== '/' && to.path !== '/dashboard') {
-      next({ ...to, replace: true })
-      return
-    }
+    // 重新导航到当前路径以确保动态路由可用
+    next({ ...to, replace: true })
+    return
   }
 
   // 如果用户数据已加载但没有菜单（可能是权限问题），仍然允许访问基础页面
