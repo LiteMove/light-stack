@@ -37,7 +37,12 @@ func Error(c *gin.Context, code int, message string) {
 
 // BadRequest 400错误
 func BadRequest(c *gin.Context, message string) {
-	Error(c, 400, message)
+	c.JSON(http.StatusBadRequest, Response{
+		Code:      400,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
 }
 
 // Unauthorized 401错误
@@ -72,7 +77,12 @@ func NotFound(c *gin.Context, message string) {
 
 // InternalServerError 500错误
 func InternalServerError(c *gin.Context, message string) {
-	Error(c, 500, message)
+	c.JSON(http.StatusInternalServerError, Response{
+		Code:      500,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now().Unix(),
+	})
 }
 
 // PageData 分页数据结构

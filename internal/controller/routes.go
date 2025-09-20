@@ -69,8 +69,9 @@ func RegisterRoutes(r *gin.Engine) {
 			// 认证相关路由（无需认证）
 			auth := v1.Group("/auth")
 			{
-				auth.POST("/login", authController.Login)          // 用户登录
-				auth.POST("/register", authController.Register)    // 用户注册
+				auth.POST("/login", authController.Login)       // 用户登录
+				auth.POST("/register", authController.Register) // 用户注册
+				auth.GET("/user", authController.GetProfile)
 				auth.POST("/refresh", authController.RefreshToken) // 刷新token
 				auth.POST("/logout", authController.Logout)        // 用户登出
 			}

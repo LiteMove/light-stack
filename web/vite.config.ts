@@ -26,12 +26,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      }
-    }
+    host: '0.0.0.0',
+  // 将你的自定义域名添加到允许列表中
+  allowedHosts: [
+      'test.light-stack.com'
+  ],
+    // 注释掉代理配置，直接使用环境变量中的完整URL
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:8080',
+    //     changeOrigin: true
+    //   }
+    // }
   },
   build: {
     outDir: 'dist',

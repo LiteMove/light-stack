@@ -41,7 +41,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	loginResp, err := c.authService.Login(tenantID, &req)
 	if err != nil {
-		response.InternalServerError(ctx, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -106,7 +106,7 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 
 	profile, err := c.authService.GetUserProfile(userID.(uint64))
 	if err != nil {
-		response.Error(ctx, 404, err.Error())
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
