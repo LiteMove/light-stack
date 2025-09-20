@@ -235,9 +235,11 @@ export const useUserStore = defineStore('user', () => {
 
   // 将菜单转换为路由
   const menuToRoute = (menu: Menu): RouteRecordRaw => {
-    const route: RouteRecordRaw = {
+      let modules = import.meta.glob('../views/**/*.vue')
+      const route: RouteRecordRaw = {
       path: menu.path || `/${menu.code}`,
       name: menu.code,
+      component: modules[`../views/${menu.component}.vue`],
       meta: {
         title: menu.name,
         icon: menu.icon,
@@ -246,6 +248,7 @@ export const useUserStore = defineStore('user', () => {
         permission: menu.code // 添加权限标识
       }
     }
+    console.log('Converted menu to route:', route)
 
     // 根据菜单类型设置组件
     if (menu.type === 'directory') {
@@ -263,14 +266,8 @@ export const useUserStore = defineStore('user', () => {
         }
       }
     } else if (menu.type === 'menu' && menu.component) {
-      // 菜单类型动态导入组件
-      route.component = () => {
-        return import(`@/views/${menu.component}.vue`).catch((error) => {
-          console.warn(`Failed to load component: @/views/${menu.component}.vue`, error)
-          // 如果组件不存在，使用404组件
-          return import('@/views/error/404.vue')
-        })
-      }
+      // 菜单类型使用预加载的模块
+      route.component = modules[`../views/${menu.component}.vue`] || (() => import('../views/error/404.vue'))
     } else if (menu.type === 'menu' && !menu.component) {
       // 如果菜单没有指定组件，使用默认的空组件或404页面
       route.component = () => import('@/views/error/404.vue')
