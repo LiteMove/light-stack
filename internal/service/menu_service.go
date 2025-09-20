@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"gorm.io/gorm"
@@ -65,6 +66,9 @@ func (s *menuService) CreateMenu(menu *model.Menu) error {
 		if parent.Status != 1 {
 			return errors.New("父菜单已禁用")
 		}
+	}
+	if menu.Meta == "" {
+		menu.Meta = "{}"
 	}
 
 	return s.menuRepo.Create(menu)
