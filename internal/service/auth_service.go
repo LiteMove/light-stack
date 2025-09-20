@@ -205,12 +205,19 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 	// 创建用户
 	user := &model.User{
 		Username: req.Username,
-		Email:    req.Email,
 		Password: hashedPassword,
 		Nickname: req.Nickname,
-		Phone:    req.Phone,
 		Status:   1, // 启用状态
 	}
+
+	// 处理可选字段
+	if req.Email != "" {
+		user.Email = &req.Email
+	}
+	if req.Phone != "" {
+		user.Phone = &req.Phone
+	}
+
 	user.TenantID = tenantID
 
 	if err := s.userRepo.Create(user); err != nil {
@@ -359,7 +366,7 @@ func (s *authService) UpdateUserProfile(userID uint64, req *UpdateProfileRequest
 		user.Avatar = req.Avatar
 	}
 	if req.Phone != "" {
-		user.Phone = req.Phone
+		user.Phone = &req.Phone
 	}
 
 	// 保存更新

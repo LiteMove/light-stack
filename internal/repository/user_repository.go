@@ -32,6 +32,8 @@ type UserRepository interface {
 	UsernameExists(tenantID uint64, username string) (bool, error)
 	// 检查邮箱是否存在
 	EmailExists(tenantID uint64, email string) (bool, error)
+	// 检查手机号是否存在
+	PhoneExists(tenantID uint64, phone string) (bool, error)
 	// 获取用户列表（分页）
 	GetList(tenantID uint64, page, pageSize int, status int) ([]*model.User, int64, error)
 	// 更新用户状态
@@ -173,7 +175,16 @@ func (r *userRepository) UsernameExists(tenantID uint64, username string) (bool,
 func (r *userRepository) EmailExists(tenantID uint64, email string) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).
-		Where("tenant_id = ? AND email = ?", tenantID, email).
+		Where("tenant_id = ? AND email = ? AND email != ''", tenantID, email).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// PhoneExists 检查手机号是否存在
+func (r *userRepository) PhoneExists(tenantID uint64, phone string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).
+		Where("tenant_id = ? AND phone = ? AND phone != ''", tenantID, phone).
 		Count(&count).Error
 	return count > 0, err
 }

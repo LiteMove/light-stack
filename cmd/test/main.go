@@ -6,7 +6,6 @@ import (
 	"github.com/LiteMove/light-stack/pkg/logger"
 	"net/http"
 	"os"
-	"time"
 )
 
 func main() {

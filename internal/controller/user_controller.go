@@ -100,12 +100,19 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 	user := &model.User{
 		Username: req.Username,
 		Nickname: req.Nickname,
-		Email:    req.Email,
-		Phone:    req.Phone,
 		Password: req.Password,
 		Status:   req.Status,
 		IsSystem: false,
 	}
+
+	// 处理可选字段
+	if req.Email != "" {
+		user.Email = &req.Email
+	}
+	if req.Phone != "" {
+		user.Phone = &req.Phone
+	}
+
 	user.TenantID = tenantID
 
 	// 调用服务创建用户
@@ -217,9 +224,19 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	// 更新用户信息
 	existingUser.Username = req.Username
 	existingUser.Nickname = req.Nickname
-	existingUser.Email = req.Email
-	existingUser.Phone = req.Phone
 	existingUser.Status = req.Status
+
+	// 处理可选字段
+	if req.Email != "" {
+		existingUser.Email = &req.Email
+	} else {
+		existingUser.Email = nil
+	}
+	if req.Phone != "" {
+		existingUser.Phone = &req.Phone
+	} else {
+		existingUser.Phone = nil
+	}
 
 	// 调用服务更新用户
 	if err := c.userService.UpdateUser(existingUser); err != nil {

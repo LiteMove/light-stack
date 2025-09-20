@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"github.com/LiteMove/light-stack/internal/middleware"
 	"strconv"
 	"strings"
+
+	"github.com/LiteMove/light-stack/internal/middleware"
 
 	"github.com/LiteMove/light-stack/internal/service"
 	"github.com/LiteMove/light-stack/pkg/response"
@@ -40,7 +41,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	loginResp, err := c.authService.Login(tenantID, &req)
 	if err != nil {
-		response.Unauthorized(ctx, err.Error())
+		response.InternalServerError(ctx, err.Error())
 		return
 	}
 

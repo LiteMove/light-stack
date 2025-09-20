@@ -34,8 +34,7 @@ func main() {
 		&model.Permission{},
 		&model.Menu{},
 		&model.UserRole{},
-		&model.RolePermission{},
-		&model.RoleMenu{},
+		&model.RoleMenuPermission{},
 	)
 
 	if err != nil {
@@ -68,7 +67,6 @@ func createBasicRoles() {
 
 	roles := []model.Role{
 		{
-			TenantID:    0,
 			Name:        "超级管理员",
 			Code:        "super_admin",
 			Description: "拥有系统所有权限",
@@ -77,7 +75,6 @@ func createBasicRoles() {
 			SortOrder:   1,
 		},
 		{
-			TenantID:    0,
 			Name:        "租户管理员",
 			Code:        "tenant_admin",
 			Description: "租户管理员，管理本租户下的用户和角色",
@@ -86,7 +83,6 @@ func createBasicRoles() {
 			SortOrder:   2,
 		},
 		{
-			TenantID:    0,
 			Name:        "普通用户",
 			Code:        "user",
 			Description: "普通用户，只能查看和操作自己的信息",
@@ -98,7 +94,7 @@ func createBasicRoles() {
 
 	for _, role := range roles {
 		var existingRole model.Role
-		result := db.Where("code = ? AND tenant_id = ?", role.Code, role.TenantID).First(&existingRole)
+		result := db.Where("code = ?", role.Code).First(&existingRole)
 		if result.Error != nil {
 			// 角色不存在，创建新角色
 			if err := db.Create(&role).Error; err != nil {
@@ -129,14 +125,14 @@ func createDefaultAdmin() {
 		}
 
 		// 创建默认管理员
+		email := "admin@lightstack.com"
 		admin := model.User{
-			TenantID:    0,
-			Username:    "admin",
-			Password:    hashedPassword,
-			Nickname:    "系统管理员",
-			Email:       "admin@lightstack.com",
-			Status:      1,
-			IsSystem:    true,
+			Username: "admin",
+			Password: hashedPassword,
+			Nickname: "系统管理员",
+			Email:    &email,
+			Status:   1,
+			IsSystem: true,
 		}
 
 		if err := db.Create(&admin).Error; err != nil {

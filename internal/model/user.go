@@ -12,8 +12,8 @@ type User struct {
 	Username      string     `json:"username" gorm:"not null;size:50;uniqueIndex:uk_tenant_username" validate:"required,min=3,max=50"`
 	Password      string     `json:"-" gorm:"not null;size:255" validate:"required,min=6"`
 	Nickname      string     `json:"nickname" gorm:"size:100" validate:"max=100"`
-	Email         string     `json:"email" gorm:"size:100;uniqueIndex:uk_tenant_email" validate:"email,max=100"`
-	Phone         string     `json:"phone" gorm:"size:20;uniqueIndex:uk_tenant_phone" validate:"max=20"`
+	Email         *string    `json:"email" gorm:"size:100;uniqueIndex:uk_tenant_email" validate:"omitempty,email,max=100"`
+	Phone         *string    `json:"phone" gorm:"size:20;uniqueIndex:uk_tenant_phone" validate:"omitempty,max=20"`
 	Avatar        string     `json:"avatar" gorm:"size:255"`
 	Status        int        `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3"`
 	IsSystem      bool       `json:"is_system" gorm:"not null;default:false;index"`
@@ -38,8 +38,8 @@ type UserProfile struct {
 	TenantID    uint64        `json:"tenant_id"`
 	Username    string        `json:"username"`
 	Nickname    string        `json:"nickname"`
-	Email       string        `json:"email"`
-	Phone       string        `json:"phone"`
+	Email       *string       `json:"email"`
+	Phone       *string       `json:"phone"`
 	Avatar      string        `json:"avatar"`
 	Status      int           `json:"status"`
 	IsSystem    bool          `json:"is_system"`

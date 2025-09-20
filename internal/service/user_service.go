@@ -68,13 +68,24 @@ func (s *userService) CreateUser(user *model.User) error {
 	}
 
 	// 检查邮箱是否已存在（如果提供了邮箱）
-	if user.Email != "" {
-		exists, err := s.userRepo.EmailExists(user.TenantID, user.Email)
+	if user.Email != nil && *user.Email != "" {
+		exists, err := s.userRepo.EmailExists(user.TenantID, *user.Email)
 		if err != nil {
 			return fmt.Errorf("检查邮箱是否存在失败: %w", err)
 		}
 		if exists {
 			return errors.New("邮箱已存在")
+		}
+	}
+
+	// 检查手机号是否已存在（如果提供了手机号）
+	if user.Phone != nil && *user.Phone != "" {
+		exists, err := s.userRepo.PhoneExists(user.TenantID, *user.Phone)
+		if err != nil {
+			return fmt.Errorf("检查手机号是否存在失败: %w", err)
+		}
+		if exists {
+			return errors.New("手机号已存在")
 		}
 	}
 
@@ -141,13 +152,38 @@ func (s *userService) UpdateUser(user *model.User) error {
 	}
 
 	// 如果邮箱发生变化，检查新邮箱是否已存在
-	if user.Email != "" && user.Email != existingUser.Email {
-		exists, err := s.userRepo.EmailExists(user.TenantID, user.Email)
-		if err != nil {
-			return fmt.Errorf("检查邮箱是否存在失败: %w", err)
+	if user.Email != nil && *user.Email != "" {
+		// 检查邮箱是否真的发生了变化
+		existingEmailValue := ""
+		if existingUser.Email != nil {
+			existingEmailValue = *existingUser.Email
 		}
-		if exists {
-			return errors.New("邮箱已存在")
+		if *user.Email != existingEmailValue {
+			exists, err := s.userRepo.EmailExists(user.TenantID, *user.Email)
+			if err != nil {
+				return fmt.Errorf("检查邮箱是否存在失败: %w", err)
+			}
+			if exists {
+				return errors.New("邮箱已存在")
+			}
+		}
+	}
+
+	// 如果手机号发生变化，检查新手机号是否已存在
+	if user.Phone != nil && *user.Phone != "" {
+		// 检查手机号是否真的发生了变化
+		existingPhoneValue := ""
+		if existingUser.Phone != nil {
+			existingPhoneValue = *existingUser.Phone
+		}
+		if *user.Phone != existingPhoneValue {
+			exists, err := s.userRepo.PhoneExists(user.TenantID, *user.Phone)
+			if err != nil {
+				return fmt.Errorf("检查手机号是否存在失败: %w", err)
+			}
+			if exists {
+				return errors.New("手机号已存在")
+			}
 		}
 	}
 
@@ -197,9 +233,13 @@ func (s *userService) GetUserList(tenantID uint64, page, pageSize int, keyword s
 		keyword = strings.ToLower(keyword)
 		var filteredUsers []*model.User
 		for _, user := range users {
+			emailStr := ""
+			if user.Email != nil {
+				emailStr = *user.Email
+			}
 			if strings.Contains(strings.ToLower(user.Username), keyword) ||
 				strings.Contains(strings.ToLower(user.Nickname), keyword) ||
-				strings.Contains(strings.ToLower(user.Email), keyword) {
+				strings.Contains(strings.ToLower(emailStr), keyword) {
 				filteredUsers = append(filteredUsers, user)
 			}
 		}
