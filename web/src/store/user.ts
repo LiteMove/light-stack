@@ -235,11 +235,13 @@ export const useUserStore = defineStore('user', () => {
 
   // 将菜单转换为路由
   const menuToRoute = (menu: Menu): RouteRecordRaw => {
+      console.log('[USER STORE] Converting menu to route:', menu.name, menu.path, menu.component)
       let modules = import.meta.glob('../views/**/*.vue')
+      console.log('[USER STORE] Available modules:', Object.keys(modules))
+
       const route: RouteRecordRaw = {
       path: menu.path || `/${menu.code}`,
       name: menu.code,
-      component: modules[`../views/${menu.component}.vue`],
       meta: {
         title: menu.name,
         icon: menu.icon,
@@ -248,10 +250,11 @@ export const useUserStore = defineStore('user', () => {
         permission: menu.code // 添加权限标识
       }
     }
-    console.log('Converted menu to route:', route)
+    console.log('[USER STORE] Initial route object:', route)
 
     // 根据菜单类型设置组件
     if (menu.type === 'directory') {
+      console.log('[USER STORE] Setting directory component for:', menu.name)
       // 目录类型使用Layout组件
       route.component = Layout
       // 如果有子菜单，重定向到第一个可见的子菜单
@@ -263,54 +266,73 @@ export const useUserStore = defineStore('user', () => {
         )
         if (firstVisibleChild) {
           route.redirect = firstVisibleChild.path || `/${firstVisibleChild.code}`
+          console.log('[USER STORE] Set redirect to:', route.redirect)
         }
       }
     } else if (menu.type === 'menu' && menu.component) {
+      console.log('[USER STORE] Setting menu component for:', menu.name, 'component:', menu.component)
       // 菜单类型使用预加载的模块
-      route.component = modules[`../views/${menu.component}.vue`] || (() => import('../views/error/404.vue'))
+      const componentPath = `../views/${menu.component}.vue`
+      console.log('[USER STORE] Looking for component at:', componentPath)
+
+      if (modules[componentPath]) {
+        route.component = modules[componentPath]
+        console.log('[USER STORE] Found component:', componentPath)
+      } else {
+        console.error('[USER STORE] Component not found for path:', componentPath)
+        route.component = () => import('../views/error/404.vue')
+      }
     } else if (menu.type === 'menu' && !menu.component) {
+      console.log('[USER STORE] No component specified for menu:', menu.name)
       // 如果菜单没有指定组件，使用默认的空组件或404页面
-      route.component = () => import('@/views/error/404.vue')
+      route.component = () => import('../views/error/404.vue')
     }
 
     // 处理子菜单
     if (menu.children && menu.children.length > 0) {
+      console.log('[USER STORE] Processing children for:', menu.name, 'children count:', menu.children.length)
       const childRoutes = menu.children
-        .filter(child =>
-          !child.is_hidden &&
-          child.status === 1 &&
-          child.type !== 'permission'
-        )
+        .filter(child => {
+          const isValid = !child.is_hidden && child.status === 1 && child.type !== 'permission'
+          console.log('[USER STORE] Child menu filter:', child.name, 'valid:', isValid)
+          return isValid
+        })
         .map(child => menuToRoute(child))
 
       if (childRoutes.length > 0) {
         route.children = childRoutes
+        console.log('[USER STORE] Added children routes:', childRoutes.length)
       }
     }
 
+    console.log('[USER STORE] Final route:', route)
     return route
   }
 
   // 获取动态路由
   const getDynamicRoutes = (): RouteRecordRaw[] => {
-      console.log('getDynamicRoutes')
+    console.log('[USER STORE] getDynamicRoutes called')
+    console.log('[USER STORE] userMenus length:', userMenus.value.length)
+
     if (!userMenus.value.length) {
+      console.log('[USER STORE] No user menus, returning empty routes')
       return []
     }
 
-
-
-
     // 构建菜单树
     const menuTree = userMenus.value
-      console.log('menuTree', menuTree)
+    console.log('[USER STORE] menuTree:', JSON.stringify(menuTree, null, 2))
+
     // 如果没有可用的菜单，返回空数组
     if (!menuTree.length) {
+      console.log('[USER STORE] Empty menu tree, returning empty routes')
       return []
     }
 
     // 转换为路由配置
-    return menuTree.map(menu => menuToRoute(menu))
+    const routes = menuTree.map(menu => menuToRoute(menu))
+    console.log('[USER STORE] Generated routes:', JSON.stringify(routes, null, 2))
+    return routes
   }
 
   return {
