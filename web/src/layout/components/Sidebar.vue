@@ -7,7 +7,7 @@
       </router-link>
     </div>
 
-    <el-scrollbar>
+    <div class="sidebar-menu-wrapper">
       <el-menu
         :default-active="activeMenu"
         :collapse="collapsed"
@@ -26,7 +26,7 @@
           :base-path="route.path"
         />
       </el-menu>
-    </el-scrollbar>
+    </div>
   </div>
 </template>
 
@@ -102,5 +102,27 @@ const routes = computed(() => {
 
 .el-menu {
   border-right: none;
+}
+
+.sidebar-menu-wrapper {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
+
+.sidebar-menu-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-menu-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.sidebar-menu-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 </style>

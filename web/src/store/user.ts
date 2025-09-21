@@ -234,8 +234,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 将菜单转换为路由
-  const menuToRoute = (menu: Menu): RouteRecordRaw => {
-      console.log('[USER STORE] Converting menu to route:', menu.name, menu.path, menu.component)
+  const menuToRoute = (menu: Menu, isChild: boolean = false): RouteRecordRaw => {
+      console.log('[USER STORE] Converting menu to route:', menu.name, menu.path, menu.component, 'isChild:', isChild)
       let modules = import.meta.glob('../views/**/*.vue')
       console.log('[USER STORE] Available modules:', Object.keys(modules))
 
@@ -255,37 +255,122 @@ export const useUserStore = defineStore('user', () => {
     // 根据菜单类型设置组件
     if (menu.type === 'directory') {
       console.log('[USER STORE] Setting directory component for:', menu.name)
-      // 目录类型使用Layout组件
-      route.component = Layout
-      // 如果有子菜单，重定向到第一个可见的子菜单
-      if (menu.children && menu.children.length > 0) {
-        const firstVisibleChild = menu.children.find(child =>
-          !child.is_hidden &&
-          child.type === 'menu' &&
-          child.status === 1
-        )
-        if (firstVisibleChild) {
-          route.redirect = firstVisibleChild.path || `/${firstVisibleChild.code}`
-          console.log('[USER STORE] Set redirect to:', route.redirect)
+      // 顶级目录使用Layout组件，子级目录不使用Layout
+      if (!isChild) {
+        route.component = Layout
+        // 如果有子菜单，重定向到第一个可见的子菜单
+        if (menu.children && menu.children.length > 0) {
+          const firstVisibleChild = menu.children.find(child =>
+            !child.is_hidden &&
+            child.type === 'menu' &&
+            child.status === 1
+          )
+          if (firstVisibleChild) {
+            route.redirect = firstVisibleChild.path || `/${firstVisibleChild.code}`
+            console.log('[USER STORE] Set redirect to:', route.redirect)
+          }
+        }
+      } else {
+        // 子级目录不使用组件，只是路由容器
+        route.component = undefined
+      }
+    } else if (menu.type === 'menu') {
+      console.log('[USER STORE] Setting menu component for:', menu.name, 'component:', menu.component)
+      
+      if (menu.component) {
+        const componentPath = `../views/${menu.component}.vue`
+        console.log('[USER STORE] Looking for component at:', componentPath)
+        console.log('[USER STORE] Available modules include:', Object.keys(modules).slice(0, 5))
+
+        if (!isChild) {
+          // 顶级菜单：需要包装在Layout中，作为子路由
+          route.component = Layout
+          
+          // 确保组件被正确加载
+          let componentLoader = modules[componentPath]
+          if (!componentLoader) {
+            // 尝试不同的路径匹配方式
+            const altPaths = [
+              `../views/${menu.component}.vue`,
+              `../views/${menu.component}/index.vue`,
+              `../views/${menu.component.toLowerCase()}.vue`,
+              `../views/${menu.component.toLowerCase()}/index.vue`
+            ]
+            
+            for (const altPath of altPaths) {
+              if (modules[altPath]) {
+                componentLoader = modules[altPath]
+                console.log('[USER STORE] Found component at alternative path:', altPath)
+                break
+              }
+            }
+          }
+          
+          route.children = [{
+            path: '',
+            name: menu.code + 'Child',
+            component: componentLoader || (() => import('../views/error/404.vue')),
+            meta: {
+              title: menu.name,
+              icon: menu.icon,
+              hidden: menu.is_hidden,
+              type: menu.type,
+              permission: menu.code
+            }
+          }]
+        } else {
+          // 子级菜单：直接使用组件，不再包装Layout
+          let componentLoader = modules[componentPath]
+          if (!componentLoader) {
+            // 尝试不同的路径匹配方式
+            const altPaths = [
+              `../views/${menu.component}.vue`,
+              `../views/${menu.component}/index.vue`,
+              `../views/${menu.component.toLowerCase()}.vue`,
+              `../views/${menu.component.toLowerCase()}/index.vue`
+            ]
+            
+            for (const altPath of altPaths) {
+              if (modules[altPath]) {
+                componentLoader = modules[altPath]
+                console.log('[USER STORE] Found component at alternative path:', altPath)
+                break
+              }
+            }
+          }
+          
+          route.component = componentLoader || (() => import('../views/error/404.vue'))
+        }
+        
+        if (modules[componentPath]) {
+          console.log('[USER STORE] Found component:', componentPath)
+        } else {
+          console.error('[USER STORE] Component not found for path:', componentPath)
+          console.log('[USER STORE] Menu component value:', menu.component)
+        }
+      } else {
+        console.log('[USER STORE] No component specified for menu:', menu.name)
+        
+        if (!isChild) {
+          // 顶级菜单：仍然使用布局包装
+          route.component = Layout
+          route.children = [{
+            path: '',
+            name: menu.code + 'Child',
+            component: () => import('../views/error/404.vue'),
+            meta: {
+              title: menu.name,
+              icon: menu.icon,
+              hidden: menu.is_hidden,
+              type: menu.type,
+              permission: menu.code
+            }
+          }]
+        } else {
+          // 子级菜单：直接使用404组件
+          route.component = () => import('../views/error/404.vue')
         }
       }
-    } else if (menu.type === 'menu' && menu.component) {
-      console.log('[USER STORE] Setting menu component for:', menu.name, 'component:', menu.component)
-      // 菜单类型使用预加载的模块
-      const componentPath = `../views/${menu.component}.vue`
-      console.log('[USER STORE] Looking for component at:', componentPath)
-
-      if (modules[componentPath]) {
-        route.component = modules[componentPath]
-        console.log('[USER STORE] Found component:', componentPath)
-      } else {
-        console.error('[USER STORE] Component not found for path:', componentPath)
-        route.component = () => import('../views/error/404.vue')
-      }
-    } else if (menu.type === 'menu' && !menu.component) {
-      console.log('[USER STORE] No component specified for menu:', menu.name)
-      // 如果菜单没有指定组件，使用默认的空组件或404页面
-      route.component = () => import('../views/error/404.vue')
     }
 
     // 处理子菜单
@@ -297,10 +382,15 @@ export const useUserStore = defineStore('user', () => {
           console.log('[USER STORE] Child menu filter:', child.name, 'valid:', isValid)
           return isValid
         })
-        .map(child => menuToRoute(child))
+        .map(child => menuToRoute(child, true)) // 传递isChild=true
 
       if (childRoutes.length > 0) {
-        route.children = childRoutes
+        // 如果当前路由已有children（如顶级menu类型），则合并
+        if (route.children && route.children.length > 0) {
+          route.children.push(...childRoutes)
+        } else {
+          route.children = childRoutes
+        }
         console.log('[USER STORE] Added children routes:', childRoutes.length)
       }
     }
