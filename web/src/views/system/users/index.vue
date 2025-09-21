@@ -494,9 +494,8 @@ const fetchUserRoles = async () => {
 // 获取角色列表
 const fetchRoles = async () => {
   try {
-    const params = { page: 1, page_size: 100 }
-    const { data } = await roleApi.getRoles(params)
-    roles.value = data.list
+    const { data } = await roleApi.getActiveRoles()
+    roles.value = data
   } catch (error) {
     // 错误信息已在响应拦截器中处理
     console.error('获取角色列表失败:', error)

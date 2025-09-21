@@ -59,20 +59,20 @@
         <div class="detail-grid">
           <div class="detail-item">
             <span class="label">创建时间：</span>
-            <span class="value">{{ formatDateTime(tenantData.created_at) }}</span>
+            <span class="value">{{ formatDateTime(tenantData.createdAt) }}</span>
           </div>
           <div class="detail-item">
             <span class="label">更新时间：</span>
-            <span class="value">{{ formatDateTime(tenantData.updated_at) }}</span>
+            <span class="value">{{ formatDateTime(tenantData.updatedAt) }}</span>
           </div>
           <div class="detail-item">
             <span class="label">过期时间：</span>
             <span class="value">
-              <div v-if="tenantData.expired_at">
-                <span :class="{ 'text-danger': isExpired(tenantData.expired_at) }">
-                  {{ formatDateTime(tenantData.expired_at) }}
+              <div v-if="tenantData.expiredAt">
+                <span :class="{ 'text-danger': isExpired(tenantData.expiredAt) }">
+                  {{ formatDateTime(tenantData.expiredAt) }}
                 </span>
-                <el-tag v-if="isExpired(tenantData.expired_at)" type="danger" size="small" class="ml-2">
+                <el-tag v-if="isExpired(tenantData.expiredAt)" type="danger" size="small" class="ml-2">
                   已过期
                 </el-tag>
               </div>
@@ -225,9 +225,9 @@ const formatConfig = (config) => {
 
 // 计算剩余天数
 const getDaysUntilExpiry = () => {
-  if (!props.tenantData?.expired_at) return '永久'
+  if (!props.tenantData?.expiredAt) return '永久'
 
-  const expiredDate = new Date(props.tenantData.expired_at)
+  const expiredDate = new Date(props.tenantData.expiredAt)
   const now = new Date()
   const diffTime = expiredDate - now
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))

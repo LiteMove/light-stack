@@ -19,9 +19,9 @@
     >
       <el-row :gutter="20">
         <el-col :span="12">
-          <el-form-item label="父级菜单" prop="parent_id">
+          <el-form-item label="父级菜单" prop="parentId">
             <el-tree-select
-              v-model="form.parent_id"
+              v-model="form.parentId"
               :data="parentOptions"
               :props="treeProps"
               check-strictly
@@ -134,9 +134,9 @@
 
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-form-item label="显示排序" prop="sort_order">
+          <el-form-item label="显示排序" prop="sortOrder">
             <el-input-number
-              v-model="form.sort_order"
+              v-model="form.sortOrder"
               :min="0"
               :max="999"
               controls-position="right"
@@ -155,7 +155,7 @@
         <el-col :span="8">
           <el-form-item label="是否隐藏">
             <el-switch
-              v-model="form.is_hidden"
+              v-model="form.isHidden"
               active-text="隐藏"
               inactive-text="显示"
             />
@@ -220,7 +220,7 @@ const isEdit = computed(() => !!props.formData.id)
 
 // 表单数据
 const form = ref<MenuFormData>({
-  parent_id: 0,
+  parentId: 0,
   name: '',
   code: '',
   type: 'menu',
@@ -229,8 +229,8 @@ const form = ref<MenuFormData>({
   icon: '',
   resource: '',
   action: '',
-  sort_order: 0,
-  is_hidden: false,
+  sortOrder: 0,
+  isHidden: false,
   status: 1,
   meta: ''
 })
@@ -282,7 +282,7 @@ const rules = computed<FormRules>(() => ({
   action: [
     { max: 50, message: '长度不能超过 50 个字符', trigger: 'blur' }
   ],
-  sort_order: [
+  sortOrder: [
     { type: 'number', min: 0, max: 999, message: '排序值应在 0-999 之间', trigger: 'blur' }
   ],
   status: [
@@ -314,7 +314,7 @@ watch(
   (newData) => {
     if (newData) {
       Object.assign(form.value, {
-        parent_id: newData.parent_id || 0,
+        parentId: newData.parentId || 0,
         name: newData.name || '',
         code: newData.code || '',
         type: newData.type || 'menu',
@@ -323,8 +323,8 @@ watch(
         icon: newData.icon || '',
         resource: newData.resource || '',
         action: newData.action || '',
-        sort_order: newData.sort_order || 0,
-        is_hidden: newData.is_hidden || false,
+        sort_order: newData.sortOrder || 0,
+        isHidden: newData.isHidden || false,
         status: newData.status || 1,
         meta: newData.meta || ''
       })
@@ -429,7 +429,7 @@ const generateCode = () => {
 const suggestPath = () => {
   if (!form.value.code || form.value.path) return
 
-  const parentPath = getParentPath(form.value.parent_id)
+  const parentPath = getParentPath(form.value.parentId)
   form.value.path = parentPath ? `${parentPath}/${form.value.code}` : `/${form.value.code}`
 }
 

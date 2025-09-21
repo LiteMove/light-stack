@@ -253,8 +253,8 @@ func (r *menuRepository) AssignMenusToRole(roleID uint64, menuIDs []uint64) erro
 
 	// 批量插入新关联
 	type RoleMenuPermission struct {
-		RoleID uint64 `gorm:"column:role_id"`
-		MenuID uint64 `gorm:"column:menu_id"`
+		RoleID uint64 `gorm:"column:roleId"`
+		MenuID uint64 `gorm:"column:menuId"`
 	}
 
 	var associations []RoleMenuPermission

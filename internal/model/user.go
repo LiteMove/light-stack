@@ -16,11 +16,11 @@ type User struct {
 	Phone         *string    `json:"phone" gorm:"size:20;uniqueIndex:uk_tenant_phone" validate:"omitempty,max=20"`
 	Avatar        string     `json:"avatar" gorm:"size:255"`
 	Status        int        `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3"`
-	IsSystem      bool       `json:"is_system" gorm:"not null;default:false;index"`
-	LastLoginAt   *time.Time `json:"last_login_at"`
-	LastLoginIP   string     `json:"last_login_ip" gorm:"size:45"`
-	LoginFailures int        `json:"login_failures" gorm:"not null;default:0"`
-	LockedUntil   *time.Time `json:"locked_until"`
+	IsSystem      bool       `json:"isSystem" gorm:"not null;default:false;index"`
+	LastLoginAt   *time.Time `json:"lastLoginAt"`
+	LastLoginIP   string     `json:"lastLoginIp" gorm:"size:45"`
+	LoginFailures int        `json:"loginFailures" gorm:"not null;default:0"`
+	LockedUntil   *time.Time `json:"lockedUntil"`
 
 	// 关联关系
 	Roles  []Role  `json:"roles,omitempty" gorm:"many2many:user_roles;"`
@@ -35,22 +35,22 @@ func (User) TableName() string {
 // UserProfile 用户资料（不包含敏感信息）
 type UserProfile struct {
 	ID          uint64         `json:"id"`
-	TenantID    uint64         `json:"tenant_id"`
+	TenantID    uint64         `json:"tenantId"`
 	Username    string         `json:"username"`
 	Nickname    string         `json:"nickname"`
 	Email       *string        `json:"email"`
 	Phone       *string        `json:"phone"`
 	Avatar      string         `json:"avatar"`
 	Status      int            `json:"status"`
-	IsSystem    bool           `json:"is_system"`
-	LastLoginAt *time.Time     `json:"last_login_at"`
-	LastLoginIP string         `json:"last_login_ip"`
+	IsSystem    bool           `json:"isSystem"`
+	LastLoginAt *time.Time     `json:"lastLoginAt"`
+	LastLoginIP string         `json:"lastLoginIp"`
 	Roles       []RoleProfile  `json:"roles,omitempty"`
-	RoleCodes   []string       `json:"role_codes,omitempty"`
+	RoleCodes   []string       `json:"roleCodes,omitempty"`
 	Permissions []string       `json:"permissions,omitempty"`
 	Menus       []MenuTreeNode `json:"menus,omitempty"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
 }
 
 // ToProfile 转换为用户资料

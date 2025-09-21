@@ -110,7 +110,7 @@ export const useUserStore = defineStore('user', () => {
                   nickname: data.nickname,
                   email: data.email,
                   avatar: data.avatar,
-                  roles: data.role_codes || [],
+                  roles: data.roleCodes || [],
                   permissions: data.permissions || [],
                   menus: data.menus || []
               }
@@ -245,7 +245,7 @@ export const useUserStore = defineStore('user', () => {
       meta: {
         title: menu.name,
         icon: menu.icon,
-        hidden: menu.is_hidden,
+        hidden: menu.isHidden,
         type: menu.type,
         permission: menu.code // 添加权限标识
       }
@@ -261,7 +261,7 @@ export const useUserStore = defineStore('user', () => {
         // 如果有子菜单，重定向到第一个可见的子菜单
         if (menu.children && menu.children.length > 0) {
           const firstVisibleChild = menu.children.find(child =>
-            !child.is_hidden &&
+            !child.isHidden &&
             child.type === 'menu' &&
             child.status === 1
           )
@@ -313,7 +313,7 @@ export const useUserStore = defineStore('user', () => {
             meta: {
               title: menu.name,
               icon: menu.icon,
-              hidden: menu.is_hidden,
+              hidden: menu.isHidden,
               type: menu.type,
               permission: menu.code
             }
@@ -361,7 +361,7 @@ export const useUserStore = defineStore('user', () => {
             meta: {
               title: menu.name,
               icon: menu.icon,
-              hidden: menu.is_hidden,
+              hidden: menu.isHidden,
               type: menu.type,
               permission: menu.code
             }
@@ -378,7 +378,7 @@ export const useUserStore = defineStore('user', () => {
       console.log('[USER STORE] Processing children for:', menu.name, 'children count:', menu.children.length)
       const childRoutes = menu.children
         .filter(child => {
-          const isValid = !child.is_hidden && child.status === 1 && child.type !== 'permission'
+          const isValid = !child.isHidden && child.status === 1 && child.type !== 'permission'
           console.log('[USER STORE] Child menu filter:', child.name, 'valid:', isValid)
           return isValid
         })

@@ -46,9 +46,9 @@
         </el-radio-group>
       </el-form-item>
 
-      <el-form-item label="过期时间" prop="expired_at">
+      <el-form-item label="过期时间" prop="expiredAt">
         <el-date-picker
-          v-model="formData.expired_at"
+          v-model="formData.expiredAt"
           type="datetime"
           placeholder="选择过期时间"
           format="YYYY-MM-DD HH:mm:ss"
@@ -125,7 +125,7 @@ const formData = reactive({
   name: '',
   domain: '',
   status: 1,
-  expired_at: '',
+  expiredAt: '',
   config: ''
 })
 
@@ -178,7 +178,7 @@ const resetForm = () => {
     name: '',
     domain: '',
     status: 1,
-    expired_at: '',
+    expiredAt: '',
     config: ''
   })
 }
@@ -190,7 +190,7 @@ const initFormData = () => {
       name: props.tenantData.name || '',
       domain: props.tenantData.domain || '',
       status: props.tenantData.status || 1,
-      expired_at: props.tenantData.expired_at || '',
+      expiredAt: props.tenantData.expiredAt || '',
       config: props.tenantData.config || ''
     })
   } else {
@@ -224,8 +224,8 @@ const handleSubmit = async () => {
     const submitData = { ...formData }
 
     // 如果没有设置过期时间，则移除该字段
-    if (!submitData.expired_at) {
-      delete submitData.expired_at
+    if (!submitData.expiredAt) {
+      delete submitData.expiredAt
     }
 
     // 如果没有设置配置信息，则移除该字段

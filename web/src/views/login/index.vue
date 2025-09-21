@@ -140,7 +140,7 @@ const handleLogin = async () => {
       return
     }
     // 只保存token，用户信息将在路由守卫中获取
-    userStore.setToken(response.data.access_token.trim())
+    userStore.setToken(response.data.accessToken.trim())
 
     ElMessage.success('登录成功')
     router.push('/')

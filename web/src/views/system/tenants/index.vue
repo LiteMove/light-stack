@@ -21,13 +21,6 @@
         >
           刷新
         </el-button>
-        <el-button
-          :icon="Download"
-          @click="exportTenants"
-          size="default"
-        >
-          导出数据
-        </el-button>
       </div>
     </div>
 
@@ -111,7 +104,7 @@
         @selection-change="handleSelectionChange"
         @sort-change="handleSortChange"
         row-key="id"
-        :default-sort="{ prop: 'created_at', order: 'descending' }"
+        :default-sort="{ prop: 'createdAt', order: 'descending' }"
       >
         <el-table-column type="selection" width="50" />
 
@@ -148,13 +141,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="expired_at" label="过期时间" width="180" sortable="custom">
+        <el-table-column prop="expiredAt" label="过期时间" width="180" sortable="custom">
           <template #default="{ row }">
-            <div v-if="row.expired_at">
-              <span :class="{ 'text-danger': isExpired(row.expired_at) }">
-                {{ formatDateTime(row.expired_at) }}
+            <div v-if="row.expiredAt">
+              <span :class="{ 'text-danger': isExpired(row.expiredAt) }">
+                {{ formatDateTime(row.expiredAt) }}
               </span>
-              <el-tag v-if="isExpired(row.expired_at)" type="danger" size="small" class="ml-2">
+              <el-tag v-if="isExpired(row.expiredAt)" type="danger" size="small" class="ml-2">
                 已过期
               </el-tag>
             </div>
@@ -162,9 +155,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="created_at" label="创建时间" width="180" sortable="custom">
+        <el-table-column prop="createdAt" label="创建时间" width="180" sortable="custom">
           <template #default="{ row }">
-            {{ formatDateTime(row.created_at) }}
+            {{ formatDateTime(row.createdAt) }}
           </template>
         </el-table-column>
 
@@ -452,11 +445,6 @@ const batchUpdateStatus = async (status) => {
       console.error('批量状态更新失败:', error)
     }
   }
-}
-
-// 导出租户数据
-const exportTenants = () => {
-  ElMessage.info('导出功能开发中...')
 }
 
 // 表格选择变化

@@ -85,51 +85,10 @@ func RegisterRoutes(r *gin.Engine) {
 				user.PUT("/password", authController.ChangePassword) // 修改密码
 				user.GET("/:id/roles", authController.GetUserRoles)  // 获取用户角色
 			}
-
-			// 管理员相关路由（需要管理员权限）
+			// TODO 看后续怎么优化，现在是根据路由地址来区分用户和超管以及管理员的
 			admin := v1.Group("/admin")
-			admin.Use(middleware.JWTAuthMiddleware())   // 应用JWT认证中间件
-			admin.Use(middleware.AdminAuthMiddleware()) // 应用管理员权限中间件
+			admin.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
 			{
-				// 租户管理
-				tenants := admin.Group("/tenants")
-				{
-					tenants.POST("", tenantController.CreateTenant) // 创建租户
-					tenants.GET("", tenantController.GetTenants)
-					tenants.GET("/list", tenantController.GetSelectList)            // 获取租户列表
-					tenants.GET("/:id", tenantController.GetTenant)                 // 获取租户详情
-					tenants.PUT("/:id", tenantController.UpdateTenant)              // 更新租户
-					tenants.DELETE("/:id", tenantController.DeleteTenant)           // 删除租户
-					tenants.PUT("/:id/status", tenantController.UpdateTenantStatus) // 更新租户状态
-					tenants.GET("/check-domain", tenantController.CheckDomain)      // 检查域名可用性
-					tenants.GET("/check-name", tenantController.CheckName)          // 检查名称可用性
-				}
-
-				// 角色管理
-				roles := admin.Group("/roles")
-				{
-					roles.POST("", roleController.CreateRole)                 // 创建角色
-					roles.GET("", roleController.GetRoles)                    // 获取角色列表
-					roles.GET("/:id", roleController.GetRole)                 // 获取角色详情
-					roles.PUT("/:id", roleController.UpdateRole)              // 更新角色
-					roles.DELETE("/:id", roleController.DeleteRole)           // 删除角色
-					roles.GET("/:id/menus", menuController.GetRoleMenus)      // 获取角色菜单
-					roles.PUT("/:id/menus", menuController.AssignMenusToRole) // 为角色分配菜单
-				}
-
-				// 菜单管理
-				menus := admin.Group("/menus")
-				{
-					menus.POST("", menuController.CreateMenu)                        // 创建菜单
-					menus.GET("", menuController.GetMenus)                           // 获取菜单列表
-					menus.GET("/tree", menuController.GetMenuTree)                   // 获取菜单树
-					menus.GET("/:id", menuController.GetMenu)                        // 获取菜单详情
-					menus.PUT("/:id", menuController.UpdateMenu)                     // 更新菜单
-					menus.DELETE("/:id", menuController.DeleteMenu)                  // 删除菜单
-					menus.PUT("/:id/status", menuController.UpdateMenuStatus)        // 更新菜单状态
-					menus.PUT("/batch/status", menuController.BatchUpdateMenuStatus) // 批量更新菜单状态
-				}
-
 				// 用户角色管理
 				users := admin.Group("/users")
 				{
@@ -143,6 +102,56 @@ func RegisterRoutes(r *gin.Engine) {
 					users.POST("/:id/reset-password", userController.ResetPassword)  // 重置密码
 					users.PUT("/:id/roles", userController.AssignUserRoles)          // 为用户分配角色
 					users.GET("/:id/roles", userController.GetUserRoles)             // 获取用户角色
+				}
+				// 角色管理
+				roles := admin.Group("/roles")
+				{
+					roles.GET("/select-list", roleController.GetEnabledRoles) // 获取角色列表
+				}
+			}
+
+			// 超管相关路由（需要超级管理员权限）
+			superAdmin := v1.Group("/super-admin")
+			superAdmin.Use(middleware.JWTAuthMiddleware())        // 应用JWT认证中间件
+			superAdmin.Use(middleware.SuperAdminAuthMiddleware()) // 应用超级管理员权限中间件
+			{
+				// 租户管理
+				tenants := superAdmin.Group("/tenants")
+				{
+					tenants.POST("", tenantController.CreateTenant) // 创建租户
+					tenants.GET("", tenantController.GetTenants)
+					tenants.GET("/list", tenantController.GetSelectList)            // 获取租户列表
+					tenants.GET("/:id", tenantController.GetTenant)                 // 获取租户详情
+					tenants.PUT("/:id", tenantController.UpdateTenant)              // 更新租户
+					tenants.DELETE("/:id", tenantController.DeleteTenant)           // 删除租户
+					tenants.PUT("/:id/status", tenantController.UpdateTenantStatus) // 更新租户状态
+					tenants.GET("/check-domain", tenantController.CheckDomain)      // 检查域名可用性
+					tenants.GET("/check-name", tenantController.CheckName)          // 检查名称可用性
+				}
+
+				// 角色管理
+				roles := superAdmin.Group("/roles")
+				{
+					roles.POST("", roleController.CreateRole)                 // 创建角色
+					roles.GET("", roleController.GetRoles)                    // 获取角色列表
+					roles.GET("/:id", roleController.GetRole)                 // 获取角色详情
+					roles.PUT("/:id", roleController.UpdateRole)              // 更新角色
+					roles.DELETE("/:id", roleController.DeleteRole)           // 删除角色
+					roles.GET("/:id/menus", menuController.GetRoleMenus)      // 获取角色菜单
+					roles.PUT("/:id/menus", menuController.AssignMenusToRole) // 为角色分配菜单
+				}
+
+				// 菜单管理
+				menus := superAdmin.Group("/menus")
+				{
+					menus.POST("", menuController.CreateMenu)                        // 创建菜单
+					menus.GET("", menuController.GetMenus)                           // 获取菜单列表
+					menus.GET("/tree", menuController.GetMenuTree)                   // 获取菜单树
+					menus.GET("/:id", menuController.GetMenu)                        // 获取菜单详情
+					menus.PUT("/:id", menuController.UpdateMenu)                     // 更新菜单
+					menus.DELETE("/:id", menuController.DeleteMenu)                  // 删除菜单
+					menus.PUT("/:id/status", menuController.UpdateMenuStatus)        // 更新菜单状态
+					menus.PUT("/batch/status", menuController.BatchUpdateMenuStatus) // 批量更新菜单状态
 				}
 			}
 		}

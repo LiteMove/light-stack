@@ -27,7 +27,7 @@ func NewMenuController(menuService service.MenuService) *MenuController {
 
 // CreateMenuRequest 创建菜单请求
 type CreateMenuRequest struct {
-	ParentID  uint64 `json:"parent_id" validate:""`
+	ParentID  uint64 `json:"parentId" validate:""`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
 	Code      string `json:"code" validate:"required,min=1,max=100"`
 	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
@@ -36,15 +36,15 @@ type CreateMenuRequest struct {
 	Icon      string `json:"icon" validate:"max=100"`
 	Resource  string `json:"resource" validate:"max=255"`
 	Action    string `json:"action" validate:"max=50"`
-	SortOrder int    `json:"sort_order"`
-	IsHidden  bool   `json:"is_hidden"`
+	SortOrder int    `json:"sortOrder"`
+	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
 	Meta      string `json:"meta"`
 }
 
 // UpdateMenuRequest 更新菜单请求
 type UpdateMenuRequest struct {
-	ParentID  uint64 `json:"parent_id"`
+	ParentID  uint64 `json:"parentId"`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
 	Code      string `json:"code" validate:"required,min=1,max=100"`
 	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
@@ -53,8 +53,8 @@ type UpdateMenuRequest struct {
 	Icon      string `json:"icon" validate:"max=100"`
 	Resource  string `json:"resource" validate:"max=255"`
 	Action    string `json:"action" validate:"max=50"`
-	SortOrder int    `json:"sort_order"`
-	IsHidden  bool   `json:"is_hidden"`
+	SortOrder int    `json:"sortOrder"`
+	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
 	Meta      string `json:"meta"`
 }
@@ -80,7 +80,7 @@ type BatchUpdateStatusRequest struct {
 
 // AssignMenusRequest 分配菜单请求
 type AssignMenusRequest struct {
-	MenuIDs []uint64 `json:"menu_ids" validate:"required"`
+	MenuIDs []uint64 `json:"menuIds" validate:"required"`
 }
 
 // CreateMenu 创建菜单

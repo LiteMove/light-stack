@@ -27,7 +27,7 @@
               {{ getMenuTypeLabel(data.type) }}
             </el-tag>
             <el-tag 
-              v-if="data.is_system" 
+              v-if="data.isSystem"
               type="info" 
               size="small" 
               class="node-tag"

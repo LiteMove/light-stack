@@ -10,7 +10,7 @@ import (
 
 // Claims JWT声明结构
 type Claims struct {
-	UserID   uint64   `json:"user_id"`
+	UserID   uint64   `json:"userId"`
 	Username string   `json:"username"`
 	Roles    []string `json:"roles"`
 	jwt.RegisteredClaims

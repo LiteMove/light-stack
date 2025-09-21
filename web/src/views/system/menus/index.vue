@@ -179,7 +179,7 @@
                 <span class="menu-name">{{ row.name }}</span>
                 <div class="menu-meta">
                   <el-tag 
-                    v-if="row.is_system" 
+                    v-if="row.isSystem"
                     type="info" 
                     size="small" 
                     effect="plain"
@@ -232,9 +232,9 @@
         </el-table-column>
         
         <!-- 排序列 -->
-        <el-table-column prop="sort_order" label="排序" width="80" align="center">
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center">
           <template #default="{ row }">
-            <el-tag type="info" size="small" effect="plain">{{ row.sort_order }}</el-tag>
+            <el-tag type="info" size="small" effect="plain">{{ row.sortOrder }}</el-tag>
           </template>
         </el-table-column>
         
@@ -246,17 +246,17 @@
               :active-value="1"
               :inactive-value="2"
               @change="handleStatusChange(row)"
-              :disabled="row.is_system && row.status === 2"
+              :disabled="row.isSystem && row.status === 2"
               size="small"
             />
           </template>
         </el-table-column>
         
         <!-- 显示/隐藏列 -->
-        <el-table-column prop="is_hidden" label="可见性" width="80" align="center">
+        <el-table-column prop="isHidden" label="可见性" width="80" align="center">
           <template #default="{ row }">
             <el-tag 
-              v-if="row.is_hidden" 
+              v-if="row.isHidden"
               type="warning" 
               size="small"
               effect="light"
@@ -275,9 +275,9 @@
         </el-table-column>
         
         <!-- 创建时间列 -->
-        <el-table-column prop="created_at" label="创建时间" width="160" align="center">
+        <el-table-column prop="createdAt" label="创建时间" width="160" align="center">
           <template #default="{ row }">
-            <span class="time-text">{{ formatDateTime(row.created_at) }}</span>
+            <span class="time-text">{{ formatDateTime(row.createdAt) }}</span>
           </template>
         </el-table-column>
         
@@ -320,7 +320,7 @@
                   size="small"
                   :icon="Delete"
                   @click="handleDelete(row)"
-                  :disabled="row.is_system"
+                  :disabled="row.isSystem"
                 />
               </el-tooltip>
             </div>
@@ -500,10 +500,10 @@ const handleResetSearch = () => {
 // 添加菜单
 const handleAdd = (parent?: Menu) => {
   formData.value = {
-    parent_id: parent?.id || 0,
+    parentId: parent?.id || 0,
     status: 1,
-    sort_order: 0,
-    is_hidden: false,
+    sortOrder: 0,
+    isHidden: false,
     type: 'menu'
   }
   formVisible.value = true

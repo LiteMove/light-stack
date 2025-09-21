@@ -25,13 +25,13 @@ func (DictType) TableName() string {
 // DictData 字典数据模型
 type DictData struct {
 	BaseModel
-	DictType  string `json:"dict_type" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
+	DictType  string `json:"dictType" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
 	Label     string `json:"label" gorm:"not null;size:100" validate:"required,max=100"`
 	Value     string `json:"value" gorm:"not null;size:100;uniqueIndex:uk_type_value" validate:"required,max=100"`
-	SortOrder int    `json:"sort_order" gorm:"not null;default:0;index:idx_sort_order"`
-	CssClass  string `json:"css_class" gorm:"size:100" validate:"max=100"`
-	ListClass string `json:"list_class" gorm:"size:100" validate:"max=100"`
-	IsDefault bool   `json:"is_default" gorm:"not null;default:false"`
+	SortOrder int    `json:"sortOrder" gorm:"not null;default:0;index:idx_sort_order"`
+	CssClass  string `json:"cssClass" gorm:"size:100" validate:"max=100"`
+	ListClass string `json:"listClass" gorm:"size:100" validate:"max=100"`
+	IsDefault bool   `json:"isDefault" gorm:"not null;default:false"`
 	Status    int    `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2"`
 	Remark    string `json:"remark" gorm:"size:255" validate:"max=255"`
 }
@@ -48,8 +48,8 @@ type DictTypeProfile struct {
 	Type        string    `json:"type"`
 	Description string    `json:"description"`
 	Status      int       `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // ToProfile 转换为字典类型资料
@@ -68,17 +68,17 @@ func (dt *DictType) ToProfile() DictTypeProfile {
 // DictDataProfile 字典数据资料（简化版本）
 type DictDataProfile struct {
 	ID        uint64    `json:"id"`
-	DictType  string    `json:"dict_type"`
+	DictType  string    `json:"dictType"`
 	Label     string    `json:"label"`
 	Value     string    `json:"value"`
-	SortOrder int       `json:"sort_order"`
-	CssClass  string    `json:"css_class"`
-	ListClass string    `json:"list_class"`
-	IsDefault bool      `json:"is_default"`
+	SortOrder int       `json:"sortOrder"`
+	CssClass  string    `json:"cssClass"`
+	ListClass string    `json:"listClass"`
+	IsDefault bool      `json:"isDefault"`
 	Status    int       `json:"status"`
 	Remark    string    `json:"remark"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // ToProfile 转换为字典数据资料

@@ -29,9 +29,8 @@ export interface LoginParams {
 
 // 登录响应数据
 export interface TokenResponse {
-    access_token: string
-    token_type: string
-    expires_in: number
+    accessToken: string
+    expiresIn: number
 }
 
 // 用户信息
@@ -50,9 +49,9 @@ export interface User {
   lastLoginIp?: string
   createdAt: string
   updatedAt: string
-    role_codes: string[]
-    permissions: string[]
-    menus: Menu[]
+  roleCodes: string[]
+  permissions: string[]
+  menus: Menu[]
 
 }
 
@@ -73,7 +72,7 @@ export interface Role {
 // 菜单信息
 export interface Menu {
   id: number
-  parent_id: number
+  parentId: number
   name: string
   code: string
   type: 'directory' | 'menu' | 'permission'
@@ -82,19 +81,19 @@ export interface Menu {
   icon?: string
   resource?: string
   action?: string
-  sort_order: number
-  is_hidden: boolean
-  is_system: boolean
+  sortOrder: number
+  isHidden: boolean
+  isSystem: boolean
   status: number
   meta?: string
   children?: Menu[]
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 // 菜单创建/更新请求参数
 export interface MenuFormData {
-  parent_id?: number
+  parentId?: number
   name: string
   code: string
   type: 'directory' | 'menu' | 'permission'
@@ -103,8 +102,8 @@ export interface MenuFormData {
   icon?: string
   resource?: string
   action?: string
-  sort_order: number
-  is_hidden: boolean
+  sortOrder: number
+  isHidden: boolean
   status: number
   meta?: string
 }
@@ -130,7 +129,7 @@ export interface BatchMenuStatusData {
 
 // 角色菜单分配参数
 export interface AssignMenusData {
-  menu_ids: number[]
+  menuIds: number[]
 }
 
 // 权限信息
@@ -195,5 +194,5 @@ export interface PermissionFormData {
 
 // 用户角色分配参数
 export interface AssignUserRolesData {
-  role_ids: number[]
+  roleIds: number[]
 }

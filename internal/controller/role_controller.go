@@ -104,6 +104,19 @@ func (c *RoleController) GetRole(ctx *gin.Context) {
 	response.Success(ctx, role)
 }
 
+// GetEnabledRoles 获取启用的角色列表
+func (c *RoleController) GetEnabledRoles(ctx *gin.Context) {
+
+	isSuperAdmin := ctx.GetBool("is_super_admin")
+	roles, err := c.roleService.GetEnabledRoles(isSuperAdmin)
+	if err != nil {
+		response.BadRequest(ctx, err.Error())
+		return
+	}
+
+	response.Success(ctx, roles)
+}
+
 // GetRoles 获取角色列表
 func (c *RoleController) GetRoles(ctx *gin.Context) {
 	// 获取查询参数
@@ -135,11 +148,11 @@ func (c *RoleController) GetRoles(ctx *gin.Context) {
 
 // ChangePasswordRequest 修改密码请求
 type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=6"`
+	OldPassword string `json:"oldPassword" validate:"required"`
+	NewPassword string `json:"newPassword" validate:"required,min=6"`
 }
 
 // AssignRolesRequest 分配角色请求
 type AssignRolesRequest struct {
-	RoleIDs []uint64 `json:"role_ids" validate:"required"`
+	RoleIDs []uint64 `json:"roleIds" validate:"required"`
 }

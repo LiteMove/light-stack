@@ -36,6 +36,8 @@ type RoleRepository interface {
 	GetRoleUserCount(roleID uint64) (int64, error)
 	// 获取角色及其用户信息
 	GetRoleWithUsers(roleID uint64) (*model.RoleWithUsers, error)
+	// 获取所有启用的角色
+	GetEnabledRoles(isSuper bool) ([]*model.Role, error)
 }
 
 // roleRepository 角色数据访问实现
@@ -217,4 +219,15 @@ func (r *roleRepository) GetRoleWithUsers(roleID uint64) (*model.RoleWithUsers, 
 	}
 
 	return roleWithUsers, nil
+}
+
+// GetEnabledRoles 获取所有启用的角色
+func (r *roleRepository) GetEnabledRoles(isSuper bool) ([]*model.Role, error) {
+	var roles []*model.Role
+	query := r.db.Model(&model.Role{}).Where("status = ?", model.RoleStatusEnabled)
+	if !isSuper {
+		query.Where("id != ?", model.SuperAdminId) // 非超级管理员不返回超级管理员角色
+	}
+	err := query.Order("sort_order ASC").Find(&roles).Error
+	return roles, err
 }

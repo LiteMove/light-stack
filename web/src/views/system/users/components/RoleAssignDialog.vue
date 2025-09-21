@@ -276,7 +276,7 @@ const handleSubmit = async () => {
     
     // 这里应该调用API保存角色分配
     await userApi.assignUserRoles(props.userData.id, {
-      role_ids: selectedRoleIds.value
+      roleIds: selectedRoleIds.value
     })
 
 

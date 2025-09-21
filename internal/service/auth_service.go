@@ -64,7 +64,7 @@ type RegisterRequest struct {
 	Password string   `json:"password" validate:"required,min=6"`
 	Nickname string   `json:"nickname" validate:"max=100"`
 	Phone    string   `json:"phone" validate:"max=20"`
-	RoleIDs  []uint64 `json:"role_ids"` // 分配的角色ID列表
+	RoleIDs  []uint64 `json:"roleIds"` // 分配的角色ID列表
 }
 
 // UpdateProfileRequest 更新用户信息请求
@@ -76,9 +76,8 @@ type UpdateProfileRequest struct {
 
 // TokenResponse token响应
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
+	AccessToken string `json:"accessToken"`
+	ExpiresIn   int    `json:"expiresIn"`
 }
 
 // Login 用户登录
@@ -113,15 +112,15 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 	// 检查用户状态
 	if !user.IsActive() {
 		logger.WithFields(map[string]interface{}{
-			"user_id": user.ID,
-			"status":  user.Status,
+			"userId": user.ID,
+			"status": user.Status,
 		}).Warn("Login attempt with inactive user")
 		return nil, errors.New("账户已被禁用")
 	}
 
 	// 检查用户是否被锁定
 	if user.IsLocked() {
-		logger.WithField("user_id", user.ID).Warn("Login attempt with locked user")
+		logger.WithField("userId", user.ID).Warn("Login attempt with locked user")
 		return nil, errors.New("账户已被锁定")
 	}
 
@@ -129,7 +128,7 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 	if !utils.VerifyPassword(user.Password, req.Password) {
 		// 记录登录失败
 		s.userRepo.RecordLoginFailure(user.ID)
-		logger.WithField("user_id", user.ID).Warn("Login attempt with wrong password")
+		logger.WithField("userId", user.ID).Warn("Login attempt with wrong password")
 		return nil, errors.New("用户名或密码错误")
 	}
 
@@ -141,20 +140,19 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 
 	token, err := jwt.GenerateToken(user.ID, user.Username, userRoles)
 	if err != nil {
-		logger.WithField("user_id", user.ID).Error("Failed to generate token:", err)
+		logger.WithField("userId", user.ID).Error("Failed to generate token:", err)
 		return nil, errors.New("登录失败")
 	}
 
 	// 更新最后登录信息
 	if err := s.userRepo.UpdateLoginInfo(user.ID, ""); err != nil {
-		logger.WithField("user_id", user.ID).Warn("Failed to update login info:", err)
+		logger.WithField("userId", user.ID).Warn("Failed to update login info:", err)
 	}
 
-	logger.WithField("user_id", user.ID).Info("User logged in successfully")
+	logger.WithField("userId", user.ID).Info("User logged in successfully")
 
 	return &TokenResponse{
 		AccessToken: token,
-		TokenType:   "Bearer",
 		ExpiresIn:   3600, // 1小时
 	}, nil
 }
@@ -221,7 +219,7 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 	// 分配角色
 	if len(req.RoleIDs) > 0 {
 		if err := s.roleRepo.AssignRolesToUser(user.ID, req.RoleIDs); err != nil {
-			logger.WithField("user_id", user.ID).Error("Failed to assign roles:", err)
+			logger.WithField("userId", user.ID).Error("Failed to assign roles:", err)
 			// 注册已成功，角色分配失败只记录警告
 		}
 	} else {
@@ -232,7 +230,7 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 		}
 	}
 
-	logger.WithField("user_id", user.ID).Info("User registered successfully")
+	logger.WithField("userId", user.ID).Info("User registered successfully")
 
 	// 重新获取用户信息（包含角色）
 	user, _ = s.userRepo.GetByIDWithRoles(user.ID)
@@ -266,13 +264,12 @@ func (s *authService) RefreshToken(tokenString string) (*TokenResponse, error) {
 
 	newToken, err := jwt.GenerateToken(user.ID, user.Username, userRoles)
 	if err != nil {
-		logger.WithField("user_id", user.ID).Error("Failed to refresh token:", err)
+		logger.WithField("userId", user.ID).Error("Failed to refresh token:", err)
 		return nil, errors.New("刷新token失败")
 	}
 
 	return &TokenResponse{
 		AccessToken: newToken,
-		TokenType:   "Bearer",
 		ExpiresIn:   3600,
 	}, nil
 }
@@ -318,17 +315,17 @@ func (s *authService) ChangePassword(userID uint64, oldPassword, newPassword str
 	// 加密新密码
 	hashedPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
-		logger.WithField("user_id", userID).Error("Failed to hash new password:", err)
+		logger.WithField("userId", userID).Error("Failed to hash new password:", err)
 		return errors.New("密码修改失败")
 	}
 
 	// 更新密码
 	if err := s.userRepo.UpdatePassword(userID, hashedPassword); err != nil {
-		logger.WithField("user_id", userID).Error("Failed to update password:", err)
+		logger.WithField("userId", userID).Error("Failed to update password:", err)
 		return errors.New("密码修改失败")
 	}
 
-	logger.WithField("user_id", userID).Info("Password changed successfully")
+	logger.WithField("userId", userID).Info("Password changed successfully")
 	return nil
 }
 
@@ -344,7 +341,7 @@ func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) 
 	// 获取用户权限（仅返回权限码数组）
 	permissions, err := s.menuRepo.GetUserPermissions(userID)
 	if err != nil {
-		logger.WithField("user_id", userID).Warn("Failed to get user permissions:", err)
+		logger.WithField("userId", userID).Warn("Failed to get user permissions:", err)
 	} else {
 		profile.Permissions = permissions
 	}
@@ -373,11 +370,11 @@ func (s *authService) UpdateUserProfile(userID uint64, req *UpdateProfileRequest
 
 	// 保存更新
 	if err := s.userRepo.Update(user); err != nil {
-		logger.WithField("user_id", userID).Error("Failed to update user profile:", err)
+		logger.WithField("userId", userID).Error("Failed to update user profile:", err)
 		return nil, errors.New("更新失败")
 	}
 
-	logger.WithField("user_id", userID).Info("User profile updated successfully")
+	logger.WithField("userId", userID).Info("User profile updated successfully")
 
 	// 重新获取用户信息（包含角色）
 	user, _ = s.userRepo.GetByIDWithRoles(userID)

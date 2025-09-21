@@ -32,7 +32,7 @@ type CreateTenantRequest struct {
 	Name      string `json:"name" validate:"required,min=1,max=100"`
 	Domain    string `json:"domain" validate:"omitempty,max=100"`
 	Status    int    `json:"status" validate:"required,oneof=1 2 3 4"`
-	ExpiredAt string `json:"expired_at" validate:"omitempty"`
+	ExpiredAt string `json:"expiredAt" validate:"omitempty"`
 	Config    string `json:"config" validate:"omitempty"`
 }
 
@@ -41,7 +41,7 @@ type UpdateTenantRequest struct {
 	Name      string `json:"name" validate:"required,min=1,max=100"`
 	Domain    string `json:"domain" validate:"omitempty,max=100"`
 	Status    int    `json:"status" validate:"required,oneof=1 2 3 4"`
-	ExpiredAt string `json:"expired_at" validate:"omitempty"`
+	ExpiredAt string `json:"expiredAt" validate:"omitempty"`
 	Config    string `json:"config" validate:"omitempty"`
 }
 

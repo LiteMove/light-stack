@@ -11,7 +11,7 @@ type Tenant struct {
 	Name      string     `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
 	Domain    string     `json:"domain" gorm:"size:100;uniqueIndex:uk_domain" validate:"max=100"`
 	Status    int        `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3 4"`
-	ExpiredAt *time.Time `json:"expired_at" gorm:"index"`
+	ExpiredAt *time.Time `json:"expiredAt" gorm:"index"`
 	Config    string     `json:"config" gorm:"type:json"`
 
 	// 关联关系
@@ -29,10 +29,10 @@ type TenantProfile struct {
 	Name      string     `json:"name"`
 	Domain    string     `json:"domain"`
 	Status    int        `json:"status"`
-	ExpiredAt *time.Time `json:"expired_at"`
+	ExpiredAt *time.Time `json:"expiredAt"`
 	Config    string     `json:"config"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
 // ToProfile 转换为租户资料

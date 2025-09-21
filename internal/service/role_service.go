@@ -28,7 +28,7 @@ type CreateRoleRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=100"`
 	Code        string `json:"code" validate:"required,min=1,max=50"`
 	Description string `json:"description" validate:"max=255"`
-	SortOrder   int    `json:"sort_order"`
+	SortOrder   int    `json:"sortOrder"`
 }
 
 // UpdateRoleRequest 更新角色请求
@@ -36,7 +36,7 @@ type UpdateRoleRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=100"`
 	Description string `json:"description" validate:"max=255"`
 	Status      int    `json:"status" validate:"oneof=1 2"`
-	SortOrder   int    `json:"sort_order"`
+	SortOrder   int    `json:"sortOrder"`
 }
 
 // RoleService 角色服务
@@ -55,6 +55,8 @@ type RoleService interface {
 	AssignRolesToUser(userID uint64, roleIDs []uint64) error
 	// 移除用户角色
 	RemoveUserRoles(userID uint64, roleIDs []uint64) error
+	// 获取所有启用的角色
+	GetEnabledRoles(isSuper bool) ([]*model.Role, error)
 }
 
 // 角色服务实现
@@ -85,7 +87,7 @@ func (s *roleService) Create(req *CreateRoleRequest) (*model.RoleProfile, error)
 		return nil, errors.New("创建失败")
 	}
 
-	logger.WithField("role_id", role.ID).Info("Role created successfully")
+	logger.WithField("roleId", role.ID).Info("Role created successfully")
 	profile := role.ToProfile()
 	return &profile, nil
 }
@@ -104,11 +106,11 @@ func (s *roleService) Update(id uint64, req *UpdateRoleRequest) (*model.RoleProf
 	role.SortOrder = req.SortOrder
 
 	if err := s.roleRepo.Update(role); err != nil {
-		logger.WithField("role_id", id).Error("Failed to update role:", err)
+		logger.WithField("roleId", id).Error("Failed to update role:", err)
 		return nil, errors.New("更新失败")
 	}
 
-	logger.WithField("role_id", id).Info("Role updated successfully")
+	logger.WithField("roleId", id).Info("Role updated successfully")
 	profile := role.ToProfile()
 	return &profile, nil
 }
@@ -125,11 +127,11 @@ func (s *roleService) Delete(id uint64) error {
 	}
 
 	if err := s.roleRepo.Delete(id); err != nil {
-		logger.WithField("role_id", id).Error("Failed to delete role:", err)
+		logger.WithField("roleId", id).Error("Failed to delete role:", err)
 		return errors.New("删除失败")
 	}
 
-	logger.WithField("role_id", id).Info("Role deleted successfully")
+	logger.WithField("roleId", id).Info("Role deleted successfully")
 	return nil
 }
 
@@ -157,4 +159,9 @@ func (s *roleService) AssignRolesToUser(userID uint64, roleIDs []uint64) error {
 // RemoveUserRoles 移除用户角色
 func (s *roleService) RemoveUserRoles(userID uint64, roleIDs []uint64) error {
 	return s.roleRepo.RemoveUserRoles(userID, roleIDs)
+}
+
+// GetEnabledRoles 获取所有启用的角色
+func (s *roleService) GetEnabledRoles(isSuper bool) ([]*model.Role, error) {
+	return s.roleRepo.GetEnabledRoles(isSuper)
 }

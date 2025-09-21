@@ -102,7 +102,7 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 // GetProfile 获取用户信息
 func (c *AuthController) GetProfile(ctx *gin.Context) {
 	// 从上下文中获取用户ID（由JWT中间件设置）
-	userId := ctx.GetUint64("user_id")
+	userId := ctx.GetUint64("userId")
 	if userId == 0 {
 		response.Unauthorized(ctx, "未授权")
 		return
@@ -129,7 +129,7 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 // UpdateProfile 更新用户信息
 func (c *AuthController) UpdateProfile(ctx *gin.Context) {
 	// 从上下文中获取用户ID
-	userID, exists := ctx.Get("user_id")
+	userID, exists := ctx.Get("userId")
 	if !exists {
 		response.Unauthorized(ctx, "未授权")
 		return
@@ -153,7 +153,7 @@ func (c *AuthController) UpdateProfile(ctx *gin.Context) {
 // ChangePassword 修改密码
 func (c *AuthController) ChangePassword(ctx *gin.Context) {
 	// 从上下文中获取用户ID
-	userID, exists := ctx.Get("user_id")
+	userID, exists := ctx.Get("userId")
 	if !exists {
 		response.Unauthorized(ctx, "未授权")
 		return

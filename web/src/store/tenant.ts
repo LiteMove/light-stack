@@ -7,8 +7,8 @@ export interface Tenant {
   name: string
   domain?: string
   status: number
-  expired_at?: string
-  created_at: string
+  expiredAt?: string
+  createdAt: string
 }
 
 export const useTenantStore = defineStore('tenant', () => {

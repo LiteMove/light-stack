@@ -55,7 +55,7 @@
                 </el-icon>
                 <span class="node-label">{{ data.name }}</span>
                 <el-tag
-                  v-if="data.is_system"
+                  v-if="data.isSystem"
                   type="danger"
                   size="small"
                   effect="plain"
@@ -163,7 +163,7 @@ const menuMap = ref(new Map<number, Menu>())
 const treeProps = {
   children: 'children',
   label: 'name',
-  disabled: (data: Menu) => data.is_system && !selectedMenus.value.includes(data.id)
+  disabled: (data: Menu) => data.isSystem && !selectedMenus.value.includes(data.id)
 }
 
 // 计算属性
@@ -178,7 +178,7 @@ const checkAll = computed({
     const allMenuIds = getAllMenuIds(menuTree.value)
     const availableMenuIds = allMenuIds.filter(id => {
       const menu = menuMap.value.get(id)
-      return !menu?.is_system || selectedMenus.value.includes(id)
+      return !menu?.isSystem || selectedMenus.value.includes(id)
     })
     return availableMenuIds.length > 0 && availableMenuIds.every(id => selectedMenus.value.includes(id))
   },
@@ -192,7 +192,7 @@ const indeterminate = computed(() => {
   const allMenuIds = getAllMenuIds(menuTree.value)
   const availableMenuIds = allMenuIds.filter(id => {
     const menu = menuMap.value.get(id)
-    return !menu?.is_system || selectedMenus.value.includes(id)
+    return !menu?.isSystem || selectedMenus.value.includes(id)
   })
   const selectedCount = availableMenuIds.filter(id => selectedMenus.value.includes(id)).length
   return selectedCount > 0 && selectedCount < availableMenuIds.length
@@ -304,7 +304,7 @@ const handleCheckAllChange = (checked: boolean) => {
   const allMenuIds = getAllMenuIds(menuTree.value)
   const availableMenuIds = allMenuIds.filter(id => {
     const menu = menuMap.value.get(id)
-    return !menu?.is_system || selectedMenus.value.includes(id)
+    return !menu?.isSystem || selectedMenus.value.includes(id)
   })
 
   if (checked) {
@@ -312,7 +312,7 @@ const handleCheckAllChange = (checked: boolean) => {
   } else {
     const systemMenuIds = selectedMenus.value.filter(id => {
       const menu = menuMap.value.get(id)
-      return menu?.is_system
+      return menu?.isSystem
     })
     selectedMenus.value = systemMenuIds
   }
@@ -372,7 +372,7 @@ const handleSubmit = async () => {
     submitting.value = true
     
     await roleApi.assignMenusToRole(props.roleData.id, {
-      menu_ids: selectedMenus.value
+      menuIds: selectedMenus.value
     })
     
     ElMessage.success('菜单权限配置保存成功')

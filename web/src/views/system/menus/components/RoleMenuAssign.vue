@@ -168,7 +168,7 @@ const handleSave = async () => {
   try {
     saving.value = true
     await menuApi.assignMenusToRole(props.roleInfo.id, {
-      menu_ids: selectedMenuIds.value
+      menuIds: selectedMenuIds.value
     })
     
     ElMessage.success('菜单权限分配成功')

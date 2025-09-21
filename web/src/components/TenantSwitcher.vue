@@ -31,7 +31,7 @@
             已禁用
           </el-tag>
           <el-tag 
-            v-else-if="isExpired(tenant.expired_at)" 
+            v-else-if="isExpired(tenant.expiredAt)"
             type="warning" 
             size="small" 
             effect="plain"
@@ -118,7 +118,7 @@ const handleTenantChange = async (tenantId: number | null) => {
     }
     
     // 检查是否过期
-    if (isExpired(tenant.expired_at)) {
+    if (isExpired(tenant.expiredAt)) {
       const confirm = await ElMessageBox.confirm(
         '该租户已过期，确定要切换吗？',
         '租户已过期',

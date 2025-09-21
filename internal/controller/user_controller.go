@@ -51,7 +51,7 @@ type UserListRequest struct {
 	PageSize int    `form:"page_size" validate:"min=1,max=100"`
 	Keyword  string `form:"keyword"`
 	Status   int    `form:"status" validate:"oneof=0 1 2"`
-	RoleID   uint64 `form:"role_id"`
+	RoleID   uint64 `form:"roleId"`
 }
 
 // UpdateUserStatusRequest 更新用户状态请求
@@ -67,13 +67,13 @@ type BatchUpdateUserStatusRequest struct {
 
 // ChangeUserPasswordRequest 修改用户密码请求
 type ChangeUserPasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required,min=6,max=50"`
-	NewPassword string `json:"new_password" validate:"required,min=6,max=50"`
+	OldPassword string `json:"oldPassword" validate:"required,min=6,max=50"`
+	NewPassword string `json:"newPassword" validate:"required,min=6,max=50"`
 }
 
 // AssignUserRolesRequest 分配用户角色请求
 type AssignUserRolesRequest struct {
-	RoleIDs []uint64 `json:"role_ids" validate:"required"`
+	RoleIDs []uint64 `json:"roleIds" validate:"required"`
 }
 
 // CreateUser 创建用户
@@ -348,8 +348,8 @@ func (c *UserController) ResetPassword(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, gin.H{
-		"message":      "密码重置成功",
-		"new_password": newPassword,
+		"message":     "密码重置成功",
+		"newPassword": newPassword,
 	})
 }
 

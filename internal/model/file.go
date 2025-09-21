@@ -7,15 +7,15 @@ import (
 // File 文件模型
 type File struct {
 	TenantBaseModel
-	OriginalName string `json:"original_name" gorm:"not null;size:255" validate:"required,max=255"`
-	FileName     string `json:"file_name" gorm:"not null;size:255" validate:"required,max=255"`
-	FilePath     string `json:"file_path" gorm:"not null;size:500" validate:"required,max=500"`
-	FileSize     int64  `json:"file_size" gorm:"not null" validate:"required,min=0"`
-	FileType     string `json:"file_type" gorm:"not null;size:100" validate:"required,max=100"`
-	MimeType     string `json:"mime_type" gorm:"not null;size:100" validate:"required,max=100"`
+	OriginalName string `json:"originalName" gorm:"not null;size:255" validate:"required,max=255"`
+	FileName     string `json:"fileName" gorm:"not null;size:255" validate:"required,max=255"`
+	FilePath     string `json:"filePath" gorm:"not null;size:500" validate:"required,max=500"`
+	FileSize     int64  `json:"fileSize" gorm:"not null" validate:"required,min=0"`
+	FileType     string `json:"fileType" gorm:"not null;size:100" validate:"required,max=100"`
+	MimeType     string `json:"mimeType" gorm:"not null;size:100" validate:"required,max=100"`
 	MD5          string `json:"md5" gorm:"not null;size:32;index:idx_md5" validate:"required,len=32"`
-	UploadUserID uint64 `json:"upload_user_id" gorm:"not null;index:idx_upload_user_id" validate:"required"`
-	UsageType    string `json:"usage_type" gorm:"size:50;index:idx_usage_type" validate:"max=50"`
+	UploadUserID uint64 `json:"uploadUserId" gorm:"not null;index:idx_upload_user_id" validate:"required"`
+	UsageType    string `json:"usageType" gorm:"size:50;index:idx_usage_type" validate:"max=50"`
 
 	// 关联关系
 	UploadUser *User `json:"upload_user,omitempty" gorm:"foreignKey:UploadUserID"`
@@ -29,18 +29,18 @@ func (File) TableName() string {
 // FileProfile 文件资料（简化版本）
 type FileProfile struct {
 	ID           uint64    `json:"id"`
-	TenantID     uint64    `json:"tenant_id"`
-	OriginalName string    `json:"original_name"`
-	FileName     string    `json:"file_name"`
-	FilePath     string    `json:"file_path"`
-	FileSize     int64     `json:"file_size"`
-	FileType     string    `json:"file_type"`
-	MimeType     string    `json:"mime_type"`
+	TenantID     uint64    `json:"tenantId"`
+	OriginalName string    `json:"originalName"`
+	FileName     string    `json:"fileName"`
+	FilePath     string    `json:"filePath"`
+	FileSize     int64     `json:"fileSize"`
+	FileType     string    `json:"fileType"`
+	MimeType     string    `json:"mimeType"`
 	MD5          string    `json:"md5"`
-	UploadUserID uint64    `json:"upload_user_id"`
-	UsageType    string    `json:"usage_type"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	UploadUserID uint64    `json:"uploadUserId"`
+	UsageType    string    `json:"usageType"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // ToProfile 转换为文件资料

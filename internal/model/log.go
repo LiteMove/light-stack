@@ -7,7 +7,7 @@ import (
 // OperationLog 操作日志模型
 type OperationLog struct {
 	TenantBaseModel
-	UserID       uint64 `json:"user_id" gorm:"not null;index:idx_user_id" validate:"required"`
+	UserID       uint64 `json:"userId" gorm:"not null;index:idx_user_id" validate:"required"`
 	Username     string `json:"username" gorm:"not null;size:50" validate:"required,max=50"`
 	Operation    string `json:"operation" gorm:"not null;size:50;index:idx_operation" validate:"required,max=50"`
 	Method       string `json:"method" gorm:"not null;size:10" validate:"required,max=10"`
@@ -16,7 +16,7 @@ type OperationLog struct {
 	Result       string `json:"result" gorm:"type:text"`
 	ErrorMessage string `json:"error_message" gorm:"type:text"`
 	IP           string `json:"ip" gorm:"not null;size:45" validate:"required,max=45"`
-	UserAgent    string `json:"user_agent" gorm:"size:500" validate:"max=500"`
+	UserAgent    string `json:"userAgent" gorm:"size:500" validate:"max=500"`
 	Duration     int    `json:"duration"` // 执行时长（毫秒）
 	Status       int    `json:"status" gorm:"not null;index:idx_status" validate:"required,oneof=1 2"`
 
@@ -32,17 +32,17 @@ func (OperationLog) TableName() string {
 // LoginLog 登录日志模型
 type LoginLog struct {
 	ID        uint64    `json:"id" gorm:"primarykey"`
-	TenantID  uint64    `json:"tenant_id" gorm:"not null;default:0;index:idx_tenant_id"`
-	UserID    *uint64   `json:"user_id" gorm:"index:idx_user_id"`
+	TenantID  uint64    `json:"tenantId" gorm:"not null;default:0;index:idx_tenant_id"`
+	UserID    *uint64   `json:"userId" gorm:"index:idx_user_id"`
 	Username  string    `json:"username" gorm:"not null;size:50;index:idx_username" validate:"required,max=50"`
 	IP        string    `json:"ip" gorm:"not null;size:45" validate:"required,max=45"`
-	UserAgent string    `json:"user_agent" gorm:"size:500" validate:"max=500"`
+	UserAgent string    `json:"userAgent" gorm:"size:500" validate:"max=500"`
 	Location  string    `json:"location" gorm:"size:100" validate:"max=100"`
 	Browser   string    `json:"browser" gorm:"size:100" validate:"max=100"`
 	OS        string    `json:"os" gorm:"size:100" validate:"max=100"`
 	Status    int       `json:"status" gorm:"not null;index:idx_status" validate:"required,oneof=1 2"`
 	Message   string    `json:"message" gorm:"size:255" validate:"max=255"`
-	LoginTime time.Time `json:"login_time" gorm:"not null;default:CURRENT_TIMESTAMP;index:idx_login_time"`
+	LoginTime time.Time `json:"loginTime" gorm:"not null;default:CURRENT_TIMESTAMP;index:idx_login_time"`
 
 	// 关联关系
 	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
@@ -56,20 +56,20 @@ func (LoginLog) TableName() string {
 // OperationLogProfile 操作日志资料（简化版本）
 type OperationLogProfile struct {
 	ID           uint64    `json:"id"`
-	TenantID     uint64    `json:"tenant_id"`
-	UserID       uint64    `json:"user_id"`
+	TenantID     uint64    `json:"tenantId"`
+	UserID       uint64    `json:"userId"`
 	Username     string    `json:"username"`
 	Operation    string    `json:"operation"`
 	Method       string    `json:"method"`
 	URL          string    `json:"url"`
 	Params       string    `json:"params"`
 	Result       string    `json:"result"`
-	ErrorMessage string    `json:"error_message"`
+	ErrorMessage string    `json:"errorMessage"`
 	IP           string    `json:"ip"`
-	UserAgent    string    `json:"user_agent"`
+	UserAgent    string    `json:"userAgent"`
 	Duration     int       `json:"duration"`
 	Status       int       `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 // ToProfile 转换为操作日志资料
@@ -97,7 +97,7 @@ func (ol *OperationLog) ToProfile() OperationLogProfile {
 type LoginLogProfile struct {
 	ID        uint64    `json:"id"`
 	TenantID  uint64    `json:"tenant_id"`
-	UserID    *uint64   `json:"user_id"`
+	UserID    *uint64   `json:"userId"`
 	Username  string    `json:"username"`
 	IP        string    `json:"ip"`
 	UserAgent string    `json:"user_agent"`
