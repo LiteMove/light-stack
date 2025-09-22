@@ -72,23 +72,6 @@
                 <el-option label="禁用" :value="2" />
               </el-select>
             </el-form-item>
-            <el-form-item label="角色" class="search-item">
-              <el-select
-                v-model="searchForm.roleId"
-                placeholder="角色筛选"
-                clearable
-                @change="handleSearch"
-                style="width: 140px"
-              >
-                <el-option label="全部" :value="0" />
-                <el-option 
-                  v-for="role in roles" 
-                  :key="role.id" 
-                  :label="role.name" 
-                  :value="role.id" 
-                />
-              </el-select>
-            </el-form-item>
             <el-form-item class="search-actions">
               <el-button 
                 type="primary" 
@@ -300,6 +283,7 @@
                   size="small"
                   :icon="Key"
                   @click="handleAssignRoles(row)"
+                  :disabled="row.id == 1"
                 />
               </el-tooltip>
               <el-tooltip content="重置密码" placement="top">
@@ -398,7 +382,6 @@ const userStore = useUserStore()
 const loading = ref(false)
 const userList = ref<User[]>([])
 const roles = ref<Role[]>([])
-const userRoles = ref<Record<number, Role[]>>({})
 const selectedRows = ref<User[]>([])
 const formVisible = ref(false)
 const roleAssignVisible = ref(false)
@@ -413,7 +396,6 @@ const currentTenant = computed(() => tenantStore.getCurrentTenant())
 const searchForm = reactive({
   keyword: '',
   status: 0,
-  roleId: 0,
   page: 1,
   pageSize: 20
 })
@@ -432,11 +414,6 @@ const getAvatarColor = (username: string): string => {
   return colors[index]
 }
 
-// 获取用户角色
-const getUserRoles = (userId: number): Role[] => {
-  return userRoles.value[userId] || []
-}
-
 // 获取用户列表
 const fetchUsers = async () => {
   // 如果是超级管理员但没有选择租户，不加载数据
@@ -449,12 +426,11 @@ const fetchUsers = async () => {
   
   try {
     loading.value = true
-    const params: PageParams & { keyword?: string; status?: number; roleId?: number } = {
+    const params: PageParams & { keyword?: string; status?: number } = {
       page: pagination.page,
       page_size: pagination.pageSize,
       keyword: searchForm.keyword || undefined,
       status: searchForm.status === 0 ? undefined : searchForm.status,
-      roleId: searchForm.roleId === 0 ? undefined : searchForm.roleId
     }
     
     // 租户ID现在通过请求头自动添加，不需要在参数中指定
@@ -462,32 +438,11 @@ const fetchUsers = async () => {
     userList.value = data.list
     pagination.total = data.total
     
-    // 获取每个用户的角色信息
-    await fetchUserRoles()
   } catch (error) {
     // 错误信息已在响应拦截器中处理
     console.error('获取用户列表失败:', error)
   } finally {
     loading.value = false
-  }
-}
-
-// 获取用户角色信息
-const fetchUserRoles = async () => {
-  try {
-    const promises = userList.value.map(async (user) => {
-      try {
-        // 这里假设有获取用户角色的API，如果没有，可以从用户信息中提取
-        // const { data } = await userApi.getUserRoles(user.id)
-        // 临时使用模拟数据
-        userRoles.value[user.id] = []
-      } catch (error) {
-        userRoles.value[user.id] = []
-      }
-    })
-    await Promise.all(promises)
-  } catch (error) {
-    console.error('获取用户角色失败:', error)
   }
 }
 
@@ -570,7 +525,7 @@ const handleDelete = async (row: User) => {
 const handleStatusChange = async (row: User) => {
   const oldStatus = row.status
   try {
-    await userApi.updateUser(row.id, { status: row.status })
+    await userApi.updateUserStatus(row.id, { status: row.status })
     ElMessage.success(`用户已${row.status === 1 ? '启用' : '禁用'}`)
   } catch (error) {
     // 恢复状态
@@ -696,7 +651,7 @@ const handleFormSuccess = () => {
 
 // 角色分配成功回调
 const handleRoleAssignSuccess = () => {
-  fetchUserRoles()
+  refreshUsers()
 }
 
 // 初始化

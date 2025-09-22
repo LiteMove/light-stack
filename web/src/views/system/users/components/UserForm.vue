@@ -161,7 +161,7 @@
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="用户状态" prop="status">
-            <el-radio-group v-model="form.status">
+            <el-radio-group v-model="form.status" :disabled="isEdit && form.isSystem">
               <el-radio :label="1">
                 <el-icon style="color: #67c23a"><Check /></el-icon>
                 正常
@@ -187,34 +187,6 @@
           </el-form-item>
         </el-col>
       </el-row>
-
-      <!-- 角色分配（仅在编辑模式下显示预览） -->
-      <template v-if="isEdit">
-        <el-divider content-position="left">
-          <el-icon><Key /></el-icon>
-          角色信息
-        </el-divider>
-        <el-form-item label="当前角色">
-          <div class="current-roles">
-            <el-tag
-              v-for="role in currentRoles"
-              :key="role.id"
-              :type="role.isSystem ? 'danger' : 'primary'"
-              size="default"
-              effect="light"
-              class="role-tag"
-            >
-              {{ role.name }}
-            </el-tag>
-            <el-tag v-if="currentRoles.length === 0" type="info" effect="plain">
-              未分配角色
-            </el-tag>
-          </div>
-          <div class="form-item-tip">
-            如需修改角色，请在用户列表中使用"分配角色"功能
-          </div>
-        </el-form-item>
-      </template>
     </el-form>
 
     <template #footer>
@@ -283,12 +255,6 @@ const dialogVisible = computed({
 })
 
 const isEdit = computed(() => !!props.formData.id)
-
-const currentRoles = computed(() => {
-  // 这里应该从props或API获取当前用户的角色
-  // 临时返回空数组
-  return []
-})
 
 // 表单数据
 const form = ref<UserFormData>({

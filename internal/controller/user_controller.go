@@ -221,6 +221,12 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
+	// 不可禁用超级管理员/系统用户
+	if id == model.SuperAdminId || existingUser.IsSystem {
+		response.BadRequest(ctx, "不可禁用超级管理员/系统用户")
+		return
+	}
+
 	// 更新用户信息
 	existingUser.Username = req.Username
 	existingUser.Nickname = req.Nickname
@@ -336,7 +342,7 @@ func (c *UserController) ResetPassword(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "用户ID格式错误")
+		response.BadRequest(ctx, "用户ID格式错误")
 		return
 	}
 
@@ -359,19 +365,24 @@ func (c *UserController) AssignUserRoles(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		response.Error(ctx, 400, "用户ID格式错误")
+		response.BadRequest(ctx, "用户ID格式错误")
 		return
 	}
 
 	var req AssignUserRolesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "请求参数格式错误: "+err.Error())
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
+		return
+	}
+
+	if id == model.SuperAdminUserId {
+		response.BadRequest(ctx, "超级管理员用户不允许分配角色")
 		return
 	}
 
 	// 参数验证
 	if err := c.validator.Struct(&req); err != nil {
-		response.Error(ctx, 400, "参数验证失败: "+err.Error())
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
 		return
 	}
 

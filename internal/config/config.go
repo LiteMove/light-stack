@@ -18,8 +18,9 @@ type Config struct {
 
 // AppConfig 应用配置
 type AppConfig struct {
-	Name string `mapstructure:"name"`
-	Mode string `mapstructure:"mode"`
+	Name     string `mapstructure:"name"`
+	Mode     string `mapstructure:"mode"`
+	TimeZone string `mapstructure:"time_zone"`
 }
 
 // ServerConfig 服务器配置
@@ -101,6 +102,7 @@ func setDefaults() {
 	// 应用配置
 	viper.SetDefault("app.name", "light-stack")
 	viper.SetDefault("app.mode", "development")
+	viper.SetDefault("app.time_zone", "Asia/Shanghai")
 
 	// 服务器配置
 	viper.SetDefault("server.port", "8080")

@@ -131,3 +131,6 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	}
 	return nil
 }
+
+// 超级管理员用户ID
+const SuperAdminUserId = 1

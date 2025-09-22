@@ -3,10 +3,11 @@ package service
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/utils"
-	"strings"
 )
 
 // UserService 用户服务接口
@@ -281,6 +282,11 @@ func (s *userService) UpdateUserStatus(id uint64, status int) error {
 		return errors.New("不允许禁用系统用户")
 	}
 
+	// 不允许禁用超级管理员
+	if user.ID == model.SuperAdminUserId && status == 2 {
+		return errors.New("不允许禁用超级管理员")
+	}
+
 	// 更新状态
 	if err := s.userRepo.UpdateStatus(id, status); err != nil {
 		return fmt.Errorf("更新用户状态失败: %w", err)
@@ -301,6 +307,11 @@ func (s *userService) BatchUpdateUserStatus(ids []uint64, status int) error {
 		// 不允许禁用系统用户
 		if user.IsSystem && status == 2 {
 			continue // 跳过系统用户
+		}
+
+		// 不允许禁用超级管理员
+		if user.ID == model.SuperAdminUserId && status == 2 {
+			continue // 跳过超级管理员
 		}
 
 		// 更新状态

@@ -50,6 +50,7 @@ export interface User {
   createdAt: string
   updatedAt: string
   roleCodes: string[]
+  roles: Role[]
   permissions: string[]
   menus: Menu[]
 

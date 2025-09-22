@@ -2,8 +2,9 @@ package database
 
 import (
 	"fmt"
-	"github.com/LiteMove/light-stack/internal/config"
 	"time"
+
+	"github.com/LiteMove/light-stack/internal/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
