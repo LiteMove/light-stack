@@ -2,6 +2,8 @@ package controller
 
 import (
 	"net/http"
+	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 
@@ -104,11 +106,18 @@ func (fc *FileController) DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// 检查文件是否存在
+	if _, err := os.Stat(file.FilePath); os.IsNotExist(err) {
+		response.Error(c, http.StatusNotFound, "文件已被删除")
+		return
+	}
+
 	// 设置下载头
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", "attachment; filename="+file.OriginalName)
-	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(file.OriginalName))
+	c.Header("Content-Type", file.MimeType)
+	c.Header("Content-Length", strconv.FormatInt(file.FileSize, 10))
 
 	c.File(file.FilePath)
 }
@@ -174,14 +183,14 @@ func (fc *FileController) GetUserFiles(c *gin.Context) {
 	})
 }
 
-// GetAllFiles 获取所有文件列表（管理员功能）
+// GetAllFiles 获取所有文件列表（按租户）
 func (fc *FileController) GetAllFiles(c *gin.Context) {
 	// 获取租户信息
 	tenantID, _ := middleware.GetTenantIDFromContext(c)
 
 	// 获取分页参数
 	pageStr := c.DefaultQuery("page", "1")
-	pageSizeStr := c.DefaultQuery("pageSize", "10")
+	pageSizeStr := c.DefaultQuery("pageSize", "20")
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
@@ -190,11 +199,14 @@ func (fc *FileController) GetAllFiles(c *gin.Context) {
 
 	pageSize, err := strconv.Atoi(pageSizeStr)
 	if err != nil || pageSize < 1 {
-		pageSize = 10
+		pageSize = 20
 	}
 
 	// 获取过滤参数
 	filters := make(map[string]interface{})
+	if filename := c.Query("filename"); filename != "" {
+		filters["filename"] = filename
+	}
 	if fileType := c.Query("fileType"); fileType != "" {
 		filters["file_type"] = fileType
 	}
@@ -236,6 +248,7 @@ func (fc *FileController) GetAllFiles(c *gin.Context) {
 					"id":       file.UploadUser.ID,
 					"username": file.UploadUser.Username,
 					"nickname": file.UploadUser.Nickname,
+					"avatar":   file.UploadUser.Avatar,
 				},
 			}
 		} else {

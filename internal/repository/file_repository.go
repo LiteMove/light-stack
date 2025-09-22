@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	"github.com/LiteMove/light-stack/internal/model"
 	"gorm.io/gorm"
 )
@@ -65,7 +67,7 @@ func (r *FileRepository) GetFilesByUser(userID uint64, tenantID uint64, offset, 
 	return files, total, nil
 }
 
-// GetAllFiles 获取所有文件列表（管理员功能）
+// GetAllFiles 获取所有文件列表（按租户）
 func (r *FileRepository) GetAllFiles(tenantID uint64, offset, limit int, filters map[string]interface{}) ([]*model.File, int64, error) {
 	var files []*model.File
 	var total int64
@@ -73,8 +75,20 @@ func (r *FileRepository) GetAllFiles(tenantID uint64, offset, limit int, filters
 	db := r.db.Where("tenant_id = ?", tenantID)
 
 	// 应用过滤条件
+	if filename, ok := filters["filename"]; ok && filename != "" {
+		db = db.Where("original_name LIKE ?", "%"+filename.(string)+"%")
+	}
 	if fileType, ok := filters["file_type"]; ok && fileType != "" {
-		db = db.Where("file_type = ?", fileType)
+		// 处理多个文件类型，用逗号分隔
+		fileTypeStr := fileType.(string)
+		if fileTypeStr != "" {
+			types := strings.Split(fileTypeStr, ",")
+			if len(types) > 1 {
+				db = db.Where("file_type IN ?", types)
+			} else {
+				db = db.Where("file_type = ?", fileTypeStr)
+			}
+		}
 	}
 	if usageType, ok := filters["usage_type"]; ok && usageType != "" {
 		db = db.Where("usage_type = ?", usageType)

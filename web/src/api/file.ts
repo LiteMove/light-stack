@@ -88,9 +88,12 @@ export const deleteFile = (id: number) => {
 export const getUserFiles = (params: {
   page?: number
   pageSize?: number
+  filename?: string
+  fileType?: string
+  usageType?: string
 }) => {
   return request({
-    url: '/v1/files/list',
+    url: '/v1/files',
     method: 'get',
     params
   })
@@ -100,12 +103,13 @@ export const getUserFiles = (params: {
 export const getAllFiles = (params: {
   page?: number
   pageSize?: number
+  filename?: string
   fileType?: string
   usageType?: string
   uploadUserId?: number
 }) => {
   return request({
-    url: '/api/v1/admin/files',
+    url: '/v1/files',
     method: 'get',
     params
   })

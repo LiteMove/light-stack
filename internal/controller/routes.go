@@ -94,7 +94,8 @@ func RegisterRoutes(r *gin.Engine) {
 			files.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
 			{
 				files.POST("/upload", fileController.UploadFile)        // 文件上传
-				files.GET("/list", fileController.GetUserFiles)         // 获取用户文件列表
+				files.GET("", fileController.GetAllFiles)               // 获取文件列表（按租户）
+				files.GET("/list", fileController.GetAllFiles)          // 获取文件列表（兼容旧接口）
 				files.GET("/:id", fileController.GetFile)               // 获取文件信息
 				files.GET("/:id/download", fileController.DownloadFile) // 下载文件
 				files.DELETE("/:id", fileController.DeleteFile)         // 删除文件
