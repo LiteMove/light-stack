@@ -142,8 +142,8 @@ func (r *menuRepository) GetUserMenus(userID uint64) ([]model.Menu, error) {
 	var menus []model.Menu
 	err := r.db.Table("menus").
 		Select("DISTINCT menus.*").
-		Joins("JOIN role_menu_permissions ON menus.id = role_menu_permissions.menu_id").
-		Joins("JOIN user_roles ON role_menu_permissions.role_id = user_roles.role_id").
+		Joins("JOIN role_menus ON menus.id = role_menus.menu_id").
+		Joins("JOIN user_roles ON role_menus.role_id = user_roles.role_id").
 		Where("user_roles.user_id = ? AND menus.status = ?", userID, 1).
 		Order("menus.sort_order ASC, menus.id ASC").
 		Find(&menus).Error
@@ -155,9 +155,9 @@ func (r *menuRepository) GetUserPermissions(userID uint64) ([]string, error) {
 	var permissions []string
 	err := r.db.Table("menus").
 		Select("DISTINCT menus.code").
-		Joins("JOIN role_menu_permissions ON menus.id = role_menu_permissions.menu_id").
-		Joins("JOIN user_roles ON role_menu_permissions.role_id = user_roles.role_id").
-		Where("user_roles.user_id = ? AND menus.status = ? AND menus.permission_code != ''", userID, 1).
+		Joins("JOIN role_menus ON menus.id = role_menus.menu_id").
+		Joins("JOIN user_roles ON role_menus.role_id = user_roles.role_id").
+		Where("user_roles.user_id = ? AND menus.status = ? AND menus.code != ''", userID, 1).
 		Pluck("code", &permissions).Error
 	return permissions, err
 }
@@ -167,8 +167,8 @@ func (r *menuRepository) GetRoleMenus(roleID uint64) ([]model.Menu, error) {
 	var menus []model.Menu
 	err := r.db.Table("menus").
 		Select("menus.*").
-		Joins("JOIN role_menu_permissions ON menus.id = role_menu_permissions.menu_id").
-		Where("role_menu_permissions.role_id = ? AND menus.status = ?", roleID, 1).
+		Joins("JOIN role_menus ON menus.id = role_menus.menu_id").
+		Where("role_menus.role_id = ? AND menus.status = ?", roleID, 1).
 		Order("menus.sort_order ASC, menus.id ASC").
 		Find(&menus).Error
 	return menus, err
@@ -243,33 +243,27 @@ func (r *menuRepository) AssignMenusToRole(roleID uint64, menuIDs []uint64) erro
 		return nil
 	}
 
-	// 批量插入新关联
-	type RoleMenuPermission struct {
-		RoleID uint64 `gorm:"column:roleId"`
-		MenuID uint64 `gorm:"column:menuId"`
-	}
-
-	var associations []RoleMenuPermission
+	var roleMenu []model.RoleMenus
 	for _, menuID := range menuIDs {
-		associations = append(associations, RoleMenuPermission{
-			RoleID: roleID,
-			MenuID: menuID,
+		roleMenu = append(roleMenu, model.RoleMenus{
+			RoleId: roleID,
+			MenuId: menuID,
 		})
 	}
 
-	return r.db.Table("role_menu_permissions").Create(&associations).Error
+	return r.db.Table("role_menus").Create(&roleMenu).Error
 }
 
 // RemoveMenusFromRole 从角色中移除菜单
 func (r *menuRepository) RemoveMenusFromRole(roleID uint64, menuIDs []uint64) error {
-	return r.db.Table("role_menu_permissions").
+	return r.db.Table("role_menus").
 		Where("role_id = ? AND menu_id IN ?", roleID, menuIDs).
 		Delete(nil).Error
 }
 
 // ClearRoleMenus 清除角色的所有菜单
 func (r *menuRepository) ClearRoleMenus(roleID uint64) error {
-	return r.db.Table("role_menu_permissions").
+	return r.db.Table("role_menus").
 		Where("role_id = ?", roleID).
 		Delete(nil).Error
 }

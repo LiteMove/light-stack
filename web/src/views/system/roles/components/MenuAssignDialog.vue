@@ -163,7 +163,7 @@ const menuMap = ref(new Map<number, Menu>())
 const treeProps = {
   children: 'children',
   label: 'name',
-  disabled: (data: Menu) => data.isSystem && !selectedMenus.value.includes(data.id)
+  //disabled: (data: Menu) => data.isSystem && !selectedMenus.value.includes(data.id)
 }
 
 // 计算属性

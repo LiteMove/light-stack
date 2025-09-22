@@ -27,7 +27,7 @@ type Menu struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 关联关系
-	Roles    []Role `json:"roles,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Roles    []Role `json:"roles,omitempty" gorm:"many2many:role_menus;"`
 	Children []Menu `json:"children,omitempty" gorm:"-"`
 }
 

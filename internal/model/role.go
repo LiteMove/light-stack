@@ -17,7 +17,7 @@ type Role struct {
 
 	// 关联关系
 	Users []User `json:"users,omitempty" gorm:"many2many:user_roles;"`
-	Menus []Menu `json:"menus,omitempty" gorm:"many2many:role_menu_permissions;"`
+	Menus []Menu `json:"menus,omitempty" gorm:"many2many:role_menus;"`
 }
 
 // TableName 指定表名

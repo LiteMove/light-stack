@@ -1,12 +1,13 @@
 package main
 
 import (
+	"log"
+
 	"github.com/LiteMove/light-stack/internal/config"
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/utils"
 	"github.com/LiteMove/light-stack/pkg/database"
 	"github.com/LiteMove/light-stack/pkg/logger"
-	"log"
 )
 
 func main() {
@@ -31,10 +32,9 @@ func main() {
 	err := db.AutoMigrate(
 		&model.User{},
 		&model.Role{},
-		&model.Permission{},
 		&model.Menu{},
 		&model.UserRole{},
-		&model.RoleMenuPermission{},
+		&model.RoleMenus{},
 	)
 
 	if err != nil {
