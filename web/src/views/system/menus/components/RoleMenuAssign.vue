@@ -170,12 +170,13 @@ const handleSave = async () => {
     await menuApi.assignMenusToRole(props.roleInfo.id, {
       menuIds: selectedMenuIds.value
     })
-    
-    ElMessage.success('菜单权限分配成功')
+    console.log('菜单权限分配成功')
+
     emit('success')
     handleClose()
   } catch (error) {
     ElMessage.error('菜单权限分配失败')
+    console.log('菜单权限分配失败')
   } finally {
     saving.value = false
   }

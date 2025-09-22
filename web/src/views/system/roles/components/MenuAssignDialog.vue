@@ -375,7 +375,8 @@ const handleSubmit = async () => {
       menuIds: selectedMenus.value
     })
     
-    ElMessage.success('菜单权限配置保存成功')
+    //ElMessage.success('菜单权限配置保存成功')
+    console.log('菜单权限配置保存成功')
     emit('success')
     handleClose()
   } catch (error: any) {

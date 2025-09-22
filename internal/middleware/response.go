@@ -151,3 +151,9 @@ func OptionalJWTAuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// GetUserIDFromContext 从上下文获取用户ID的辅助函数
+func GetUserIDFromContext(c *gin.Context) uint64 {
+	userID := c.GetUint64("userId")
+	return userID
+}

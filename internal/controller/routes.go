@@ -34,16 +34,19 @@ func RegisterRoutes(r *gin.Engine) {
 	roleRepo := repository.NewRoleRepository(db)
 	menuRepo := repository.NewMenuRepository(db)
 	tenantRepo := repository.NewTenantRepository(db)
+	fileRepo := repository.NewFileRepository(db)
 	authService := service.NewAuthService(userRepo, roleRepo, menuRepo)
 	userService := service.NewUserService(userRepo, roleRepo)
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)
 	tenantService := service.NewTenantService(tenantRepo, userRepo)
+	fileService := service.NewFileService(fileRepo)
 	authController := NewAuthController(authService, roleService, menuService)
 	userController := NewUserController(userService)
 	roleController := NewRoleController(roleService)
 	menuController := NewMenuController(menuService)
 	tenantController := NewTenantController(tenantService)
+	fileController := NewFileController(fileService)
 	healthController := NewHealthController()
 
 	// API 分组
@@ -85,6 +88,17 @@ func RegisterRoutes(r *gin.Engine) {
 				user.PUT("/password", authController.ChangePassword) // 修改密码
 				user.GET("/:id/roles", authController.GetUserRoles)  // 获取用户角色
 			}
+
+			// 文件相关路由（需要认证）
+			files := v1.Group("/files")
+			files.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
+			{
+				files.POST("/upload", fileController.UploadFile)        // 文件上传
+				files.GET("/list", fileController.GetUserFiles)         // 获取用户文件列表
+				files.GET("/:id", fileController.GetFile)               // 获取文件信息
+				files.GET("/:id/download", fileController.DownloadFile) // 下载文件
+				files.DELETE("/:id", fileController.DeleteFile)         // 删除文件
+			}
 			// TODO 看后续怎么优化，现在是根据路由地址来区分用户和超管以及管理员的
 			admin := v1.Group("/admin")
 			admin.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
@@ -107,6 +121,14 @@ func RegisterRoutes(r *gin.Engine) {
 				roles := admin.Group("/roles")
 				{
 					roles.GET("/select-list", roleController.GetEnabledRoles) // 获取角色列表
+				}
+
+				// 文件管理
+				files := admin.Group("/files")
+				{
+					files.GET("", fileController.GetAllFiles)       // 获取所有文件列表
+					files.GET("/:id", fileController.GetFile)       // 获取文件信息
+					files.DELETE("/:id", fileController.DeleteFile) // 删除文件
 				}
 			}
 

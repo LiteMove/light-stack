@@ -35,6 +35,7 @@ func main() {
 		&model.Menu{},
 		&model.UserRole{},
 		&model.RoleMenus{},
+		&model.File{},
 	)
 
 	if err != nil {
@@ -45,6 +46,9 @@ func main() {
 
 	// 创建基础数据
 	createBasicData()
+
+	// 创建文件管理菜单
+	createFileManagementMenus()
 
 	logger.Info("Migration process finished!")
 }
@@ -183,5 +187,78 @@ func assignAdminRoles() {
 		}
 	} else {
 		logger.Info("Admin user already has super_admin role")
+	}
+}
+
+// createFileManagementMenus 创建文件管理菜单
+func createFileManagementMenus() {
+	db := database.GetDB()
+
+	menus := []model.Menu{
+		{
+			ParentID:  0,
+			Name:      "文件管理",
+			Code:      "file_management",
+			Type:      "menu",
+			Path:      "/files",
+			Component: "system/files",
+			Icon:      "FolderOpened",
+			SortOrder: 500,
+			IsHidden:  false,
+			IsSystem:  true,
+			Status:    1,
+		},
+	}
+
+	for _, menu := range menus {
+		var existingMenu model.Menu
+		result := db.Where("code = ?", menu.Code).First(&existingMenu)
+		if result.Error != nil {
+			// 菜单不存在，创建新菜单
+			if err := db.Create(&menu).Error; err != nil {
+				logger.Error("Failed to create menu:", menu.Code, err)
+			} else {
+				logger.Info("Created menu:", menu.Code)
+
+				// 为超级管理员和租户管理员角色分配文件管理权限
+				assignFileMenuToRoles(menu.ID)
+			}
+		} else {
+			logger.Info("Menu already exists:", menu.Code)
+		}
+	}
+}
+
+// assignFileMenuToRoles 为角色分配文件管理菜单权限
+func assignFileMenuToRoles(menuID uint64) {
+	db := database.GetDB()
+
+	// 获取需要分配权限的角色
+	roleCodes := []string{"super_admin", "tenant_admin"}
+
+	for _, roleCode := range roleCodes {
+		var role model.Role
+		if err := db.Where("code = ?", roleCode).First(&role).Error; err != nil {
+			logger.Error("Failed to find role:", roleCode, err)
+			continue
+		}
+
+		// 检查是否已分配权限
+		var count int64
+		db.Model(&model.RoleMenus{}).Where("role_id = ? AND menu_id = ?", role.ID, menuID).Count(&count)
+
+		if count == 0 {
+			// 为角色分配菜单权限
+			roleMenu := model.RoleMenus{
+				RoleId: role.ID,
+				MenuId: menuID,
+			}
+
+			if err := db.Create(&roleMenu).Error; err != nil {
+				logger.Error("Failed to assign menu to role:", roleCode, err)
+			} else {
+				logger.Info("Assigned file management menu to role:", roleCode)
+			}
+		}
 	}
 }
