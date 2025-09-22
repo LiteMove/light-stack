@@ -86,7 +86,6 @@ export interface Menu {
   isHidden: boolean
   isSystem: boolean
   status: number
-  meta?: string
   children?: Menu[]
   createdAt: string
   updatedAt: string
@@ -106,7 +105,6 @@ export interface MenuFormData {
   sortOrder: number
   isHidden: boolean
   status: number
-  meta?: string
 }
 
 // 菜单列表查询参数

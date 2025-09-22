@@ -31,87 +31,6 @@
       </div>
     </div>
 
-    <!-- 操作工具栏 -->
-    <el-card class="toolbar-card" shadow="never">
-      <div class="toolbar-content">
-        <!-- 搜索区域 -->
-        <div class="search-section">
-          <el-form :model="searchForm" inline class="search-form">
-            <el-form-item label="关键词" class="search-item">
-              <el-input
-                v-model="searchForm.name"
-                placeholder="搜索菜单名称或编码"
-                clearable
-                @keyup.enter="handleSearch"
-                @clear="handleSearch"
-                :prefix-icon="Search"
-                style="width: 260px"
-              />
-            </el-form-item>
-            <el-form-item label="状态" class="search-item">
-              <el-select
-                v-model="searchForm.status"
-                placeholder="状态筛选"
-                clearable
-                @change="handleSearch"
-                style="width: 140px"
-              >
-                <el-option label="全部" :value="0" />
-                <el-option label="启用" :value="1" />
-                <el-option label="禁用" :value="2" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="类型" class="search-item">
-              <el-select
-                v-model="searchForm.type"
-                placeholder="类型筛选"
-                clearable
-                @change="handleSearch"
-                style="width: 140px"
-              >
-                <el-option label="全部" value="" />
-                <el-option label="目录" value="directory" />
-                <el-option label="菜单" value="menu" />
-                <el-option label="权限" value="permission" />
-              </el-select>
-            </el-form-item>
-            <el-form-item class="search-actions">
-              <el-button 
-                type="primary" 
-                :icon="Search" 
-                @click="handleSearch"
-                :loading="loading"
-              >
-                搜索
-              </el-button>
-              <el-button @click="handleResetSearch" :disabled="loading">
-                重置
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-        <!-- 批量操作区域 -->
-        <div class="batch-section" v-show="selectedRows.length > 0">
-          <div class="batch-info">
-            <el-icon class="info-icon"><InfoFilled /></el-icon>
-            已选择 <strong class="selected-count">{{ selectedRows.length }}</strong> 项
-          </div>
-          <div class="batch-actions">
-            <el-button type="success" size="small" :icon="Check" @click="batchEnable">
-              批量启用
-            </el-button>
-            <el-button type="warning" size="small" :icon="Close" @click="batchDisable">
-              批量禁用
-            </el-button>
-            <el-button type="danger" size="small" :icon="Delete" @click="batchDelete">
-              批量删除
-            </el-button>
-          </div>
-        </div>
-      </div>
-    </el-card>
-
     <!-- 菜单树形表格 -->
     <el-card class="table-card" shadow="never">
       <template #header>
@@ -127,10 +46,10 @@
             </el-tag>
           </div>
           <div class="table-actions">
-            <el-tooltip content="展开/收起所有" placement="top">
+            <el-tooltip content="展开/收起所有" placement="top" :disabled="isTreeView">
               <el-button
                 size="small"
-                :icon="isTreeView ? 'FoldPlus' : 'UnfoldPlus'"
+                :icon="expandAll ? 'Plus' : 'Minus'"
                 @click="toggleExpandAll"
                 circle
               />
@@ -567,57 +486,6 @@ const handleStatusChange = async (row: Menu) => {
 // 选择变化
 const handleSelectionChange = (selection: Menu[]) => {
   selectedRows.value = selection
-}
-
-// 批量启用
-const batchEnable = async () => {
-  const ids = selectedRows.value.map(row => row.id)
-  try {
-    await menuApi.batchUpdateMenuStatus({ ids, status: 1 })
-    ElMessage.success('批量启用成功')
-    refreshMenuTree()
-  } catch (error) {
-    // 错误信息已在响应拦截器中处理
-    console.error('批量启用失败:', error)
-  }
-}
-
-// 批量禁用
-const batchDisable = async () => {
-  const ids = selectedRows.value.map(row => row.id)
-  try {
-    await menuApi.batchUpdateMenuStatus({ ids, status: 2 })
-    ElMessage.success('批量禁用成功')
-    refreshMenuTree()
-  } catch (error) {
-    // 错误信息已在响应拦截器中处理
-    console.error('批量禁用失败:', error)
-  }
-}
-
-// 批量删除
-const batchDelete = async () => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedRows.value.length} 个菜单吗？此操作不可恢复！`,
-      '批量删除确认',
-      {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    const promises = selectedRows.value.map(row => menuApi.deleteMenu(row.id))
-    await Promise.all(promises)
-    ElMessage.success('批量删除成功')
-    refreshMenuTree()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      // 错误信息已在响应拦截器中处理
-      console.error('批量删除失败:', error)
-    }
-  }
 }
 
 // 分页相关

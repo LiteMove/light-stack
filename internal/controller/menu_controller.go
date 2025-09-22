@@ -39,7 +39,6 @@ type CreateMenuRequest struct {
 	SortOrder int    `json:"sortOrder"`
 	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
-	Meta      string `json:"meta"`
 }
 
 // UpdateMenuRequest 更新菜单请求
@@ -56,7 +55,6 @@ type UpdateMenuRequest struct {
 	SortOrder int    `json:"sortOrder"`
 	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
-	Meta      string `json:"meta"`
 }
 
 // MenuListRequest 菜单列表请求
@@ -70,12 +68,6 @@ type MenuListRequest struct {
 // UpdateStatusRequest 更新状态请求
 type UpdateStatusRequest struct {
 	Status int `json:"status" validate:"required,oneof=1 2"`
-}
-
-// BatchUpdateStatusRequest 批量更新状态请求
-type BatchUpdateStatusRequest struct {
-	IDs    []uint64 `json:"ids" validate:"required,min=1"`
-	Status int      `json:"status" validate:"required,oneof=1 2"`
 }
 
 // AssignMenusRequest 分配菜单请求
@@ -109,7 +101,6 @@ func (mc *MenuController) CreateMenu(c *gin.Context) {
 		SortOrder: req.SortOrder,
 		IsHidden:  req.IsHidden,
 		Status:    req.Status,
-		Meta:      req.Meta,
 	}
 
 	if err := mc.menuService.CreateMenu(menu); err != nil {
@@ -207,7 +198,6 @@ func (mc *MenuController) UpdateMenu(c *gin.Context) {
 		SortOrder: req.SortOrder,
 		IsHidden:  req.IsHidden,
 		Status:    req.Status,
-		Meta:      req.Meta,
 	}
 
 	if err := mc.menuService.UpdateMenu(menu); err != nil {
@@ -290,27 +280,6 @@ func (mc *MenuController) UpdateMenuStatus(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"message": "更新状态成功"})
-}
-
-// BatchUpdateMenuStatus 批量更新菜单状态
-func (mc *MenuController) BatchUpdateMenuStatus(c *gin.Context) {
-	var req BatchUpdateStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数格式错误")
-		return
-	}
-
-	if err := mc.validator.Struct(&req); err != nil {
-		response.BadRequest(c, "参数验证失败")
-		return
-	}
-
-	if err := mc.menuService.BatchUpdateMenuStatus(req.IDs, req.Status); err != nil {
-		response.BadRequest(c, "批量更新菜单状态失败")
-		return
-	}
-
-	response.Success(c, gin.H{"message": "批量更新状态成功"})
 }
 
 // AssignMenusToRole 为角色分配菜单

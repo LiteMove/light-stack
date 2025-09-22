@@ -162,17 +162,6 @@
           </el-form-item>
         </el-col>
       </el-row>
-
-      <el-form-item label="元数据" prop="meta">
-        <el-input
-          v-model="form.meta"
-          type="textarea"
-          :rows="4"
-          placeholder="请输入JSON格式的元数据，如：{&quot;keepAlive&quot;: true, &quot;title&quot;: &quot;页面标题&quot;}"
-          maxlength="1000"
-          show-word-limit
-        />
-      </el-form-item>
     </el-form>
 
     <template #footer>
@@ -232,7 +221,6 @@ const form = ref<MenuFormData>({
   sortOrder: 0,
   isHidden: false,
   status: 1,
-  meta: ''
 })
 
 // 树选择器配置
@@ -288,25 +276,7 @@ const rules = computed<FormRules>(() => ({
   status: [
     { required: true, message: '请选择状态', trigger: 'change' }
   ],
-  meta: [
-    { validator: validateMeta, trigger: 'blur' }
-  ]
 }))
-
-// 自定义验证器
-function validateMeta(rule: any, value: string, callback: any) {
-  if (!value) {
-    callback()
-    return
-  }
-  
-  try {
-    JSON.parse(value)
-    callback()
-  } catch (error) {
-    callback(new Error('请输入有效的JSON格式'))
-  }
-}
 
 // 监听表单数据变化
 watch(
@@ -326,7 +296,6 @@ watch(
         sort_order: newData.sortOrder || 0,
         isHidden: newData.isHidden || false,
         status: newData.status || 1,
-        meta: newData.meta || ''
       })
     }
   },

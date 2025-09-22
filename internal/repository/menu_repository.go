@@ -25,7 +25,6 @@ type MenuRepository interface {
 
 	// 状态操作
 	UpdateStatus(id uint64, status int) error
-	BatchUpdateStatus(ids []uint64, status int) error
 
 	// 树形结构操作
 	GetChildren(parentID uint64) ([]model.Menu, error)
@@ -179,13 +178,6 @@ func (r *menuRepository) GetRoleMenus(roleID uint64) ([]model.Menu, error) {
 func (r *menuRepository) UpdateStatus(id uint64, status int) error {
 	return r.db.Model(&model.Menu{}).
 		Where("id = ?", id).
-		Update("status", status).Error
-}
-
-// BatchUpdateStatus 批量更新菜单状态
-func (r *menuRepository) BatchUpdateStatus(ids []uint64, status int) error {
-	return r.db.Model(&model.Menu{}).
-		Where("id IN ?", ids).
 		Update("status", status).Error
 }
 

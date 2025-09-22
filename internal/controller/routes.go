@@ -144,14 +144,13 @@ func RegisterRoutes(r *gin.Engine) {
 				// 菜单管理
 				menus := superAdmin.Group("/menus")
 				{
-					menus.POST("", menuController.CreateMenu)                        // 创建菜单
-					menus.GET("", menuController.GetMenus)                           // 获取菜单列表
-					menus.GET("/tree", menuController.GetMenuTree)                   // 获取菜单树
-					menus.GET("/:id", menuController.GetMenu)                        // 获取菜单详情
-					menus.PUT("/:id", menuController.UpdateMenu)                     // 更新菜单
-					menus.DELETE("/:id", menuController.DeleteMenu)                  // 删除菜单
-					menus.PUT("/:id/status", menuController.UpdateMenuStatus)        // 更新菜单状态
-					menus.PUT("/batch/status", menuController.BatchUpdateMenuStatus) // 批量更新菜单状态
+					menus.POST("", menuController.CreateMenu)                 // 创建菜单
+					menus.GET("", menuController.GetMenus)                    // 获取菜单列表
+					menus.GET("/tree", menuController.GetMenuTree)            // 获取菜单树
+					menus.GET("/:id", menuController.GetMenu)                 // 获取菜单详情
+					menus.PUT("/:id", menuController.UpdateMenu)              // 更新菜单
+					menus.DELETE("/:id", menuController.DeleteMenu)           // 删除菜单
+					menus.PUT("/:id/status", menuController.UpdateMenuStatus) // 更新菜单状态
 				}
 			}
 		}

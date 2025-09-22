@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Menu 菜单权限模型
@@ -21,7 +22,6 @@ type Menu struct {
 	IsHidden  bool           `json:"isHidden" gorm:"not null;default:false"`
 	IsSystem  bool           `json:"isSystem" gorm:"not null;default:false"`
 	Status    int            `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
-	Meta      string         `json:"meta" gorm:"type:json"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
@@ -52,7 +52,6 @@ type MenuProfile struct {
 	IsHidden  bool          `json:"isHidden"`
 	IsSystem  bool          `json:"isSystem"`
 	Status    int           `json:"status"`
-	Meta      string        `json:"meta"`
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 	Children  []MenuProfile `json:"children,omitempty"`
@@ -75,7 +74,6 @@ func (m *Menu) ToProfile() MenuProfile {
 		IsHidden:  m.IsHidden,
 		IsSystem:  m.IsSystem,
 		Status:    m.Status,
-		Meta:      m.Meta,
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,
 	}

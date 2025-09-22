@@ -24,7 +24,6 @@ type MenuService interface {
 
 	// 状态操作
 	UpdateMenuStatus(id uint64, status int) error
-	BatchUpdateMenuStatus(ids []uint64, status int) error
 
 	// 权限相关
 	AssignMenusToRole(roleID uint64, menuIDs []uint64) error
@@ -66,9 +65,6 @@ func (s *menuService) CreateMenu(menu *model.Menu) error {
 		if parent.Status != 1 {
 			return errors.New("父菜单已禁用")
 		}
-	}
-	if menu.Meta == "" {
-		menu.Meta = "{}"
 	}
 
 	return s.menuRepo.Create(menu)
@@ -213,22 +209,6 @@ func (s *menuService) UpdateMenuStatus(id uint64, status int) error {
 	}
 
 	return s.menuRepo.UpdateStatus(id, status)
-}
-
-// BatchUpdateMenuStatus 批量更新菜单状态
-func (s *menuService) BatchUpdateMenuStatus(ids []uint64, status int) error {
-	// 检查系统菜单
-	for _, id := range ids {
-		menu, err := s.menuRepo.GetByID(id)
-		if err != nil {
-			continue
-		}
-		if menu.IsSystem && status != 1 {
-			return errors.New("系统菜单不能禁用")
-		}
-	}
-
-	return s.menuRepo.BatchUpdateStatus(ids, status)
 }
 
 // AssignMenusToRole 为角色分配菜单

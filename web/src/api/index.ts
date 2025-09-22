@@ -155,49 +155,6 @@ export const roleApi = {
   }
 }
 
-// 权限管理API
-export const permissionApi = {
-  // 获取权限列表
-  getPermissions(params: PermissionQueryParams): Promise<ApiResponse<PageResponse<Permission>>> {
-    return http.get('/v1/super-admin/permissions', { params })
-  },
-
-  // 获取权限详情
-  getPermission(id: number): Promise<ApiResponse<Permission>> {
-    return http.get(`/v1/super-admin/permissions/${id}`)
-  },
-
-  // 创建权限
-  createPermission(data: PermissionFormData): Promise<ApiResponse<Permission>> {
-    return http.post('/v1/super-admin/permissions', data)
-  },
-
-  // 更新权限
-  updatePermission(id: number, data: PermissionFormData): Promise<ApiResponse<Permission>> {
-    return http.put(`/v1/super-admin/permissions/${id}`, data)
-  },
-
-  // 删除权限
-  deletePermission(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/super-admin/permissions/${id}`)
-  },
-
-  // 更新权限状态
-  updatePermissionStatus(id: number, data: { status: number }): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/permissions/${id}/status`, data)
-  },
-
-  // 批量更新权限状态
-  batchUpdatePermissionStatus(data: { ids: number[], status: number }): Promise<ApiResponse> {
-    return http.put('/v1/super-admin/permissions/batch/status', data)
-  },
-
-  // 获取权限类型列表
-  getPermissionTypes(): Promise<ApiResponse<string[]>> {
-    return http.get('/v1/super-admin/permissions/types')
-  }
-}
-
 // 菜单管理API
 export const menuApi = {
   // 获取菜单列表(分页)
@@ -245,10 +202,6 @@ export const menuApi = {
     return http.put(`/v1/super-admin/menus/${id}/status`, data)
   },
 
-  // 批量更新菜单状态
-  batchUpdateMenuStatus(data: BatchMenuStatusData): Promise<ApiResponse> {
-    return http.put('/v1/super-admin/menus/batch/status', data)
-  },
 
   // 获取角色菜单
   getRoleMenus(roleId: number): Promise<ApiResponse<Menu[]>> {
