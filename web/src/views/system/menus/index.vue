@@ -46,10 +46,10 @@
             </el-tag>
           </div>
           <div class="table-actions">
-            <el-tooltip content="展开/收起所有" placement="top" :disabled="isTreeView">
-              <el-button
+            <el-tooltip content="展开/收起所有" placement="top">
+              <el-button :disabled="!isTreeView"
                 size="small"
-                :icon="expandAll ? 'Plus' : 'Minus'"
+                :icon="expandAll ? 'Minus' : 'Plus'"
                 @click="toggleExpandAll"
                 circle
               />
@@ -67,19 +67,17 @@
         </div>
       </template>
       <el-table
+        ref="tableRef"
         v-loading="loading"
         :data="menuList"
         row-key="id"
-        :default-expand-all="expandAll"
+        :default-expand-all="false"
         :tree-props="{ children: 'children' }"
-        @selection-change="handleSelectionChange"
         stripe
         border
         style="width: 100%"
         :header-row-style="{ backgroundColor: '#f8f9fa' }"
       >
-        <el-table-column type="selection" width="50" align="center" />
-        
         <!-- 菜单名称列 -->
         <el-table-column prop="name" label="菜单名称" min-width="280" show-overflow-tooltip>
           <template #default="{ row }">
@@ -297,15 +295,14 @@ import type { Menu, MenuQueryParams } from '@/api/types'
 import MenuForm from './components/MenuForm.vue'
 import { formatDateTime } from '@/utils/date'
 
-// 响应式数据
 const loading = ref(false)
 const menuList = ref<Menu[]>([])
-const selectedRows = ref<Menu[]>([])
 const formVisible = ref(false)
 const formData = ref<Partial<Menu>>({})
 const parentOptions = ref<Menu[]>([])
 const isTreeView = ref(true) // 默认树形视图
 const expandAll = ref(false) // 展开状态
+const tableRef = ref() // 表格引用
 
 // 搜索表单
 const searchForm = reactive<Partial<MenuQueryParams & { type: string }>>({
@@ -347,9 +344,26 @@ const toggleView = () => {
 // 切换展开/收起所有
 const toggleExpandAll = () => {
   expandAll.value = !expandAll.value
-  // 强制重新渲染表格以应用新的展开状态
+
+  // 使用 nextTick 确保 DOM 更新后再操作表格
   nextTick(() => {
-    fetchMenus()
+    if (tableRef.value) {
+      if (expandAll.value) {
+        // 展开所有行
+        flatMenuList.value.forEach(row => {
+          if (row.children && row.children.length > 0) {
+            tableRef.value.toggleRowExpansion(row, true)
+          }
+        })
+      } else {
+        // 收起所有行
+        flatMenuList.value.forEach(row => {
+          if (row.children && row.children.length > 0) {
+            tableRef.value.toggleRowExpansion(row, false)
+          }
+        })
+      }
+    }
   })
 }
 
@@ -481,11 +495,6 @@ const handleStatusChange = async (row: Menu) => {
     // 错误信息已在响应拦截器中处理
     console.error('状态更新失败:', error)
   }
-}
-
-// 选择变化
-const handleSelectionChange = (selection: Menu[]) => {
-  selectedRows.value = selection
 }
 
 // 分页相关
