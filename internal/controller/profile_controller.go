@@ -39,6 +39,10 @@ type ProfileChangePasswordRequest struct {
 
 // UpdateTenantConfigRequest 更新租户配置请求
 type UpdateTenantConfigRequest struct {
+	SystemName  string                  `json:"systemName"`
+	Logo        string                  `json:"logo"`
+	Description string                  `json:"description"`
+	Copyright   string                  `json:"copyright"`
 	FileStorage model.FileStorageConfig `json:"fileStorage" validate:"required"`
 }
 
@@ -148,16 +152,21 @@ func (c *ProfileController) GetTenantConfig(ctx *gin.Context) {
 
 	uid := userID.(uint64)
 
-	// 检查是否为租户管理员
-	isAdmin, err := c.profileService.IsTenantAdmin(uid, tenantID)
-	if err != nil {
-		response.InternalServerError(ctx, err.Error())
-		return
-	}
+	// 检查是否为超级管理员
+	isSuperAdmin := ctx.GetBool("is_super_admin")
 
-	if !isAdmin {
-		response.Forbidden(ctx, "仅租户管理员可查看租户配置")
-		return
+	// 如果不是超级管理员，检查是否为租户管理员
+	if !isSuperAdmin {
+		isAdmin, err := c.profileService.IsTenantAdmin(uid, tenantID)
+		if err != nil {
+			response.InternalServerError(ctx, err.Error())
+			return
+		}
+
+		if !isAdmin {
+			response.Forbidden(ctx, "仅租户管理员可查看租户配置")
+			return
+		}
 	}
 
 	// 获取租户配置
@@ -187,16 +196,21 @@ func (c *ProfileController) UpdateTenantConfig(ctx *gin.Context) {
 
 	uid := userID.(uint64)
 
-	// 检查是否为租户管理员
-	isAdmin, err := c.profileService.IsTenantAdmin(uid, tenantID)
-	if err != nil {
-		response.InternalServerError(ctx, err.Error())
-		return
-	}
+	// 检查是否为超级管理员
+	isSuperAdmin := ctx.GetBool("is_super_admin")
 
-	if !isAdmin {
-		response.Forbidden(ctx, "仅租户管理员可修改租户配置")
-		return
+	// 如果不是超级管理员，检查是否为租户管理员
+	if !isSuperAdmin {
+		isAdmin, err := c.profileService.IsTenantAdmin(uid, tenantID)
+		if err != nil {
+			response.InternalServerError(ctx, err.Error())
+			return
+		}
+
+		if !isAdmin {
+			response.Forbidden(ctx, "仅租户管理员可修改租户配置")
+			return
+		}
 	}
 
 	var req UpdateTenantConfigRequest
@@ -213,6 +227,10 @@ func (c *ProfileController) UpdateTenantConfig(ctx *gin.Context) {
 
 	// 构建租户配置
 	config := &model.TenantConfig{
+		SystemName:  req.SystemName,
+		Logo:        req.Logo,
+		Description: req.Description,
+		Copyright:   req.Copyright,
 		FileStorage: req.FileStorage,
 	}
 

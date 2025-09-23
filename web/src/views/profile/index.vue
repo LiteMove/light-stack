@@ -5,237 +5,440 @@
       <p>管理您的个人信息和账户设置</p>
     </div>
 
-    <el-tabs v-model="activeTab" class="profile-tabs">
+    <div class="profile-content">
+      <el-tabs v-model="activeTab" class="profile-tabs">
       <!-- 个人信息标签页 -->
-      <el-tab-pane label="个人信息" name="profile">
-        <el-card class="profile-card">
-          <template #header>
-            <div class="card-header">
-              <span>基本信息</span>
-            </div>
-          </template>
+      <el-tab-pane name="profile">
+        <template #label>
+          <span class="tab-label">
+            <el-icon><User /></el-icon>
+            个人信息
+          </span>
+        </template>
+        
+        <div class="profile-layout">
+          <!-- 左侧：个人信息 -->
+          <div class="profile-left">
+            <el-card class="profile-card">
+              <template #header>
+                <div class="card-header">
+                  <span>
+                    <el-icon><UserFilled /></el-icon>
+                    基本信息
+                  </span>
+                </div>
+              </template>
 
-          <el-form
-            ref="profileFormRef"
-            :model="profileForm"
-            :rules="profileRules"
-            label-width="120px"
-            class="profile-form"
-          >
-            <el-form-item label="用户名">
-              <el-input v-model="profileForm.username" disabled />
-            </el-form-item>
+              <!-- 头像区域 -->
+              <div class="avatar-section">
+                <div class="avatar-container">
+                  <el-avatar 
+                    :size="120" 
+                    :src="profileForm.avatar || '/default-avatar.png'" 
+                    class="user-avatar"
+                  >
+                    <el-icon><UserFilled /></el-icon>
+                  </el-avatar>
+                  <div class="avatar-actions">
+                    <el-upload
+                      :show-file-list="false"
+                      :on-success="handleAvatarSuccess"
+                      :before-upload="beforeAvatarUpload"
+                      action="/api/v1/file/upload"
+                      :headers="{ Authorization: `Bearer ${getToken()}` }"
+                    >
+                      <el-button type="primary" size="small">
+                        <el-icon><Upload /></el-icon>
+                        更换头像
+                      </el-button>
+                    </el-upload>
+                  </div>
+                </div>
+              </div>
 
-            <el-form-item label="昵称" prop="nickname">
-              <el-input
-                v-model="profileForm.nickname"
-                placeholder="请输入昵称"
-                clearable
-              />
-            </el-form-item>
-
-            <el-form-item label="邮箱" prop="email">
-              <el-input
-                v-model="profileForm.email"
-                placeholder="请输入邮箱地址"
-                clearable
-              />
-            </el-form-item>
-
-            <el-form-item label="手机号" prop="phone">
-              <el-input
-                v-model="profileForm.phone"
-                placeholder="请输入手机号码"
-                clearable
-              />
-            </el-form-item>
-
-            <el-form-item label="角色">
-              <el-tag
-                v-for="role in profileInfo?.roles || []"
-                :key="role.id"
-                type="primary"
-                class="role-tag"
+              <el-form
+                ref="profileFormRef"
+                :model="profileForm"
+                :rules="profileRules"
+                label-width="120px"
+                class="profile-form"
               >
-                {{ role.name }}
-              </el-tag>
-            </el-form-item>
+                <el-form-item label="用户名">
+                  <el-input v-model="profileForm.username" disabled>
+                    <template #prefix>
+                      <el-icon><User /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
 
-            <el-form-item>
-              <el-button type="primary" @click="updateProfile" :loading="updating">
-                保存修改
-              </el-button>
-              <el-button @click="resetProfileForm">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+                <el-form-item label="昵称" prop="nickname">
+                  <el-input
+                    v-model="profileForm.nickname"
+                    placeholder="请输入昵称"
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Avatar /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
 
-        <!-- 修改密码卡片 -->
-        <el-card class="profile-card">
-          <template #header>
-            <div class="card-header">
-              <span>修改密码</span>
-            </div>
-          </template>
+                <el-form-item label="邮箱" prop="email">
+                  <el-input
+                    v-model="profileForm.email"
+                    placeholder="请输入邮箱地址"
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Message /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
 
-          <el-form
-            ref="passwordFormRef"
-            :model="passwordForm"
-            :rules="passwordRules"
-            label-width="120px"
-            class="profile-form"
-          >
-            <el-form-item label="原密码" prop="oldPassword">
-              <el-input
-                v-model="passwordForm.oldPassword"
-                type="password"
-                placeholder="请输入原密码"
-                show-password
-                clearable
-              />
-            </el-form-item>
+                <el-form-item label="手机号" prop="phone">
+                  <el-input
+                    v-model="profileForm.phone"
+                    placeholder="请输入手机号码"
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Phone /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
 
-            <el-form-item label="新密码" prop="newPassword">
-              <el-input
-                v-model="passwordForm.newPassword"
-                type="password"
-                placeholder="请输入新密码（至少6位）"
-                show-password
-                clearable
-              />
-            </el-form-item>
+                <el-form-item label="角色">
+                  <div class="roles-container">
+                    <el-tag
+                      v-for="role in profileInfo?.roles || []"
+                      :key="role.id"
+                      type="primary"
+                      size="large"
+                      class="role-tag"
+                      effect="plain"
+                    >
+                      <el-icon><Star /></el-icon>
+                      {{ role.name }}
+                    </el-tag>
+                    <el-text v-if="!profileInfo?.roles?.length" type="info">
+                      暂无角色信息
+                    </el-text>
+                  </div>
+                </el-form-item>
 
-            <el-form-item label="确认密码" prop="confirmPassword">
-              <el-input
-                v-model="passwordForm.confirmPassword"
-                type="password"
-                placeholder="请再次输入新密码"
-                show-password
-                clearable
-              />
-            </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="updateProfile" :loading="updating">
+                    <el-icon v-if="!updating"><Check /></el-icon>
+                    保存修改
+                  </el-button>
+                  <el-button @click="resetProfileForm">
+                    <el-icon><Refresh /></el-icon>
+                    重置
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </div>
 
-            <el-form-item>
-              <el-button type="primary" @click="changePassword" :loading="changingPassword">
-                修改密码
-              </el-button>
-              <el-button @click="resetPasswordForm">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+          <!-- 右侧：密码修改 -->
+          <div class="profile-right">
+            <el-card class="profile-card">
+              <template #header>
+                <div class="card-header">
+                  <span>
+                    <el-icon><Key /></el-icon>
+                    修改密码
+                  </span>
+                  <el-tag type="warning" size="small">修改后需重新登录</el-tag>
+                </div>
+              </template>
+
+              <el-form
+                ref="passwordFormRef"
+                :model="passwordForm"
+                :rules="passwordRules"
+                label-width="120px"
+                class="profile-form"
+              >
+                <el-form-item label="原密码" prop="oldPassword">
+                  <el-input
+                    v-model="passwordForm.oldPassword"
+                    type="password"
+                    placeholder="请输入原密码"
+                    show-password
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Lock /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+
+                <el-form-item label="新密码" prop="newPassword">
+                  <el-input
+                    v-model="passwordForm.newPassword"
+                    type="password"
+                    placeholder="请输入新密码（至少6位）"
+                    show-password
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Key /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+
+                <el-form-item label="确认密码" prop="confirmPassword">
+                  <el-input
+                    v-model="passwordForm.confirmPassword"
+                    type="password"
+                    placeholder="请再次输入新密码"
+                    show-password
+                    clearable
+                  >
+                    <template #prefix>
+                      <el-icon><Key /></el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+
+                <el-form-item>
+                  <el-button type="primary" @click="changePassword" :loading="changingPassword">
+                    <el-icon v-if="!changingPassword"><Check /></el-icon>
+                    修改密码
+                  </el-button>
+                  <el-button @click="resetPasswordForm">
+                    <el-icon><Refresh /></el-icon>
+                    重置
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </div>
+        </div>
       </el-tab-pane>
 
       <!-- 租户配置标签页（仅租户管理员可见） -->
-      <el-tab-pane v-if="isTenantAdmin" label="租户配置" name="tenantConfig">
-        <el-card class="profile-card">
-          <template #header>
-            <div class="card-header">
-              <span>文件存储配置</span>
-              <el-tag type="warning" size="small">仅租户管理员可修改</el-tag>
-            </div>
-          </template>
+      <el-tab-pane v-if="isTenantAdmin" name="tenantConfig">
+        <template #label>
+          <span class="tab-label">
+            <el-icon><Setting /></el-icon>
+            租户配置
+          </span>
+        </template>
+        
+        <!-- 当前租户信息显示 -->
+        <div class="tenant-info-bar" v-if="currentTenantInfo">
+          <el-tag type="info" size="large" effect="dark">
+            <el-icon><Setting /></el-icon>
+            正在配置租户：{{ currentTenantInfo.name }}
+          </el-tag>
+        </div>
+        
+        <div class="tenant-config-layout">
+          <!-- 左侧：系统基本信息 -->
+          <div class="config-left">
+            <el-card class="profile-card">
+              <template #header>
+                <div class="card-header">
+                  <span>
+                    <el-icon><Setting /></el-icon>
+                    系统基本信息
+                  </span>
+                  <el-tag type="warning" size="small">仅租户管理员可修改</el-tag>
+                </div>
+              </template>
 
-          <el-form
-            ref="tenantConfigFormRef"
-            :model="tenantConfigForm"
-            :rules="tenantConfigRules"
-            label-width="150px"
-            class="profile-form"
-          >
-            <el-form-item label="存储类型" prop="fileStorage.type">
-              <el-radio-group v-model="tenantConfigForm.fileStorage.type">
-                <el-radio label="local">本地存储</el-radio>
-                <el-radio label="oss" disabled>OSS存储（暂未实现）</el-radio>
-              </el-radio-group>
-            </el-form-item>
+              <el-form
+                ref="systemInfoFormRef"
+                :model="tenantConfigForm"
+                :rules="systemInfoRules"
+                label-width="120px"
+                class="profile-form"
+              >
+                <el-form-item label="系统名称" prop="systemName">
+                  <el-input
+                    v-model="tenantConfigForm.systemName"
+                    placeholder="请输入系统名称"
+                    clearable
+                  />
+                </el-form-item>
 
-            <el-form-item label="默认公开访问" prop="fileStorage.defaultPublic">
-              <el-switch
-                v-model="tenantConfigForm.fileStorage.defaultPublic"
-                active-text="是"
-                inactive-text="否"
-              />
-            </el-form-item>
+                <el-form-item label="系统Logo" prop="logo">
+                  <el-input
+                    v-model="tenantConfigForm.logo"
+                    placeholder="请输入Logo URL地址"
+                    clearable
+                  />
+                  <div class="form-tip">支持本地文件路径或网络图片URL</div>
+                </el-form-item>
 
-            <el-form-item label="最大文件大小" prop="fileStorage.maxFileSize">
-              <el-input-number
-                v-model="fileSizeMB"
-                :min="1"
-                :max="1000"
-                controls-position="right"
-                @change="updateMaxFileSize"
-              />
-              <span style="margin-left: 8px;">MB</span>
-            </el-form-item>
+                <el-form-item label="系统描述" prop="description">
+                  <el-input
+                    v-model="tenantConfigForm.description"
+                    type="textarea"
+                    :rows="4"
+                    placeholder="请输入系统描述信息"
+                    maxlength="200"
+                    show-word-limit
+                  />
+                </el-form-item>
 
-            <el-form-item label="允许的文件类型" prop="fileStorage.allowedTypes">
-              <el-checkbox-group v-model="tenantConfigForm.fileStorage.allowedTypes">
-                <el-checkbox label=".jpg">JPG</el-checkbox>
-                <el-checkbox label=".jpeg">JPEG</el-checkbox>
-                <el-checkbox label=".png">PNG</el-checkbox>
-                <el-checkbox label=".gif">GIF</el-checkbox>
-                <el-checkbox label=".pdf">PDF</el-checkbox>
-                <el-checkbox label=".doc">DOC</el-checkbox>
-                <el-checkbox label=".docx">DOCX</el-checkbox>
-                <el-checkbox label=".xls">XLS</el-checkbox>
-                <el-checkbox label=".xlsx">XLSX</el-checkbox>
-                <el-checkbox label=".txt">TXT</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
+                <el-form-item label="版权信息" prop="copyright">
+                  <el-input
+                    v-model="tenantConfigForm.copyright"
+                    placeholder="请输入版权信息"
+                    clearable
+                  />
+                  <div class="form-tip">例如：© 2024 公司名称 版权所有</div>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </div>
 
-            <!-- OSS配置（预留，当前禁用） -->
-            <template v-if="tenantConfigForm.fileStorage.type === 'oss'">
-              <el-divider content-position="left">OSS配置</el-divider>
+          <!-- 右侧：文件存储配置 -->
+          <div class="config-right">
+            <el-card class="profile-card">
+              <template #header>
+                <div class="card-header">
+                  <span>
+                    <el-icon><Folder /></el-icon>
+                    文件存储配置
+                  </span>
+                  <el-tag type="warning" size="small">仅租户管理员可修改</el-tag>
+                </div>
+              </template>
 
-              <el-form-item label="OSS提供商">
-                <el-select v-model="tenantConfigForm.fileStorage.ossProvider" disabled>
-                  <el-option label="阿里云OSS" value="aliyun" />
-                  <el-option label="腾讯云COS" value="tencent" />
-                  <el-option label="AWS S3" value="aws" />
-                  <el-option label="七牛云Kodo" value="qiniu" />
-                  <el-option label="又拍云USS" value="upyun" />
-                </el-select>
-              </el-form-item>
+              <el-form
+                ref="tenantConfigFormRef"
+                :model="tenantConfigForm"
+                :rules="tenantConfigRules"
+                label-width="150px"
+                class="profile-form"
+              >
+                <el-form-item label="存储类型" prop="fileStorage.type">
+                  <el-radio-group v-model="tenantConfigForm.fileStorage.type">
+                    <el-radio label="local">本地存储</el-radio>
+                    <el-radio label="oss" disabled>OSS存储（暂未实现）</el-radio>
+                  </el-radio-group>
+                </el-form-item>
 
-              <el-form-item label="Endpoint">
-                <el-input v-model="tenantConfigForm.fileStorage.ossEndpoint" disabled />
-              </el-form-item>
+                <!-- 本地存储配置 -->
+                <template v-if="tenantConfigForm.fileStorage.type === 'local'">
+                  <el-form-item label="存储路径" prop="fileStorage.localPath">
+                    <el-input
+                      v-model="tenantConfigForm.fileStorage.localPath"
+                      placeholder="请输入文件存储路径"
+                      clearable
+                    />
+                    <div class="form-tip">相对于服务器根目录的路径，例如：uploads</div>
+                  </el-form-item>
+                </template>
 
-              <el-form-item label="Bucket">
-                <el-input v-model="tenantConfigForm.fileStorage.ossBucket" disabled />
-              </el-form-item>
+                <el-form-item label="默认公开访问" prop="fileStorage.defaultPublic">
+                  <el-switch
+                    v-model="tenantConfigForm.fileStorage.defaultPublic"
+                    active-text="是"
+                    inactive-text="否"
+                  />
+                </el-form-item>
 
-              <el-form-item label="Access Key">
-                <el-input v-model="tenantConfigForm.fileStorage.ossAccessKey" disabled />
-              </el-form-item>
+                <el-form-item label="最大文件大小" prop="fileStorage.maxFileSize">
+                  <el-input-number
+                    v-model="fileSizeMB"
+                    :min="1"
+                    :max="1000"
+                    controls-position="right"
+                    @change="updateMaxFileSize"
+                  />
+                  <span style="margin-left: 8px;">MB</span>
+                </el-form-item>
 
-              <el-form-item label="Secret Key">
-                <el-input v-model="tenantConfigForm.fileStorage.ossSecretKey" type="password" disabled />
-              </el-form-item>
-            </template>
+                <el-form-item label="允许的文件类型" prop="fileStorage.allowedTypes">
+                  <el-checkbox-group v-model="tenantConfigForm.fileStorage.allowedTypes">
+                    <el-checkbox label=".jpg">JPG</el-checkbox>
+                    <el-checkbox label=".jpeg">JPEG</el-checkbox>
+                    <el-checkbox label=".png">PNG</el-checkbox>
+                    <el-checkbox label=".gif">GIF</el-checkbox>
+                    <el-checkbox label=".pdf">PDF</el-checkbox>
+                    <el-checkbox label=".doc">DOC</el-checkbox>
+                    <el-checkbox label=".docx">DOCX</el-checkbox>
+                    <el-checkbox label=".xls">XLS</el-checkbox>
+                    <el-checkbox label=".xlsx">XLSX</el-checkbox>
+                    <el-checkbox label=".txt">TXT</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
 
-            <el-form-item>
-              <el-button type="primary" @click="updateTenantConfig" :loading="updatingTenantConfig">
-                保存配置
-              </el-button>
-              <el-button @click="resetTenantConfigForm">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+                <!-- OSS配置（预留，当前禁用） -->
+                <template v-if="tenantConfigForm.fileStorage.type === 'oss'">
+                  <el-divider content-position="left">OSS配置</el-divider>
+
+                  <el-form-item label="OSS提供商">
+                    <el-select v-model="tenantConfigForm.fileStorage.ossProvider" disabled>
+                      <el-option label="阿里云OSS" value="aliyun" />
+                      <el-option label="腾讯云COS" value="tencent" />
+                      <el-option label="AWS S3" value="aws" />
+                      <el-option label="七牛云Kodo" value="qiniu" />
+                      <el-option label="又拍云USS" value="upyun" />
+                    </el-select>
+                  </el-form-item>
+
+                  <el-form-item label="Endpoint">
+                    <el-input v-model="tenantConfigForm.fileStorage.ossEndpoint" disabled />
+                  </el-form-item>
+
+                  <el-form-item label="Bucket">
+                    <el-input v-model="tenantConfigForm.fileStorage.ossBucket" disabled />
+                  </el-form-item>
+
+                  <el-form-item label="Access Key">
+                    <el-input v-model="tenantConfigForm.fileStorage.ossAccessKey" disabled />
+                  </el-form-item>
+
+                  <el-form-item label="Secret Key">
+                    <el-input v-model="tenantConfigForm.fileStorage.ossSecretKey" type="password" disabled />
+                  </el-form-item>
+                </template>
+              </el-form>
+            </el-card>
+          </div>
+        </div>
+        
+        <!-- 底部操作按钮 -->
+        <div class="config-actions">
+          <el-button type="primary" @click="updateTenantConfig" :loading="updatingTenantConfig">
+            <el-icon v-if="!updatingTenantConfig"><Check /></el-icon>
+            保存配置
+          </el-button>
+          <el-button @click="resetTenantConfigForm">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
+        </div>
       </el-tab-pane>
     </el-tabs>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { 
+  User, UserFilled, Avatar, Message, Phone, Star, Check, Refresh, 
+  Lock, Key, Setting, Upload, Folder
+} from '@element-plus/icons-vue'
 import { profileApi, type ProfileInfo, type TenantConfig } from '@/api/profile'
+import { useTenantStore } from '@/store/tenant'
+
+// 租户store
+const tenantStore = useTenantStore()
 
 // 响应式数据
 const activeTab = ref('profile')
 const profileInfo = ref<ProfileInfo | null>(null)
+const currentTenantInfo = ref<any>(null)
 const updating = ref(false)
 const changingPassword = ref(false)
 const updatingTenantConfig = ref(false)
@@ -243,6 +446,7 @@ const updatingTenantConfig = ref(false)
 // 表单引用
 const profileFormRef = ref<FormInstance>()
 const passwordFormRef = ref<FormInstance>()
+const systemInfoFormRef = ref<FormInstance>()
 const tenantConfigFormRef = ref<FormInstance>()
 
 // 个人信息表单
@@ -250,7 +454,8 @@ const profileForm = reactive({
   username: '',
   nickname: '',
   email: '',
-  phone: ''
+  phone: '',
+  avatar: ''
 })
 
 // 密码修改表单
@@ -262,6 +467,10 @@ const passwordForm = reactive({
 
 // 租户配置表单
 const tenantConfigForm = reactive<TenantConfig>({
+  systemName: '',
+  logo: '',
+  description: '',
+  copyright: '',
   fileStorage: {
     type: 'local',
     baseUrl: '',
@@ -282,11 +491,18 @@ const tenantConfigForm = reactive<TenantConfig>({
 // 文件大小（MB）
 const fileSizeMB = ref(50)
 
-// 是否为租户管理员
+// 是否为租户管理员或超级管理员
 const isTenantAdmin = computed(() => {
-  return profileInfo.value?.roles?.some(role =>
-    role.name === '租户管理员' || role.name === 'tenant_admin'
-  ) || false
+  if (!profileInfo.value?.roles) return false
+  
+  return profileInfo.value.roles.some(role =>
+    role.name === '租户管理员' || 
+    role.name === 'tenant_admin' ||
+    role.name === 'super_admin' ||
+    role.name === '超级管理员' ||
+    role.code === 'super_admin' ||
+    role.code === 'tenant_admin'
+  )
 })
 
 // 表单验证规则
@@ -332,12 +548,64 @@ const tenantConfigRules: FormRules = {
   'fileStorage.type': [
     { required: true, message: '请选择存储类型', trigger: 'change' }
   ],
+  'fileStorage.localPath': [
+    { required: true, message: '请设置存储路径', trigger: 'blur' },
+    { max: 200, message: '存储路径长度不能超过200个字符', trigger: 'blur' }
+  ],
   'fileStorage.maxFileSize': [
     { required: true, message: '请设置最大文件大小', trigger: 'blur' }
   ],
   'fileStorage.allowedTypes': [
     { required: true, type: 'array', min: 1, message: '请至少选择一种文件类型', trigger: 'change' }
   ]
+}
+
+const systemInfoRules: FormRules = {
+  systemName: [
+    { max: 100, message: '系统名称长度不能超过100个字符', trigger: 'blur' }
+  ],
+  logo: [
+    { max: 500, message: 'Logo URL长度不能超过500个字符', trigger: 'blur' }
+  ],
+  description: [
+    { max: 200, message: '系统描述长度不能超过200个字符', trigger: 'blur' }
+  ],
+  copyright: [
+    { max: 100, message: '版权信息长度不能超过100个字符', trigger: 'blur' }
+  ]
+}
+
+// 获取Token方法（用于文件上传）
+const getToken = () => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+}
+
+// 头像上传前的校验
+const beforeAvatarUpload = (file: File) => {
+  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg'
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isJPG) {
+    ElMessage.error('头像只能是 JPG/PNG 格式!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('头像大小不能超过 2MB!')
+    return false
+  }
+  return true
+}
+
+// 头像上传成功回调
+const handleAvatarSuccess = (response: any) => {
+  if (response.code === 200) {
+    profileForm.avatar = response.data.url
+    ElMessage.success('头像上传成功')
+    // 自动保存头像
+    updateProfile()
+  } else {
+    ElMessage.error(response.message || '头像上传失败')
+  }
 }
 
 // 获取个人信息
@@ -350,6 +618,7 @@ const getProfileInfo = async () => {
     profileForm.nickname = data.nickname
     profileForm.email = data.email || ''
     profileForm.phone = data.phone || ''
+    profileForm.avatar = data.avatar || ''
   } catch (error) {
     console.error('获取个人信息失败:', error)
     ElMessage.error('获取个人信息失败')
@@ -361,6 +630,9 @@ const getTenantConfig = async () => {
   if (!isTenantAdmin.value) return
 
   try {
+    // 获取当前租户信息用于显示
+    currentTenantInfo.value = tenantStore.getCurrentTenant()
+    
     const { data } = await profileApi.getTenantConfig()
     Object.assign(tenantConfigForm, data)
     fileSizeMB.value = Math.round(data.fileStorage.maxFileSize / (1024 * 1024))
@@ -427,10 +699,19 @@ const changePassword = async () => {
 
 // 更新租户配置
 const updateTenantConfig = async () => {
-  if (!tenantConfigFormRef.value) return
-
-  const isValid = await tenantConfigFormRef.value.validate().catch(() => false)
-  if (!isValid) return
+  // 验证系统信息表单
+  let systemInfoValid = true
+  if (systemInfoFormRef.value) {
+    systemInfoValid = await systemInfoFormRef.value.validate().catch(() => false)
+  }
+  
+  // 验证文件存储配置表单
+  let tenantConfigValid = true
+  if (tenantConfigFormRef.value) {
+    tenantConfigValid = await tenantConfigFormRef.value.validate().catch(() => false)
+  }
+  
+  if (!systemInfoValid || !tenantConfigValid) return
 
   try {
     updatingTenantConfig.value = true
@@ -450,6 +731,7 @@ const resetProfileForm = () => {
     profileForm.nickname = profileInfo.value.nickname
     profileForm.email = profileInfo.value.email || ''
     profileForm.phone = profileInfo.value.phone || ''
+    profileForm.avatar = profileInfo.value.avatar || ''
   }
   profileFormRef.value?.clearValidate()
 }
@@ -463,6 +745,7 @@ const resetPasswordForm = () => {
 
 const resetTenantConfigForm = () => {
   getTenantConfig()
+  systemInfoFormRef.value?.clearValidate()
   tenantConfigFormRef.value?.clearValidate()
 }
 
@@ -481,6 +764,20 @@ onMounted(() => {
     }
   }, 500) // 等待角色信息加载完成
 })
+
+// 监听租户切换（用于超级管理员）
+watch(
+  () => tenantStore.currentTenant,
+  (newTenant, oldTenant) => {
+    if (newTenant?.id !== oldTenant?.id && isTenantAdmin.value) {
+      // 租户切换时重新获取配置
+      setTimeout(() => {
+        getTenantConfig()
+      }, 100)
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -488,10 +785,15 @@ onMounted(() => {
   padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
+  height: calc(100vh - 80px); // 减去导航栏高度等
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .profile-header {
   margin-bottom: 24px;
+  flex-shrink: 0;
 
   h2 {
     margin: 0 0 8px 0;
@@ -507,38 +809,233 @@ onMounted(() => {
   }
 }
 
+.profile-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .profile-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
   :deep(.el-tabs__header) {
     margin: 0 0 20px 0;
+    flex-shrink: 0;
   }
+  
+  :deep(.el-tabs__content) {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 0;
+    
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #a1a1a1;
+      }
+    }
+  }
+  
+  :deep(.el-tab-pane) {
+    height: 100%;
+  }
+}
+
+.profile-layout {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+  
+  @media (max-width: 1200px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.profile-left,
+.profile-right {
+  flex: 1;
+  min-width: 0; // 防止flex子元素溢出
+}
+
+.profile-right {
+  @media (max-width: 1200px) {
+    flex: none;
+  }
+}
+
+.avatar-section {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid #fff;
+  background: #f5f7fa;
+  
+  :deep(.el-icon) {
+    font-size: 48px;
+    color: #c0c4cc;
+  }
+}
+
+.avatar-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .profile-card {
   margin-bottom: 20px;
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-weight: 600;
+  height: fit-content;
+  
+  :deep(.el-card__header) {
+    background-color: #fafbfc;
+    border-bottom: 1px solid #ebeef5;
   }
+}
+
+.tenant-info-bar {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  
+  .el-tag {
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    
+    .el-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.tenant-config-layout {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 1400px) {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.config-left,
+.config-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid #ebeef5;
+  margin-top: 20px;
 }
 
 .profile-form {
   max-width: 600px;
 
+  .roles-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-height: 32px;
+  }
+
   .role-tag {
-    margin-right: 8px;
-    margin-bottom: 4px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    
+    .el-icon {
+      font-size: 14px;
+    }
   }
 
   :deep(.el-form-item__label) {
     font-weight: 500;
   }
+  
+  :deep(.el-input__prefix) {
+    display: flex;
+    align-items: center;
+    
+    .el-icon {
+      color: #a8abb2;
+      font-size: 16px;
+    }
+  }
+  
+  :deep(.el-button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    
+    .el-icon {
+      font-size: 16px;
+    }
+  }
 }
 
-:deep(.el-tabs__content) {
-  padding-top: 0;
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    
+    .el-icon {
+      color: #409eff;
+      font-size: 18px;
+    }
+  }
 }
 
 :deep(.el-card__body) {
@@ -548,5 +1045,34 @@ onMounted(() => {
 :deep(.el-divider__text) {
   color: #909399;
   font-weight: 500;
+}
+
+.form-tip {
+  color: #909399;
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+// 响应式设计
+@media (max-height: 800px) {
+  .profile-container {
+    height: calc(100vh - 60px);
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 16px;
+    height: calc(100vh - 60px);
+  }
+  
+  .profile-form {
+    max-width: 100%;
+  }
+  
+  .profile-card {
+    margin-bottom: 16px;
+  }
 }
 </style>

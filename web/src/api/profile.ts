@@ -50,6 +50,10 @@ export interface FileStorageConfig {
 
 export interface TenantConfig {
   fileStorage: FileStorageConfig
+  systemName?: string  // 系统名称
+  logo?: string       // 系统Logo URL
+  description?: string // 系统描述
+  copyright?: string   // 版权信息
 }
 
 // 个人中心API

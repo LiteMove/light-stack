@@ -106,6 +106,11 @@ type FileStorageConfig struct {
 // TenantConfig 租户配置结构
 type TenantConfig struct {
 	FileStorage FileStorageConfig `json:"fileStorage"`
+	// 系统基本信息
+	SystemName  string `json:"systemName"`  // 系统名称
+	Logo        string `json:"logo"`        // 系统Logo URL
+	Description string `json:"description"` // 系统描述
+	Copyright   string `json:"copyright"`   // 版权信息
 }
 
 // GetConfig 获取租户配置
