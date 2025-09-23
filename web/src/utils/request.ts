@@ -86,39 +86,35 @@ request.interceptors.response.use(
       const { status, data } = response
 
       // 如果有响应体且包含具体错误信息，优先使用响应体中的信息
-      if (data && data.message) {
-        ElMessage.error(data.message)
-        // 抛出包含正确错误信息的新错误对象
-        return Promise.reject(new Error(data.message))
-      }
+
+
 
       // 否则根据HTTP状态码显示通用错误信息
       let errorMessage = ''
       switch (status) {
         case 401:
           errorMessage = '登录过期，请重新登录'
-          ElMessage.error(errorMessage)
           const userStore = useUserStore()
           userStore.logout()
           router.push('/login')
           break
         case 403:
           errorMessage = '权限不足'
-          ElMessage.error(errorMessage)
           break
         case 404:
           errorMessage = '请求的资源不存在'
-          ElMessage.error(errorMessage)
           break
         case 500:
           errorMessage = '服务器内部错误'
-          ElMessage.error(errorMessage)
           break
         default:
           errorMessage = '网络错误'
-          ElMessage.error(errorMessage)
           break
       }
+      if (data && data.message) {
+        errorMessage = data.message
+      }
+      ElMessage.error(errorMessage)
 
       // 抛出包含正确错误信息的新错误对象
       return Promise.reject(new Error(errorMessage))

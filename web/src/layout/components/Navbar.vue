@@ -73,6 +73,7 @@ const handleCommand = async (command: string) => {
   switch (command) {
     case 'profile':
       // 跳转到个人中心
+      router.push('/profile')
       break
     case 'settings':
       // 跳转到系统设置

@@ -16,6 +16,9 @@ type File struct {
 	MD5          string `json:"md5" gorm:"not null;size:32;index:idx_md5" validate:"required,len=32"`
 	UploadUserID uint64 `json:"uploadUserId" gorm:"not null;index:idx_upload_user_id" validate:"required"`
 	UsageType    string `json:"usageType" gorm:"size:50;index:idx_usage_type" validate:"max=50"`
+	StorageType  string `json:"storageType" gorm:"not null;default:'local';size:20" validate:"required,oneof=local oss"`
+	IsPublic     bool   `json:"isPublic" gorm:"not null;default:false"`
+	AccessURL    string `json:"accessUrl" gorm:"size:1000"`
 
 	// 关联关系
 	UploadUser *User `json:"upload_user,omitempty" gorm:"foreignKey:UploadUserID"`
@@ -39,6 +42,9 @@ type FileProfile struct {
 	MD5          string    `json:"md5"`
 	UploadUserID uint64    `json:"uploadUserId"`
 	UsageType    string    `json:"usageType"`
+	StorageType  string    `json:"storageType"`
+	IsPublic     bool      `json:"isPublic"`
+	AccessURL    string    `json:"accessUrl"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
@@ -57,6 +63,9 @@ func (f *File) ToProfile() FileProfile {
 		MD5:          f.MD5,
 		UploadUserID: f.UploadUserID,
 		UsageType:    f.UsageType,
+		StorageType:  f.StorageType,
+		IsPublic:     f.IsPublic,
+		AccessURL:    f.AccessURL,
 		CreatedAt:    f.CreatedAt,
 		UpdatedAt:    f.UpdatedAt,
 	}

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"gorm.io/gorm"
 	"time"
 )
@@ -80,3 +81,81 @@ const (
 	TenantStatusTrial    = 3
 	TenantStatusExpired  = 4
 )
+
+// FileStorageConfig 文件存储配置
+type FileStorageConfig struct {
+	Type          string   `json:"type"` // local/oss
+	BaseURL       string   `json:"baseUrl"`
+	DefaultPublic bool     `json:"defaultPublic"` // 默认是否公开
+	MaxFileSize   int64    `json:"maxFileSize"`   // 最大文件大小(字节)
+	AllowedTypes  []string `json:"allowedTypes"`  // 允许的文件类型
+
+	// 本地存储配置
+	LocalPath string `json:"localPath,omitempty"`
+
+	// OSS配置 - 支持多平台
+	OSSProvider     string `json:"ossProvider,omitempty"` // aliyun/tencent/aws/qiniu/upyun
+	OSSEndpoint     string `json:"ossEndpoint,omitempty"`
+	OSSRegion       string `json:"ossRegion,omitempty"` // AWS S3等需要
+	OSSBucket       string `json:"ossBucket,omitempty"`
+	OSSAccessKey    string `json:"ossAccessKey,omitempty"`
+	OSSSecretKey    string `json:"ossSecretKey,omitempty"`
+	OSSCustomDomain string `json:"ossCustomDomain,omitempty"` // 自定义域名
+}
+
+// TenantConfig 租户配置结构
+type TenantConfig struct {
+	FileStorage FileStorageConfig `json:"fileStorage"`
+}
+
+// GetConfig 获取租户配置
+func (t *Tenant) GetConfig() (*TenantConfig, error) {
+	if t.Config == "" {
+		return &TenantConfig{}, nil
+	}
+
+	var config TenantConfig
+	if err := json.Unmarshal([]byte(t.Config), &config); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+// SetConfig 设置租户配置
+func (t *Tenant) SetConfig(config *TenantConfig) error {
+	configBytes, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	t.Config = string(configBytes)
+	return nil
+}
+
+// GetFileStorageConfig 获取文件存储配置（包含默认值）
+func (t *Tenant) GetFileStorageConfig() (*FileStorageConfig, error) {
+	config, err := t.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 应用默认值
+	if config.FileStorage.Type == "" {
+		config.FileStorage.Type = "local"
+	}
+	if config.FileStorage.MaxFileSize == 0 {
+		config.FileStorage.MaxFileSize = 50 << 20 // 50MB
+	}
+	if len(config.FileStorage.AllowedTypes) == 0 {
+		config.FileStorage.AllowedTypes = []string{".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"}
+	}
+	if config.FileStorage.BaseURL == "" && config.FileStorage.Type == "local" {
+		config.FileStorage.BaseURL = "/static"
+	}
+	if config.FileStorage.LocalPath == "" {
+		config.FileStorage.LocalPath = "uploads"
+	}
+
+	return &config.FileStorage, nil
+}

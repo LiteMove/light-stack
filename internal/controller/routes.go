@@ -41,12 +41,14 @@ func RegisterRoutes(r *gin.Engine) {
 	menuService := service.NewMenuService(menuRepo, roleRepo)
 	tenantService := service.NewTenantService(tenantRepo, userRepo)
 	fileService := service.NewFileService(fileRepo)
+	profileService := service.NewProfileService(userRepo, roleRepo, tenantRepo)
 	authController := NewAuthController(authService, roleService, menuService)
 	userController := NewUserController(userService)
 	roleController := NewRoleController(roleService)
 	menuController := NewMenuController(menuService)
 	tenantController := NewTenantController(tenantService)
 	fileController := NewFileController(fileService)
+	profileController := NewProfileController(profileService)
 	healthController := NewHealthController()
 
 	// API 分组
@@ -72,9 +74,8 @@ func RegisterRoutes(r *gin.Engine) {
 			// 认证相关路由（无需认证）
 			auth := v1.Group("/auth")
 			{
-				auth.POST("/login", authController.Login)       // 用户登录
-				auth.POST("/register", authController.Register) // 用户注册
-				auth.GET("/user", authController.GetProfile)
+				auth.POST("/login", authController.Login)          // 用户登录
+				auth.POST("/register", authController.Register)    // 用户注册
 				auth.POST("/refresh", authController.RefreshToken) // 刷新token
 				auth.POST("/logout", authController.Logout)        // 用户登出
 			}
@@ -88,6 +89,12 @@ func RegisterRoutes(r *gin.Engine) {
 				user.PUT("/password", authController.ChangePassword) // 修改密码
 				user.GET("/:id/roles", authController.GetUserRoles)  // 获取用户角色
 			}
+			// 用户查看和修改租户配置
+			user.Use(middleware.TenantMiddleware(tenantService))
+			{
+				user.GET("/tenant-config", profileController.GetTenantConfig)    // 获取所在租户配置
+				user.PUT("/tenant-config", profileController.UpdateTenantConfig) // 更新所在租户配置
+			}
 
 			// 文件相关路由（需要认证）
 			files := v1.Group("/files")
@@ -100,6 +107,16 @@ func RegisterRoutes(r *gin.Engine) {
 				files.GET("/:id/download", fileController.DownloadFile) // 下载文件
 				files.DELETE("/:id", fileController.DeleteFile)         // 删除文件
 			}
+
+			//// 个人中心相关路由（需要认证）
+			//profile := v1.Group("/profile")
+			//profile.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
+			//{
+			//	profile.GET("", profileController.GetProfile)              // 获取个人信息
+			//	profile.PUT("", profileController.UpdateProfile)           // 更新个人信息
+			//	profile.PUT("/password", profileController.ChangePassword) // 修改密码
+			//
+			//}
 			// TODO 看后续怎么优化，现在是根据路由地址来区分用户和超管以及管理员的
 			admin := v1.Group("/admin")
 			admin.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
@@ -150,6 +167,8 @@ func RegisterRoutes(r *gin.Engine) {
 					tenants.PUT("/:id/status", tenantController.UpdateTenantStatus) // 更新租户状态
 					tenants.GET("/check-domain", tenantController.CheckDomain)      // 检查域名可用性
 					tenants.GET("/check-name", tenantController.CheckName)          // 检查名称可用性
+					tenants.GET("/:id/config", tenantController.GetTenantConfig)    // 获取租户配置
+					tenants.PUT("/:id/config", tenantController.UpdateTenantConfig) // 更新租户配置
 				}
 
 				// 角色管理

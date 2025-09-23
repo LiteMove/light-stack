@@ -333,3 +333,66 @@ func (c *TenantController) CheckName(ctx *gin.Context) {
 		"available": !exists,
 	})
 }
+
+// TenantConfigRequest 租户配置请求
+type TenantConfigRequest struct {
+	FileStorage model.FileStorageConfig `json:"fileStorage" validate:"required"`
+}
+
+// GetTenantConfig 获取租户配置
+func (c *TenantController) GetTenantConfig(ctx *gin.Context) {
+	// 获取租户ID
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.BadRequest(ctx, "租户ID格式错误")
+		return
+	}
+
+	// 调用服务获取租户配置
+	config, err := c.tenantService.GetTenantConfig(id)
+	if err != nil {
+		response.InternalServerError(ctx, err.Error())
+		return
+	}
+
+	response.Success(ctx, config)
+}
+
+// UpdateTenantConfig 更新租户配置
+func (c *TenantController) UpdateTenantConfig(ctx *gin.Context) {
+	// 获取租户ID
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.BadRequest(ctx, "租户ID格式错误")
+		return
+	}
+
+	var req TenantConfigRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(ctx, "请求参数格式错误: "+err.Error())
+		return
+	}
+
+	// 参数验证
+	if err := c.validator.Struct(&req); err != nil {
+		response.BadRequest(ctx, "参数验证失败: "+err.Error())
+		return
+	}
+
+	// 构建租户配置
+	config := &model.TenantConfig{
+		FileStorage: req.FileStorage,
+	}
+
+	// 调用服务更新租户配置
+	if err := c.tenantService.UpdateTenantConfig(id, config); err != nil {
+		response.InternalServerError(ctx, err.Error())
+		return
+	}
+
+	response.Success(ctx, gin.H{
+		"message": "配置更新成功",
+	})
+}

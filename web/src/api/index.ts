@@ -31,7 +31,7 @@ export const authApi = {
 
   // 获取用户信息
   getUserInfo(): Promise<ApiResponse<User>> {
-    return http.get('/v1/auth/user')
+    return http.get('/v1/user/profile')
   },
 
   // 登出

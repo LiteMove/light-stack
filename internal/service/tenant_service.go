@@ -30,6 +30,10 @@ type TenantService interface {
 	// 租户验证
 	ValidateTenant(domain string) (*model.Tenant, error)
 	GetSelectList() ([]*model.Tenant, error)
+
+	// 配置操作
+	GetTenantConfig(id uint64) (*model.TenantConfig, error)
+	UpdateTenantConfig(id uint64, config *model.TenantConfig) error
 }
 
 // tenantService 租户服务实现
@@ -249,4 +253,81 @@ func (s *tenantService) ValidateTenant(domain string) (*model.Tenant, error) {
 	}
 
 	return tenant, nil
+}
+
+// GetTenantConfig 获取租户配置
+func (s *tenantService) GetTenantConfig(id uint64) (*model.TenantConfig, error) {
+	// 获取租户信息
+	tenant, err := s.tenantRepo.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("获取租户信息失败: %w", err)
+	}
+
+	// 解析配置
+	config, err := tenant.GetConfig()
+	if err != nil {
+		return nil, fmt.Errorf("解析租户配置失败: %w", err)
+	}
+
+	return config, nil
+}
+
+// UpdateTenantConfig 更新租户配置
+func (s *tenantService) UpdateTenantConfig(id uint64, config *model.TenantConfig) error {
+	// 获取租户信息
+	tenant, err := s.tenantRepo.GetByID(id)
+	if err != nil {
+		return fmt.Errorf("获取租户信息失败: %w", err)
+	}
+
+	// 验证配置
+	if err := s.validateTenantConfig(config); err != nil {
+		return fmt.Errorf("配置验证失败: %w", err)
+	}
+
+	// 设置配置
+	if err := tenant.SetConfig(config); err != nil {
+		return fmt.Errorf("设置租户配置失败: %w", err)
+	}
+
+	// 更新租户
+	if err := s.tenantRepo.Update(tenant); err != nil {
+		return fmt.Errorf("更新租户失败: %w", err)
+	}
+
+	return nil
+}
+
+// validateTenantConfig 验证租户配置
+func (s *tenantService) validateTenantConfig(config *model.TenantConfig) error {
+	// 验证文件存储配置
+	fileStorage := &config.FileStorage
+
+	// 验证存储类型
+	if fileStorage.Type != "local" && fileStorage.Type != "oss" {
+		return errors.New("不支持的存储类型")
+	}
+
+	// 验证文件大小限制
+	if fileStorage.MaxFileSize <= 0 {
+		return errors.New("文件大小限制必须大于0")
+	}
+
+	// 如果是OSS存储，验证OSS配置
+	if fileStorage.Type == "oss" {
+		if fileStorage.OSSProvider == "" {
+			return errors.New("OSS提供商不能为空")
+		}
+		if fileStorage.OSSBucket == "" {
+			return errors.New("OSS存储桶不能为空")
+		}
+		if fileStorage.OSSAccessKey == "" {
+			return errors.New("OSS访问密钥不能为空")
+		}
+		if fileStorage.OSSSecretKey == "" {
+			return errors.New("OSS密钥不能为空")
+		}
+	}
+
+	return nil
 }
