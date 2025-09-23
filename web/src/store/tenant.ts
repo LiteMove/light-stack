@@ -76,8 +76,6 @@ export const useTenantStore = defineStore('tenant', () => {
   // 切换租户
   const switchTenant = (tenant: Tenant | null) => {
     setCurrentTenant(tenant)
-    // 可以在这里触发页面刷新或重新加载数据
-    window.location.reload()
   }
 
   // 清除租户数据

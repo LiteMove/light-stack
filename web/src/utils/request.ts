@@ -63,6 +63,11 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 如果是文件下载请求（responseType 为 blob），直接返回响应对象
+    if (response.config.responseType === 'blob') {
+      return response
+    }
+
     const { data } = response
 
     // 如果返回的状态码为200，说明接口请求成功，可以正常拿到数据

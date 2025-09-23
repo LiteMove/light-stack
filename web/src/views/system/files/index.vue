@@ -181,14 +181,47 @@
 
     <!-- 文件列表 -->
     <el-card class="table-card" shadow="never">
-      <el-table
-        v-loading="loading"
-        :data="fileList"
-        stripe
-        @selection-change="handleSelectionChange"
-        style="width: 100%"
-        :default-sort="{ prop: 'createdAt', order: 'descending' }"
-      >
+      <!-- 空状态提示 -->
+      <div v-if="isSuperAdmin && !currentTenant" class="empty-state">
+        <el-empty
+          description="请先选择要管理的租户"
+          :image-size="120"
+        >
+          <template #image>
+            <el-icon class="empty-icon"><OfficeBuilding /></el-icon>
+          </template>
+        </el-empty>
+      </div>
+
+      <!-- 数据表格 -->
+      <transition name="fade" mode="out-in" v-else>
+        <div v-if="fileList.length === 0 && !loading" class="empty-state">
+          <el-empty
+            description="暂无文件数据"
+            :image-size="120"
+          >
+            <template #image>
+              <el-icon class="empty-icon"><FolderOpened /></el-icon>
+            </template>
+            <el-button type="primary" @click="showUploadDialog = true">
+              <el-icon><UploadFilled /></el-icon>
+              上传第一个文件
+            </el-button>
+          </el-empty>
+        </div>
+
+        <el-table
+          v-else
+          v-loading="loading"
+          :data="fileList"
+          stripe
+          @selection-change="handleSelectionChange"
+          style="width: 100%"
+          :default-sort="{ prop: 'createdAt', order: 'descending' }"
+          :key="currentTenant?.id || 'default'"
+          element-loading-text="正在加载文件列表..."
+          element-loading-background="rgba(0, 0, 0, 0.1)"
+        >
         <el-table-column type="selection" width="50" />
 
         <el-table-column label="文件信息" min-width="300" show-overflow-tooltip>
@@ -197,11 +230,12 @@
               <div class="file-preview">
                 <el-image
                   v-if="isImageFile(row.mimeType)"
-                  :src="getFilePreviewUrl(row.id)"
-                  :preview-src-list="[getFilePreviewUrl(row.id)]"
+                  :src="`/api/v1/files/${row.id}/download`"
                   fit="cover"
                   class="file-thumbnail"
                   @error="handleImageError"
+                  :preview-src-list="[]"
+                  :preview-teleported="true"
                 >
                   <template #error>
                     <div class="file-icon">
@@ -275,9 +309,18 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="180" fixed="right" align="center">
+        <el-table-column label="操作" width="220" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-buttons">
+              <el-tooltip v-if="isImageFile(row.mimeType)" content="预览图片" placement="top">
+                <el-button
+                  type="success"
+                  size="small"
+                  :icon="View"
+                  @click="previewImage(row)"
+                  circle
+                />
+              </el-tooltip>
               <el-tooltip content="下载文件" placement="top">
                 <el-button
                   type="primary"
@@ -311,6 +354,7 @@
           </template>
         </el-table-column>
       </el-table>
+      </transition>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -331,6 +375,79 @@
         />
       </div>
     </el-card>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      v-model="showImagePreview"
+      :title="previewFile?.originalName || '图片预览'"
+      width="80%"
+      :close-on-click-modal="true"
+      append-to-body
+      class="image-preview-dialog"
+      @close="cleanupPreviewUrl"
+    >
+      <div class="image-preview-container" v-if="previewFile">
+        <div class="preview-image-wrapper">
+          <el-image
+            v-if="previewImageUrl"
+            :src="previewImageUrl"
+            fit="contain"
+            class="preview-image"
+            @load="handlePreviewImageLoad"
+            @error="handlePreviewImageError"
+          >
+            <template #error>
+              <div class="image-error">
+                <el-icon class="error-icon"><Picture /></el-icon>
+                <p>图片加载失败</p>
+              </div>
+            </template>
+          </el-image>
+          <div v-else class="image-loading">
+            <el-icon class="loading-icon is-loading"><Loading /></el-icon>
+            <p>图片加载中...</p>
+          </div>
+        </div>
+
+        <!-- 图片信息 -->
+        <div class="image-info">
+          <div class="info-item">
+            <span class="info-label">文件名：</span>
+            <span class="info-value">{{ previewFile.originalName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">文件大小：</span>
+            <span class="info-value">{{ formatFileSize(previewFile.fileSize) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">文件类型：</span>
+            <span class="info-value">{{ previewFile.mimeType }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">上传时间：</span>
+            <span class="info-value">{{ formatTime(previewFile.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="preview-actions">
+          <el-button
+            type="primary"
+            :icon="Download"
+            @click="downloadFile(previewFile!)"
+            :loading="downloadingIds.includes(previewFile?.id || 0)"
+          >
+            下载图片
+          </el-button>
+          <el-button @click="copyFileLink(previewFile!)">
+            <el-icon><Link /></el-icon>
+            复制链接
+          </el-button>
+          <el-button @click="showImagePreview = false; cleanupPreviewUrl()">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
 
     <!-- 上传对话框 -->
     <el-dialog
@@ -369,7 +486,9 @@ import {
   Folder,
   DocumentCopy,
   User,
-  Link
+  Link,
+  View,
+  Loading
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { useTenantStore } from '@/store/tenant'
@@ -377,6 +496,7 @@ import {
   getAllFiles,
   downloadFile as downloadFileApi,
   deleteFile,
+  getFilePreview,
   type FileProfile
 } from '@/api/file'
 import FileUpload from '@/components/FileUpload.vue'
@@ -388,7 +508,10 @@ const tenantStore = useTenantStore()
 const loading = ref(false)
 const batchDeleting = ref(false)
 const showUploadDialog = ref(false)
+const showImagePreview = ref(false)
 const uploadedFile = ref<FileProfile | null>(null)
+const previewFile = ref<FileProfile | null>(null)
+const previewImageUrl = ref<string>('')
 const fileList = ref<FileProfile[]>([])
 const selectedFiles = ref<FileProfile[]>([])
 const downloadingIds = ref<number[]>([])
@@ -421,10 +544,29 @@ const isSuperAdmin = computed(() => tenantStore.checkIsSuperAdmin())
 const currentTenant = computed(() => tenantStore.getCurrentTenant())
 
 // 监听租户变化
-watch(currentTenant, () => {
-  if (isSuperAdmin.value) {
+watch(currentTenant, async (newTenant, oldTenant) => {
+  if (isSuperAdmin.value && newTenant !== oldTenant) {
+    // 显示切换提示
+    if (newTenant) {
+      //ElMessage.info(`正在切换到租户 "${newTenant.name}"...`)
+      console.log(`切换到租户 "${newTenant.name}"`)
+    }
+
+    // 重置分页到第一页
     pagination.page = 1
-    loadFileList()
+
+    // 清空当前数据，避免显示错误的数据
+    fileList.value = []
+    selectedFiles.value = []
+    updateStats([])
+
+    // 重新加载数据
+    await loadFileList()
+
+    // 切换完成提示
+    if (newTenant) {
+      ElMessage.success(`已切换到租户 "${newTenant.name}"`)
+    }
   }
 }, { immediate: false })
 
@@ -503,18 +645,13 @@ const getUsageTypeLabel = (usageType: string): string => {
   return labelMap[usageType] || usageType
 }
 
-// 获取文件预览URL
-const getFilePreviewUrl = (fileId: number): string => {
-  return `/api/v1/files/${fileId}/download`
-}
-
 // 处理图片错误
 const handleImageError = () => {
   // 图片加载失败时的处理
 }
 
 // 加载文件列表
-const loadFileList = async () => {
+const loadFileList = async (showMessage = false) => {
   if (isSuperAdmin.value && !currentTenant.value) {
     fileList.value = []
     pagination.total = 0
@@ -544,8 +681,14 @@ const loadFileList = async () => {
 
     // 更新统计信息
     updateStats(fileList.value)
+
+    if (showMessage) {
+      ElMessage.success('文件列表刷新成功')
+    }
   } catch (error: any) {
     ElMessage.error(error.message || '加载文件列表失败')
+    // 出错时也要更新统计信息
+    updateStats([])
   } finally {
     loading.value = false
   }
@@ -562,7 +705,7 @@ const updateStats = (files: FileProfile[]) => {
 // 刷新文件列表
 const refreshFiles = () => {
   pagination.page = 1
-  loadFileList()
+  loadFileList(true) // 显示刷新成功消息
 }
 
 // 搜索
@@ -608,8 +751,16 @@ const clearSelection = () => {
 const downloadFile = async (file: FileProfile) => {
   try {
     downloadingIds.value.push(file.id)
-    await downloadFileApi(file.id)
+
+    // 传递文件信息给下载函数，以便在需要时使用
+    const filename = await downloadFileApi(file.id, {
+      originalName: file.originalName,
+      mimeType: file.mimeType
+    })
+
+    ElMessage.success(`文件 "${filename}" 下载成功`)
   } catch (error: any) {
+    console.error('Download error:', error)
     ElMessage.error(error.message || '下载失败')
   } finally {
     downloadingIds.value = downloadingIds.value.filter(id => id !== file.id)
@@ -689,6 +840,42 @@ const confirmBatchDelete = async () => {
 // 导出文件列表
 const exportFiles = () => {
   ElMessage.info('导出功能开发中...')
+}
+
+// 预览图片
+const previewImage = async (file: FileProfile) => {
+  try {
+    previewFile.value = file
+    previewImageUrl.value = ''
+    showImagePreview.value = true
+
+    // 获取图片预览URL
+    const url = await getFilePreview(file.id)
+    previewImageUrl.value = url
+  } catch (error: any) {
+    console.error('获取图片预览失败:', error)
+    ElMessage.error('获取图片预览失败：' + (error.message || '未知错误'))
+    showImagePreview.value = false
+  }
+}
+
+// 清理预览URL
+const cleanupPreviewUrl = () => {
+  if (previewImageUrl.value) {
+    window.URL.revokeObjectURL(previewImageUrl.value)
+    previewImageUrl.value = ''
+  }
+}
+
+// 处理预览图片加载成功
+const handlePreviewImageLoad = () => {
+  console.log('图片预览加载成功')
+}
+
+// 处理预览图片加载失败
+const handlePreviewImageError = () => {
+  ElMessage.error('图片加载失败，请稍后重试')
+  cleanupPreviewUrl()
 }
 
 // 上传成功
@@ -1014,6 +1201,26 @@ onMounted(() => {
       }
     }
 
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+
+      .empty-icon {
+        font-size: 120px;
+        color: #dcdfe6;
+        margin-bottom: 16px;
+      }
+
+      :deep(.el-empty__description) {
+        color: #909399;
+        font-size: 16px;
+      }
+
+      .el-button {
+        margin-top: 16px;
+      }
+    }
+
     .pagination-wrapper {
       display: flex;
       justify-content: space-between;
@@ -1030,6 +1237,109 @@ onMounted(() => {
       }
     }
   }
+}
+
+// 图片预览对话框样式
+:deep(.image-preview-dialog) {
+  .el-dialog__body {
+    padding: 20px;
+  }
+
+  .image-preview-container {
+    .preview-image-wrapper {
+      text-align: center;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .preview-image {
+        max-width: 100%;
+        max-height: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .image-error, .image-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #909399;
+        font-size: 16px;
+
+        .error-icon, .loading-icon {
+          font-size: 48px;
+          margin-bottom: 12px;
+        }
+
+        .loading-icon.is-loading {
+          animation: rotating 2s linear infinite;
+        }
+      }
+    }
+
+    .image-info {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e4e7ed;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .info-label {
+          font-weight: 600;
+          color: #606266;
+          min-width: 80px;
+        }
+
+        .info-value {
+          color: #303133;
+          flex: 1;
+          text-align: right;
+        }
+      }
+    }
+  }
+
+  .preview-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotateZ(0deg);
+  }
+  100% {
+    transform: rotateZ(360deg);
+  }
+}
+
+// 过渡动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 // 响应式设计

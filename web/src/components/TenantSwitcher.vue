@@ -149,7 +149,7 @@ const handleTenantChange = async (tenantId: number | null) => {
     if (confirm) {
       // 执行切换
       tenantStore.switchTenant(tenant)
-      ElMessage.success(`已切换到租户"${tenant.name}"`)
+      //ElMessage.success(`已切换到租户"${tenant.name}"`)
     } else {
       // 恢复选择
       selectedTenantId.value = currentTenant.value?.id || null
