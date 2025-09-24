@@ -394,10 +394,10 @@
                       placeholder="请选择OSS提供商"
                     >
                       <el-option label="阿里云OSS" value="aliyun" />
-                      <el-option label="腾讯云COS" value="tencent" />
-                      <el-option label="AWS S3" value="aws" />
-                      <el-option label="七牛云Kodo" value="qiniu" />
-                      <el-option label="又拍云USS" value="upyun" />
+<!--                      <el-option label="腾讯云COS" value="tencent" />-->
+<!--                      <el-option label="AWS S3" value="aws" />-->
+<!--                      <el-option label="七牛云Kodo" value="qiniu" />-->
+<!--                      <el-option label="又拍云USS" value="upyun" />-->
                     </el-select>
                   </el-form-item>
 
