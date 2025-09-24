@@ -53,6 +53,22 @@ interface TenantStats {
 }
 
 export const tenantApi = {
+  // 根据域名获取租户展示信息（公开接口）
+  getTenantInfo(domain?: string): Promise<ApiResponse<{
+    id: number
+    name: string
+    systemName: string
+    logo: string
+    description: string
+    copyright: string
+  }>> {
+    return request({
+      url: '/tenant/info',
+      method: 'get',
+      params: domain ? { domain } : {}
+    })
+  },
+
   // 获取租户列表
   getTenantList(params: TenantQueryParams): Promise<ApiResponse<PageResponse<Tenant>>> {
     return request({

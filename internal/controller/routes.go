@@ -61,6 +61,9 @@ func RegisterRoutes(r *gin.Engine) {
 		// 健康检查
 		api.GET("/health", healthController.Check)
 
+		// 租户信息接口（公开，无需认证）
+		api.GET("/tenant/info", tenantController.GetTenantByDomain)
+
 		// V1 版本API
 		v1 := api.Group("/v1")
 		{

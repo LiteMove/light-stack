@@ -9,7 +9,10 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">LightStack 管理平台</h3>
+        <div v-if="systemLogo" class="logo-container">
+          <img :src="systemLogo" :alt="systemName" class="system-logo" @error="handleLogoError" />
+        </div>
+        <h3 class="title">{{ systemName }} 管理平台</h3>
       </div>
 
       <el-form-item prop="username">
@@ -84,25 +87,37 @@
       >
         {{ loading ? '登录中...' : '登录' }}
       </el-button>
+
+      <!-- 版权信息 -->
+      <div v-if="copyright" class="copyright">
+        {{ copyright }}
+      </div>
     </el-form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, View, Hide } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store'
+import { useSystemStore } from '@/store/system'
 import { authApi } from '@/api'
 import type { FormInstance } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 const loginFormRef = ref<FormInstance>()
 const loading = ref(false)
 const passwordType = ref('password')
+
+// 系统配置
+const systemName = computed(() => systemStore.getSystemName())
+const systemLogo = computed(() => systemStore.getSystemLogo())
+const copyright = computed(() => systemStore.getCopyright())
 
 const loginForm = reactive({
   username: 'admin',
@@ -125,6 +140,12 @@ const showPwd = () => {
   } else {
     passwordType.value = 'password'
   }
+}
+
+// logo加载错误处理
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
 }
 
 const handleLogin = async () => {
@@ -150,6 +171,16 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+onMounted(async () => {
+  // 页面加载时初始化系统配置
+  try {
+    await systemStore.initSystemConfig()
+  } catch (error) {
+    console.error('初始化系统配置失败:', error)
+    // 即使获取失败也不影响登录页面显示
+  }
+})
 </script>
 
 <style scoped>
@@ -192,6 +223,18 @@ const handleLogin = async () => {
 .title-container {
   position: relative;
   margin-bottom: 40px;
+  text-align: center;
+}
+
+.logo-container {
+  margin-bottom: 20px;
+}
+
+.system-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .title-container .title {
@@ -201,6 +244,14 @@ const handleLogin = async () => {
   text-align: center;
   font-weight: 700;
   letter-spacing: 1px;
+}
+
+.copyright {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+  line-height: 1.5;
 }
 
 .input-wrapper {

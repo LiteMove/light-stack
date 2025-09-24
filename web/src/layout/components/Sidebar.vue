@@ -2,8 +2,14 @@
   <div class="sidebar-container">
     <div class="sidebar-logo">
       <router-link to="/">
-        <img v-show="!collapsed" src="@/assets/logo.png" alt="Logo" class="sidebar-logo-img" />
-        <h1 v-show="!collapsed" class="sidebar-title">LightStack</h1>
+        <img
+          v-if="!collapsed && (systemLogo || hasDefaultLogo)"
+          :src="systemLogo || defaultLogoSrc"
+          :alt="systemName"
+          class="sidebar-logo-img"
+          @error="handleLogoError"
+        />
+        <h1 v-show="!collapsed" class="sidebar-title">{{ systemName }}</h1>
       </router-link>
     </div>
 
@@ -31,15 +37,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore, useUserStore } from '@/store'
+import { useSystemStore } from '@/store/system'
 import { constantRoutes } from '@/router'
 import SidebarItem from './SidebarItem.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
+
+const hasDefaultLogo = ref(false)
+const defaultLogoSrc = ref('')
+
+// 尝试加载默认logo
+try {
+  // 使用动态import检查logo文件是否存在
+  defaultLogoSrc.value = new URL('@/assets/logo.png', import.meta.url).href
+  hasDefaultLogo.value = true
+} catch (error) {
+  console.log('默认logo文件不存在:', error)
+  hasDefaultLogo.value = false
+}
 
 const collapsed = computed(() => appStore.collapsed)
 
@@ -50,6 +71,17 @@ const activeMenu = computed(() => {
   }
   return path
 })
+
+// 系统配置
+const systemName = computed(() => systemStore.getSystemName())
+const systemLogo = computed(() => systemStore.getSystemLogo())
+
+// logo加载错误处理
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+  hasDefaultLogo.value = false
+}
 
 // 静态路由（登录页等）
 const staticRoutes = computed(() => {
