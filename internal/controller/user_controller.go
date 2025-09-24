@@ -32,6 +32,7 @@ type CreateUserRequest struct {
 	Nickname string `json:"nickname" validate:"required,min=1,max=100"`
 	Email    string `json:"email" validate:"omitempty,email,max=255"`
 	Phone    string `json:"phone" validate:"omitempty,max=20"`
+	Avatar   string `json:"avatar" validate:"omitempty,max=255"`
 	Password string `json:"password" validate:"omitempty,min=6,max=50"`
 	Status   int    `json:"status" validate:"required,oneof=1 2"`
 }
@@ -42,6 +43,7 @@ type UpdateUserRequest struct {
 	Nickname string `json:"nickname" validate:"required,min=1,max=100"`
 	Email    string `json:"email" validate:"omitempty,email,max=255"`
 	Phone    string `json:"phone" validate:"omitempty,max=20"`
+	Avatar   string `json:"avatar" validate:"omitempty,max=255"`
 	Status   int    `json:"status" validate:"required,oneof=1 2"`
 }
 
@@ -112,6 +114,8 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 	if req.Phone != "" {
 		user.Phone = &req.Phone
 	}
+	// 设置头像
+	user.Avatar = req.Avatar
 
 	user.TenantID = tenantID
 
@@ -243,6 +247,8 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	} else {
 		existingUser.Phone = nil
 	}
+	// 更新头像
+	existingUser.Avatar = req.Avatar
 
 	// 调用服务更新用户
 	if err := c.userService.UpdateUser(existingUser); err != nil {

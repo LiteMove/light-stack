@@ -125,31 +125,11 @@
 
       <!-- 头像上传 -->
       <el-form-item label="用户头像" prop="avatar">
-        <div class="avatar-upload">
-          <el-upload
-            class="avatar-uploader"
-            :action="uploadUrl"
-            :headers="uploadHeaders"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :on-error="handleAvatarError"
-            :before-upload="beforeAvatarUpload"
-            accept="image/*"
-          >
-            <div class="avatar-container">
-              <img v-if="form.avatar" :src="form.avatar" class="avatar" />
-              <div v-else class="avatar-placeholder">
-                <el-icon class="avatar-icon"><Plus /></el-icon>
-                <div class="avatar-text">上传头像</div>
-              </div>
-            </div>
-          </el-upload>
-          <div class="avatar-tips">
-            <p>• 支持 JPG、PNG、GIF 格式</p>
-            <p>• 文件大小不超过 2MB</p>
-            <p>• 建议尺寸 200x200 像素</p>
-          </div>
-        </div>
+        <AvatarUpload
+          v-model="form.avatar"
+          @success="handleAvatarSuccess"
+          @error="handleAvatarError"
+        />
       </el-form-item>
 
       <!-- 状态设置 -->
@@ -204,7 +184,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { 
+import {
   User,
   UserFilled,
   Lock,
@@ -216,6 +196,7 @@ import {
   Close,
   Key
 } from '@element-plus/icons-vue'
+import AvatarUpload from '@/components/AvatarUpload.vue'
 import { userApi } from '@/api'
 import type { User as UserType, Role } from '@/api/types'
 
@@ -269,14 +250,16 @@ const form = ref<UserFormData>({
   isSystem: false
 })
 
-// 上传配置
-const uploadUrl = computed(() => '/api/v1/upload/avatar')
-const uploadHeaders = computed(() => ({
-  // 这里应该添加认证头
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
-}))
+// 头像上传成功处理
+const handleAvatarSuccess = (file: any) => {
+  form.value.avatar = file.accessUrl || file.filePath
+  ElMessage.success('头像上传成功')
+}
 
-// 表单验证规则
+// 头像上传错误处理
+const handleAvatarError = (error: string) => {
+  ElMessage.error(error || '头像上传失败')
+}
 const rules = computed<FormRules>(() => {
   const baseRules = {
     username: [
@@ -355,39 +338,7 @@ watch(
   { immediate: true, deep: true }
 )
 
-// 头像上传前验证
-const beforeAvatarUpload = (file: File) => {
-  const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'].includes(file.type)
-  const isLt2M = file.size / 1024 / 1024 < 2
-
-  if (!isValidType) {
-    ElMessage.error('头像必须是 JPG、PNG 或 GIF 格式!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('头像大小不能超过 2MB!')
-    return false
-  }
-  return true
-}
-
-// 头像上传成功
-const handleAvatarSuccess = (response: any) => {
-  if (response.code === 200) {
-    form.value.avatar = response.data.url
-    ElMessage.success('头像上传成功')
-  } else {
-    ElMessage.error(response.message || '头像上传失败')
-  }
-}
-
-// 头像上传失败
-const handleAvatarError = (error: any) => {
-  console.error('头像上传失败:', error)
-  ElMessage.error('头像上传失败，请重试')
-}
-
-// 提交表单
+// 监听表单数据变化
 const handleSubmit = async () => {
   try {
     const valid = await formRef.value?.validate()
@@ -467,66 +418,6 @@ watch(() => form.value.nickname, generateUsername)
   color: #909399;
   margin-top: 4px;
   line-height: 1.4;
-}
-
-// 头像上传样式
-.avatar-upload {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-
-  .avatar-uploader {
-    .avatar-container {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      border: 2px dashed #dcdfe6;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      overflow: hidden;
-
-      &:hover {
-        border-color: #409eff;
-        background-color: #f5f7fa;
-      }
-
-      .avatar {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .avatar-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        color: #8c939d;
-
-        .avatar-icon {
-          font-size: 24px;
-          margin-bottom: 8px;
-        }
-
-        .avatar-text {
-          font-size: 12px;
-        }
-      }
-    }
-  }
-
-  .avatar-tips {
-    flex: 1;
-
-    p {
-      margin: 0 0 4px 0;
-      font-size: 12px;
-      color: #909399;
-      line-height: 1.4;
-    }
-  }
 }
 
 // 角色显示

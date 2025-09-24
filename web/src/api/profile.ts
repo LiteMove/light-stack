@@ -25,6 +25,7 @@ export interface UpdateProfileData {
   nickname: string
   email: string
   phone?: string
+  avatar?: string
 }
 
 export interface ChangePasswordData {

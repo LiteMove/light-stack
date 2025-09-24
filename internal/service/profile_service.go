@@ -13,7 +13,7 @@ import (
 type ProfileService interface {
 	// 个人信息操作
 	GetProfile(userID uint64) (*model.UserProfile, error)
-	UpdateProfile(userID uint64, nickname, email, phone string) error
+	UpdateProfile(userID uint64, nickname, email, phone, avatar string) error
 	ChangePassword(userID uint64, oldPassword, newPassword string) error
 
 	// 租户配置操作（仅租户管理员）
@@ -71,7 +71,7 @@ func (s *profileService) GetProfile(userID uint64) (*model.UserProfile, error) {
 }
 
 // UpdateProfile 更新个人信息
-func (s *profileService) UpdateProfile(userID uint64, nickname, email, phone string) error {
+func (s *profileService) UpdateProfile(userID uint64, nickname, email, phone, avatar string) error {
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -101,6 +101,8 @@ func (s *profileService) UpdateProfile(userID uint64, nickname, email, phone str
 	} else {
 		user.Phone = nil
 	}
+	// 更新头像
+	user.Avatar = avatar
 
 	if err := s.userRepo.Update(user); err != nil {
 		return fmt.Errorf("更新用户信息失败: %w", err)

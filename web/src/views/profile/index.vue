@@ -31,29 +31,11 @@
 
               <!-- 头像区域 -->
               <div class="avatar-section">
-                <div class="avatar-container">
-                  <el-avatar 
-                    :size="120" 
-                    :src="profileForm.avatar || '/default-avatar.png'" 
-                    class="user-avatar"
-                  >
-                    <el-icon><UserFilled /></el-icon>
-                  </el-avatar>
-                  <div class="avatar-actions">
-                    <el-upload
-                      :show-file-list="false"
-                      :on-success="handleAvatarSuccess"
-                      :before-upload="beforeAvatarUpload"
-                      action="/api/v1/file/upload"
-                      :headers="{ Authorization: `Bearer ${getToken()}` }"
-                    >
-                      <el-button type="primary" size="small">
-                        <el-icon><Upload /></el-icon>
-                        更换头像
-                      </el-button>
-                    </el-upload>
-                  </div>
-                </div>
+                <AvatarUpload
+                  v-model="profileForm.avatar"
+                  @success="handleAvatarSuccess"
+                  @error="handleAvatarError"
+                />
               </div>
 
               <el-form
@@ -485,10 +467,11 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { 
-  User, UserFilled, Avatar, Message, Phone, Star, Check, Refresh, 
-  Lock, Key, Setting, Upload, Folder
+import {
+  User, UserFilled, Avatar, Message, Phone, Star, Check, Refresh,
+  Lock, Key, Setting, Upload, Folder, Delete
 } from '@element-plus/icons-vue'
+import AvatarUpload from '@/components/AvatarUpload.vue'
 import { profileApi, type ProfileInfo, type TenantConfig } from '@/api/profile'
 import { useTenantStore } from '@/store/tenant'
 
@@ -706,36 +689,30 @@ const systemInfoRules: FormRules = {
   ]
 }
 
-// 获取Token方法（用于文件上传）
-const getToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+// 头像上传成功处理
+const handleAvatarSuccess = async (file: any) => {
+  ElMessage.success('头像上传成功')
+  // 自动保存个人信息以更新头像
+  await updateProfileAvatar()
 }
 
-// 头像上传前的校验
-const beforeAvatarUpload = (file: File) => {
-  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg'
-  const isLt2M = file.size / 1024 / 1024 < 2
-
-  if (!isJPG) {
-    ElMessage.error('头像只能是 JPG/PNG 格式!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('头像大小不能超过 2MB!')
-    return false
-  }
-  return true
+// 头像上传错误处理
+const handleAvatarError = (error: string) => {
+  ElMessage.error(error || '头像上传失败')
 }
 
-// 头像上传成功回调
-const handleAvatarSuccess = (response: any) => {
-  if (response.code === 200) {
-    profileForm.avatar = response.data.url
-    ElMessage.success('头像上传成功')
-    // 自动保存头像
-    updateProfile()
-  } else {
-    ElMessage.error(response.message || '头像上传失败')
+// 单独更新头像
+const updateProfileAvatar = async () => {
+  try {
+    await profileApi.updateProfile({
+      nickname: profileForm.nickname,
+      email: profileForm.email,
+      phone: profileForm.phone || undefined,
+      avatar: profileForm.avatar
+    })
+  } catch (error) {
+    console.error('更新头像失败:', error)
+    throw error
   }
 }
 
@@ -1064,29 +1041,6 @@ watch(
   margin-bottom: 24px;
   display: flex;
   justify-content: center;
-}
-
-.avatar-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-avatar {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 3px solid #fff;
-  background: #f5f7fa;
-  
-  :deep(.el-icon) {
-    font-size: 48px;
-    color: #c0c4cc;
-  }
-}
-
-.avatar-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .profile-card {

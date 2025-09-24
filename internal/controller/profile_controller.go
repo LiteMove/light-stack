@@ -29,6 +29,7 @@ type UpdateProfileRequest struct {
 	Nickname string `json:"nickname" validate:"required,min=1,max=50"`
 	Email    string `json:"email" validate:"required,email"`
 	Phone    string `json:"phone" validate:"omitempty,len=11"`
+	Avatar   string `json:"avatar" validate:"omitempty,max=255"`
 }
 
 // ProfileChangePasswordRequest 修改密码请求
@@ -91,7 +92,7 @@ func (c *ProfileController) UpdateProfile(ctx *gin.Context) {
 	}
 
 	// 调用服务更新用户信息
-	if err := c.profileService.UpdateProfile(id, req.Nickname, req.Email, req.Phone); err != nil {
+	if err := c.profileService.UpdateProfile(id, req.Nickname, req.Email, req.Phone, req.Avatar); err != nil {
 		response.InternalServerError(ctx, err.Error())
 		return
 	}

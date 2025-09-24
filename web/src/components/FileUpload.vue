@@ -94,6 +94,7 @@ interface FileProfile {
   md5: string
   uploadUserId: number
   usageType: string
+  accessUrl: string
   createdAt: string
   updatedAt: string
 }
@@ -276,7 +277,18 @@ const downloadFile = async () => {
 
   try {
     downloading.value = true
-    await downloadFileApi(uploadedFile.value.id)
+    // 使用文件的访问URL进行下载
+    if (uploadedFile.value.accessUrl) {
+      const link = document.createElement('a')
+      link.href = uploadedFile.value.accessUrl
+      link.download = uploadedFile.value.originalName
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      ElMessage.error('无法获取文件下载链接')
+    }
   } catch (error: any) {
     ElMessage.error(error.message || '下载失败')
   } finally {
