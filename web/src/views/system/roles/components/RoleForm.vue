@@ -208,6 +208,12 @@ const handleSubmit = async () => {
     const valid = await formRef.value.validate()
     if (!valid) return
 
+    // 检查是否为超级管理员角色，禁止编辑
+    if (isEdit.value && props.formData?.code === 'super_admin') {
+      ElMessage.error('超级管理员角色禁止编辑')
+      return
+    }
+
     submitting.value = true
 
     if (isEdit.value && props.formData?.id) {

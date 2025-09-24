@@ -248,6 +248,12 @@ const handleSave = async () => {
     return
   }
 
+  // 检查是否为超级管理员角色，禁止分配菜单
+  if (props.roleInfo.code === 'super_admin') {
+    ElMessage.error('超级管理员角色禁止分配菜单')
+    return
+  }
+
   try {
     saving.value = true
     

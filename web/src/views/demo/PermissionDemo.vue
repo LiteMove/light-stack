@@ -55,8 +55,8 @@
           </el-button>
           
           <!-- 角色指令 -->
-          <el-button v-role="'admin'" type="warning">
-            管理员功能 (角色: admin)
+          <el-button v-role="'tenant_admin'" type="warning">
+            租户管理员功能 (角色: tenant_admin)
           </el-button>
           <el-button v-role="'super_admin'" type="info">
             超级管理员功能 (角色: super_admin)
@@ -64,7 +64,7 @@
           
           <!-- 管理员指令 -->
           <el-button v-admin type="danger">
-            管理员专用 (v-admin)
+            租户管理员专用 (v-admin)
           </el-button>
           <el-button v-super-admin type="danger">
             超管专用 (v-super-admin)
@@ -88,13 +88,13 @@
             </el-button>
           </Permission>
           
-          <Permission role="admin">
+          <Permission role="tenant_admin">
             <el-button type="success">
-              组件包装 - 管理员功能
+              组件包装 - 租户管理员功能
             </el-button>
           </Permission>
           
-          <Permission :auth="{ permissions: ['system:user:create'], roles: ['admin'] }">
+          <Permission :auth="{ permissions: ['system:user:create'], roles: ['tenant_admin'] }">
             <el-button type="info">
               组件包装 - 综合权限检查
             </el-button>
@@ -121,10 +121,10 @@
           </el-button>
           
           <el-button 
-            v-if="hasRole('admin')" 
+            v-if="hasRole('tenant_admin')" 
             type="warning"
           >
-            API检查 - 管理员功能
+            API检查 - 租户管理员功能
           </el-button>
           
           <el-button 

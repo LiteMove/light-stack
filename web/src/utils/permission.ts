@@ -52,12 +52,12 @@ export function hasAllRole(roles: string[]): boolean {
 
 export function isAdmin(): boolean {
   const userStore = useUserStore()
-  return userStore.isAdmin()
+  return userStore.hasRole('tenant_admin')
 }
 
 export function isSuperAdmin(): boolean {
   const userStore = useUserStore()
-  return userStore.isSuperAdmin()
+  return userStore.hasRole('super_admin')
 }
 
 // 综合权限检查函数
@@ -254,12 +254,12 @@ export const auth = {
   }
 }
 
-// 管理员权限指令
+// 租户管理员权限指令（简化为直接使用角色检查）
 export const admin = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    if (!userStore.isAdmin()) {
+    if (!userStore.hasRole('tenant_admin')) {
       el.style.display = 'none'
       el.setAttribute('data-admin-hidden', 'true')
     }
@@ -267,7 +267,7 @@ export const admin = {
   updated(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    if (userStore.isAdmin()) {
+    if (userStore.hasRole('tenant_admin')) {
       el.style.display = ''
       el.removeAttribute('data-admin-hidden')
     } else {
@@ -277,12 +277,12 @@ export const admin = {
   }
 }
 
-// 超级管理员权限指令
+// 超级管理员权限指令（简化为直接使用角色检查）
 export const superAdmin = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    if (!userStore.isSuperAdmin()) {
+    if (!userStore.hasRole('super_admin')) {
       el.style.display = 'none'
       el.setAttribute('data-super-admin-hidden', 'true')
     }
@@ -290,7 +290,7 @@ export const superAdmin = {
   updated(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    if (userStore.isSuperAdmin()) {
+    if (userStore.hasRole('super_admin')) {
       el.style.display = ''
       el.removeAttribute('data-super-admin-hidden')
     } else {
@@ -324,9 +324,9 @@ export function usePermission() {
     hasAnyRole: (roles: string[]) => userStore.hasAnyRole(roles),
     hasAllRoles: (roles: string[]) => userStore.hasAllRoles(roles),
     
-    // 管理员检查
-    isAdmin: () => userStore.isAdmin(),
-    isSuperAdmin: () => userStore.isSuperAdmin(),
+    // 管理员检查（简化为直接使用角色检查）
+    isAdmin: () => userStore.hasRole('tenant_admin'),
+    isSuperAdmin: () => userStore.hasRole('super_admin'),
     
     // 综合检查
     checkAuth: (config: { permissions?: string[], roles?: string[], requireAll?: boolean }) => 

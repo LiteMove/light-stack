@@ -200,23 +200,31 @@
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-tooltip content="编辑角色" placement="top">
+              <el-tooltip 
+                :content="row.code === 'super_admin' ? '超级管理员角色禁止编辑' : '编辑角色'" 
+                placement="top"
+              >
                 <el-button
                   type="primary"
                   link
                   size="small"
                   :icon="Edit"
                   @click="handleEdit(row)"
+                  :disabled="row.code === 'super_admin'"
                 />
               </el-tooltip>
 
-              <el-tooltip content="菜单权限" placement="top">
+              <el-tooltip 
+                :content="row.code === 'super_admin' ? '超级管理员角色禁止分配菜单' : '菜单权限'" 
+                placement="top"
+              >
                 <el-button
                   type="info"
                   link
                   size="small"
                   :icon="Menu"
                   @click="handleMenus(row)"
+                  :disabled="row.code === 'super_admin'"
                 />
               </el-tooltip>
               <el-tooltip content="复制角色" placement="top">
@@ -228,14 +236,17 @@
                   @click="handleCopy(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="删除角色" placement="top">
+              <el-tooltip 
+                :content="row.code === 'super_admin' ? '超级管理员角色禁止删除' : '删除角色'" 
+                placement="top"
+              >
                 <el-button
                   type="danger"
                   link
                   size="small"
                   :icon="Delete"
                   @click="handleDelete(row)"
-                  :disabled="row.isSystem"
+                  :disabled="row.isSystem || row.code === 'super_admin'"
                 />
               </el-tooltip>
             </div>

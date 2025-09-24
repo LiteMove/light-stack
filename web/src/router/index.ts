@@ -70,21 +70,17 @@ let dynamicRoutesAdded = false
 
 // 全局前置守卫
 router.beforeEach(async (to, from, next) => {
-  console.log('[ROUTER] Navigation from:', from.path, 'to:', to.path)
   const userStore = useUserStore()
 
   // 如果访问登录页面，直接通过
   if (to.path === '/login') {
-    console.log('[ROUTER] Accessing login page, allowing...')
     next()
     return
   }
 
   // 检查是否有token
   const token = userStore.getToken()
-  console.log('[ROUTER] Token check:', !!token)
   if (!token) {
-    console.log('[ROUTER] No token, redirecting to login')
     next('/login')
     return
   }

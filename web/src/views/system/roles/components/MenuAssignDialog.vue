@@ -429,6 +429,12 @@ const getCompleteMenuIds = (selectedIds: number[]): number[] => {
 const handleSubmit = async () => {
   if (!props.roleData?.id) return
 
+  // 检查是否为超级管理员角色，禁止分配菜单
+  if (props.roleData.code === 'super_admin') {
+    ElMessage.error('超级管理员角色禁止分配菜单')
+    return
+  }
+
   try {
     submitting.value = true
     

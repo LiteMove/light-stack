@@ -77,10 +77,10 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = info
     permissions.value = info.permissions || []
     userMenus.value = info.menus || []
-    // 检查是否为超级管理员
+    // 检查是否为超级管理员（只检查super_admin角色）
     const tenantStore = useTenantStore()
-    const isSuperAdmin = info.roles?.includes('super_admin') || info.roles?.includes('admin')
-    tenantStore.setIsSuperAdmin(isSuperAdmin)
+    const isSuperAdminRole = info.roles?.includes('super_admin')
+    tenantStore.setIsSuperAdmin(isSuperAdminRole)
     
     // 将用户信息持久化到本地存储
     localStorage.setItem('userInfo', JSON.stringify(info))
@@ -137,6 +137,18 @@ export const useUserStore = defineStore('user', () => {
 
   // 获取用户菜单
   const getUserMenus = async (): Promise<Menu[]> => {
+    // 如果是超级管理员，直接返回所有菜单
+    if (isSuperAdmin()) {
+      try {
+        const { data } = await menuApi.getMenuTree()
+        userMenus.value = data
+        return data
+      } catch (error) {
+        console.error('Failed to fetch all menus for super admin:', error)
+        return []
+      }
+    }
+
     // 首先检查本地存储
     if (!userMenus.value.length) {
       const storedMenus = localStorage.getItem('userMenus')
@@ -166,8 +178,41 @@ export const useUserStore = defineStore('user', () => {
     return userMenus.value
   }
 
+  // 从菜单树中提取所有权限
+  const extractPermissionsFromMenuTree = (menus: Menu[]): string[] => {
+    const permissions: string[] = []
+    const extractRecursive = (menuList: Menu[]) => {
+      menuList.forEach(menu => {
+        // 如果菜单有权限标识，添加到权限列表
+        if (menu.permission && menu.permission.trim()) {
+          permissions.push(menu.permission)
+        }
+        // 递归处理子菜单
+        if (menu.children && menu.children.length > 0) {
+          extractRecursive(menu.children)
+        }
+      })
+    }
+    extractRecursive(menus)
+    return [...new Set(permissions)] // 去重
+  }
+
   // 获取菜单权限
   const getPermissions = async (): Promise<string[]> => {
+    // 如果是超级管理员，直接返回所有权限
+    if (isSuperAdmin()) {
+      try {
+        // 从菜单树中提取所有权限
+        const { data } = await menuApi.getMenuTree()
+        const allPermissions = extractPermissionsFromMenuTree(data)
+        permissions.value = allPermissions
+        return allPermissions
+      } catch (error) {
+        console.error('Failed to fetch all permissions for super admin:', error)
+        return []
+      }
+    }
+
     // 首先检查本地存储
     if (!permissions.value.length) {
       const storedPermissions = localStorage.getItem('permissions')
@@ -233,9 +278,9 @@ export const useUserStore = defineStore('user', () => {
     return roleList.every(role => hasRole(role))
   }
 
-  // 检查是否为管理员
+  // 检查是否为租户管理员
   const isAdmin = (): boolean => {
-    return hasRole('admin') || hasRole('super_admin')
+    return hasRole('tenant_admin')
   }
 
   // 检查是否为超级管理员
