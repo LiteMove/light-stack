@@ -38,7 +38,6 @@ export interface FileStorageConfig {
   defaultPublic: boolean
   maxFileSize: number
   allowedTypes: string[]
-  localPath?: string
   ossProvider?: 'aliyun' | 'tencent' | 'aws' | 'qiniu' | 'upyun'
   ossEndpoint?: string
   ossRegion?: string

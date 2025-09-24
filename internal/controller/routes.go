@@ -40,7 +40,7 @@ func RegisterRoutes(r *gin.Engine) {
 	roleService := service.NewRoleService(roleRepo, userRepo)
 	menuService := service.NewMenuService(menuRepo, roleRepo)
 	tenantService := service.NewTenantService(tenantRepo, userRepo)
-	fileService := service.NewFileService(fileRepo)
+	fileService := service.NewFileService(fileRepo, tenantService)
 	profileService := service.NewProfileService(userRepo, roleRepo, tenantRepo)
 	authController := NewAuthController(authService, roleService, menuService)
 	userController := NewUserController(userService)
@@ -100,12 +100,13 @@ func RegisterRoutes(r *gin.Engine) {
 			files := v1.Group("/files")
 			files.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
 			{
-				files.POST("/upload", fileController.UploadFile)        // 文件上传
-				files.GET("", fileController.GetAllFiles)               // 获取文件列表（按租户）
-				files.GET("/list", fileController.GetAllFiles)          // 获取文件列表（兼容旧接口）
-				files.GET("/:id", fileController.GetFile)               // 获取文件信息
-				files.GET("/:id/download", fileController.DownloadFile) // 下载文件
-				files.DELETE("/:id", fileController.DeleteFile)         // 删除文件
+				files.POST("/upload", fileController.UploadFile)              // 文件上传
+				files.GET("", fileController.GetAllFiles)                     // 获取文件列表（按租户）
+				files.GET("/list", fileController.GetAllFiles)                // 获取文件列表（兼容旧接口）
+				files.GET("/:id", fileController.GetFile)                     // 获取文件信息
+				files.GET("/:id/download", fileController.DownloadFile)       // 下载文件
+				files.GET("/:id/download-url", fileController.GetDownloadURL) // 获取下载链接
+				files.DELETE("/:id", fileController.DeleteFile)               // 删除文件
 			}
 
 			//// 个人中心相关路由（需要认证）
@@ -195,6 +196,19 @@ func RegisterRoutes(r *gin.Engine) {
 					menus.PUT("/:id/status", menuController.UpdateMenuStatus) // 更新菜单状态
 				}
 			}
+		}
+
+		// 静态文件服务
+		// 公开文件 - 无需认证
+		api.Static("/static/public", "./uploads/public")
+
+		// 私有文件 - 需要认证和权限验证
+		privateFiles := api.Group("/static/private")
+		privateFiles.Use(middleware.JWTAuthMiddleware())
+		privateFiles.Use(middleware.TenantMiddleware(tenantService))
+		{
+			// 私有文件访问需要验证用户是否有权限访问该租户的文件
+			privateFiles.StaticFS("/", gin.Dir("./uploads/private", false))
 		}
 	}
 }

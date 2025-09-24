@@ -12,6 +12,9 @@ export interface FileProfile {
   md5: string
   uploadUserId: number
   usageType: string
+  storageType: string
+  isPublic: boolean
+  accessUrl: string
   createdAt: string
   updatedAt: string
 }
@@ -34,6 +37,14 @@ export const uploadFile = (formData: FormData) => {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
+  })
+}
+
+// 获取文件下载URL
+export const getFileDownloadURL = (id: number) => {
+  return request({
+    url: `/v1/files/${id}/download-url`,
+    method: 'get'
   })
 }
 

@@ -34,8 +34,7 @@ func NewManager(config *model.FileStorageConfig) (*Manager, error) {
 		// 根据OSS提供商创建对应的Provider
 		switch config.OSSProvider {
 		case "aliyun":
-			// TODO: 实现阿里云OSS Provider
-			return nil, fmt.Errorf("aliyun OSS provider not implemented yet")
+			provider, err = NewAliyunOSSProvider(config)
 		case "tencent":
 			// TODO: 实现腾讯云COS Provider
 			return nil, fmt.Errorf("tencent COS provider not implemented yet")

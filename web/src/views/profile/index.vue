@@ -323,18 +323,6 @@
                   </el-radio-group>
                 </el-form-item>
 
-                <!-- 本地存储配置 -->
-                <template v-if="tenantConfigForm.fileStorage.type === 'local'">
-                  <el-form-item label="存储路径" prop="fileStorage.localPath">
-                    <el-input
-                      v-model="tenantConfigForm.fileStorage.localPath"
-                      placeholder="请输入文件存储路径"
-                      clearable
-                    />
-                    <div class="form-tip">相对于服务器根目录的路径，例如：uploads</div>
-                  </el-form-item>
-                </template>
-
                 <el-form-item label="默认公开访问" prop="fileStorage.defaultPublic">
                   <el-switch
                     v-model="tenantConfigForm.fileStorage.defaultPublic"
@@ -477,7 +465,6 @@ const tenantConfigForm = reactive<TenantConfig>({
     defaultPublic: false,
     maxFileSize: 50 * 1024 * 1024, // 50MB
     allowedTypes: ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'],
-    localPath: 'uploads',
     ossProvider: 'aliyun',
     ossEndpoint: '',
     ossRegion: '',
@@ -547,10 +534,6 @@ const passwordRules: FormRules = {
 const tenantConfigRules: FormRules = {
   'fileStorage.type': [
     { required: true, message: '请选择存储类型', trigger: 'change' }
-  ],
-  'fileStorage.localPath': [
-    { required: true, message: '请设置存储路径', trigger: 'blur' },
-    { max: 200, message: '存储路径长度不能超过200个字符', trigger: 'blur' }
   ],
   'fileStorage.maxFileSize': [
     { required: true, message: '请设置最大文件大小', trigger: 'blur' }

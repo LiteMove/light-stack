@@ -37,6 +37,14 @@
       @change="handleFileChange"
     />
 
+    <!-- 上传选项 -->
+    <div v-if="showOptions && !uploading && !uploadedFile" class="upload-options">
+      <el-checkbox v-model="isPublic" label="公开文件" />
+      <div class="option-hint">
+        公开文件可被所有用户访问，私有文件仅上传者可访问
+      </div>
+    </div>
+
     <!-- 已上传文件信息 -->
     <div v-if="uploadedFile" class="uploaded-file">
       <div class="file-info">
@@ -95,6 +103,7 @@ interface Props {
   maxSize?: number // MB
   allowedTypes?: string[]
   modelValue?: FileProfile | null
+  showOptions?: boolean // 是否显示上传选项
 }
 
 interface Emits {
@@ -106,7 +115,8 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   usageType: '',
   maxSize: 50,
-  allowedTypes: () => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt']
+  allowedTypes: () => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
+  showOptions: false
 })
 
 const emit = defineEmits<Emits>()
@@ -118,6 +128,7 @@ const downloading = ref(false)
 const removing = ref(false)
 const uploadProgress = ref(0)
 const fileInputRef = ref<HTMLInputElement>()
+const isPublic = ref(false)
 
 // 计算属性
 const allowedExts = computed(() =>
@@ -183,6 +194,7 @@ const uploadFileHandler = async (file: File) => {
     if (props.usageType) {
       formData.append('usageType', props.usageType)
     }
+    formData.append('isPublic', isPublic.value.toString())
 
     const response = await uploadFile(formData)
 
@@ -363,6 +375,21 @@ const removeFile = async () => {
         width: 200px;
         margin-top: 16px;
       }
+    }
+  }
+
+  .upload-options {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+
+    .option-hint {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+      line-height: 1.4;
     }
   }
 

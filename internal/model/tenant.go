@@ -84,14 +84,13 @@ const (
 
 // FileStorageConfig 文件存储配置
 type FileStorageConfig struct {
-	Type          string   `json:"type"` // local/oss
-	BaseURL       string   `json:"baseUrl"`
+	Type          string   `json:"type"`          // local/oss
+	BaseURL       string   `json:"baseUrl"`       // 文件访问基础URL (如: https://cdn.example.com)
 	DefaultPublic bool     `json:"defaultPublic"` // 默认是否公开
 	MaxFileSize   int64    `json:"maxFileSize"`   // 最大文件大小(字节)
 	AllowedTypes  []string `json:"allowedTypes"`  // 允许的文件类型
 
-	// 本地存储配置
-	LocalPath string `json:"localPath,omitempty"`
+	// 本地存储配置 (使用系统配置，这里不需要额外配置)
 
 	// OSS配置 - 支持多平台
 	OSSProvider     string `json:"ossProvider,omitempty"` // aliyun/tencent/aws/qiniu/upyun
@@ -157,9 +156,6 @@ func (t *Tenant) GetFileStorageConfig() (*FileStorageConfig, error) {
 	}
 	if config.FileStorage.BaseURL == "" && config.FileStorage.Type == "local" {
 		config.FileStorage.BaseURL = "/static"
-	}
-	if config.FileStorage.LocalPath == "" {
-		config.FileStorage.LocalPath = "uploads"
 	}
 
 	return &config.FileStorage, nil

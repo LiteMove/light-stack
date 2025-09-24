@@ -14,6 +14,7 @@ type Config struct {
 	Redis    RedisConfig    `mapstructure:"redis"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Log      LogConfig      `mapstructure:"log"`
+	File     FileConfig     `mapstructure:"file"`
 }
 
 // AppConfig 应用配置
@@ -61,6 +62,13 @@ type LogConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
 	Output string `mapstructure:"output"`
+}
+
+// FileConfig 文件存储配置
+type FileConfig struct {
+	LocalPath   string `mapstructure:"local_path"`    // 本地存储路径
+	BaseURL     string `mapstructure:"base_url"`      // 文件访问基础URL
+	MaxFileSize int64  `mapstructure:"max_file_size"` // 默认最大文件大小(字节)
 }
 
 var config *Config
@@ -133,6 +141,11 @@ func setDefaults() {
 	viper.SetDefault("log.level", "info")
 	viper.SetDefault("log.format", "json")
 	viper.SetDefault("log.output", "stdout")
+
+	// 文件存储配置
+	viper.SetDefault("file.local_path", "uploads")
+	viper.SetDefault("file.base_url", "/api/static")
+	viper.SetDefault("file.max_file_size", 50*1024*1024) // 50MB
 }
 
 // Get 获取配置

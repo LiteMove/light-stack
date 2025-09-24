@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/LiteMove/light-stack/internal/middleware"
 	"github.com/LiteMove/light-stack/internal/service"
@@ -25,7 +26,7 @@ func NewFileController(fileService *service.FileService) *FileController {
 	}
 }
 
-// UploadFile 上传文件
+// UploadFile 上传文件（支持新的存储架构）
 func (fc *FileController) UploadFile(c *gin.Context) {
 	// 获取当前用户和租户信息
 	userID := middleware.GetUserIDFromContext(c)
@@ -41,32 +42,13 @@ func (fc *FileController) UploadFile(c *gin.Context) {
 	// 获取使用类型（可选）
 	usageType := c.PostForm("usageType")
 
-	// 文件大小限制（50MB）
-	const maxFileSize = 50 << 20
-	if file.Size > maxFileSize {
-		response.Error(c, http.StatusBadRequest, "文件大小不能超过50MB")
-		return
-	}
+	// 获取是否公开（可选，默认为false）
+	isPublic := c.PostForm("isPublic") == "true"
 
-	// 检查文件类型
-	allowedExts := []string{".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"}
-	ext := filepath.Ext(file.Filename)
-	allowed := false
-	for _, allowedExt := range allowedExts {
-		if ext == allowedExt {
-			allowed = true
-			break
-		}
-	}
-	if !allowed {
-		response.Error(c, http.StatusBadRequest, "不支持的文件类型")
-		return
-	}
-
-	// 上传文件
-	uploadedFile, err := fc.fileService.UploadFile(file, userID, tenantID, usageType)
+	// 上传文件（现在由FileService根据租户配置处理所有验证）
+	uploadedFile, err := fc.fileService.UploadFile(file, userID, tenantID, usageType, isPublic)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "文件上传失败")
+		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -91,7 +73,7 @@ func (fc *FileController) GetFile(c *gin.Context) {
 	response.Success(c, file.ToProfile())
 }
 
-// DownloadFile 下载文件
+// DownloadFile 下载文件（支持新的存储架构）
 func (fc *FileController) DownloadFile(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -100,26 +82,94 @@ func (fc *FileController) DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// 获取当前用户ID
+	userID := middleware.GetUserIDFromContext(c)
+
+	// 获取文件下载URL
+	downloadURL, err := fc.fileService.GetDownloadURL(id, userID)
+	if err != nil {
+		if err.Error() == "access denied" {
+			response.Error(c, http.StatusForbidden, "访问被拒绝")
+			return
+		}
+		if err.Error() == "file not found: record not found" {
+			response.Error(c, http.StatusNotFound, "文件不存在")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "获取下载链接失败")
+		return
+	}
+
+	// 如果是外部URL（OSS等），重定向到该URL
+	if strings.HasPrefix(downloadURL, "http://") || strings.HasPrefix(downloadURL, "https://") {
+		c.Redirect(http.StatusFound, downloadURL)
+		return
+	}
+
+	// 对于本地存储的私有文件，需要通过认证后下载
+	// 这里downloadURL应该是类似 /static/private/tenant_1/2024/01/01/file.jpg 的格式
+	// 我们需要将其转换为实际的文件路径进行下载
 	file, err := fc.fileService.GetFileByID(id)
 	if err != nil {
 		response.Error(c, http.StatusNotFound, "文件不存在")
 		return
 	}
 
-	// 检查文件是否存在
-	if _, err := os.Stat(file.FilePath); os.IsNotExist(err) {
-		response.Error(c, http.StatusNotFound, "文件已被删除")
+	// 如果是本地存储，直接提供文件下载
+	if file.StorageType == "local" {
+		// 设置下载头
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(file.OriginalName))
+		c.Header("Content-Type", file.MimeType)
+		c.Header("Content-Length", strconv.FormatInt(file.FileSize, 10))
+
+		// 构建实际文件路径
+		// file.FilePath 格式类似：private/tenant_1/2024/01/01/filename.ext
+		actualPath := filepath.Join("uploads", file.FilePath)
+
+		// 检查文件是否存在
+		if _, err := os.Stat(actualPath); os.IsNotExist(err) {
+			response.Error(c, http.StatusNotFound, "文件已被删除")
+			return
+		}
+
+		c.File(actualPath)
 		return
 	}
 
-	// 设置下载头
-	c.Header("Content-Description", "File Transfer")
-	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(file.OriginalName))
-	c.Header("Content-Type", file.MimeType)
-	c.Header("Content-Length", strconv.FormatInt(file.FileSize, 10))
+	// OSS等外部存储，返回下载URL
+	response.Success(c, gin.H{"downloadUrl": downloadURL})
+}
 
-	c.File(file.FilePath)
+// GetDownloadURL 获取文件下载URL（新增API）
+func (fc *FileController) GetDownloadURL(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "无效的文件ID")
+		return
+	}
+
+	// 获取当前用户ID
+	userID := middleware.GetUserIDFromContext(c)
+
+	// 获取文件下载URL
+	downloadURL, err := fc.fileService.GetDownloadURL(id, userID)
+	if err != nil {
+		if err.Error() == "access denied" {
+			response.Error(c, http.StatusForbidden, "访问被拒绝")
+			return
+		}
+		if err.Error() == "file not found: record not found" {
+			response.Error(c, http.StatusNotFound, "文件不存在")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "获取下载链接失败")
+		return
+	}
+
+	response.Success(c, gin.H{"downloadUrl": downloadURL})
 }
 
 // DeleteFile 删除文件

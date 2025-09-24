@@ -5,52 +5,64 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/repository"
+	"github.com/LiteMove/light-stack/internal/storage"
 )
 
 // FileService 文件服务
 type FileService struct {
-	fileRepo  *repository.FileRepository
-	uploadDir string
+	fileRepo      *repository.FileRepository
+	tenantService TenantService
 }
 
 // NewFileService 创建文件服务实例
-func NewFileService(fileRepo *repository.FileRepository) *FileService {
-	uploadDir := "uploads" // 默认上传目录
-	if dir := os.Getenv("UPLOAD_DIR"); dir != "" {
-		uploadDir = dir
-	}
-
-	// 确保上传目录存在
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		panic(fmt.Sprintf("Failed to create upload directory: %v", err))
-	}
-
+func NewFileService(fileRepo *repository.FileRepository, tenantService TenantService) *FileService {
 	return &FileService{
-		fileRepo:  fileRepo,
-		uploadDir: uploadDir,
+		fileRepo:      fileRepo,
+		tenantService: tenantService,
 	}
 }
 
-// UploadFile 上传文件
-func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID uint64, usageType string) (*model.File, error) {
+// UploadFile 上传文件（支持新的存储架构）
+func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID uint64, usageType string, isPublic bool) (*model.File, error) {
+	// 获取租户的存储配置
+	tenant, err := s.tenantService.GetTenant(tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
+	}
+
+	storageConfig, err := tenant.GetFileStorageConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storage config: %w", err)
+	}
+
+	// 验证文件大小限制
+	if file.Size > storageConfig.MaxFileSize {
+		return nil, fmt.Errorf("file size exceeds limit: %d > %d", file.Size, storageConfig.MaxFileSize)
+	}
+
+	// 验证文件类型
+	fileExt := s.getFileExtension(file.Filename)
+	if !s.isAllowedFileType(fileExt, storageConfig.AllowedTypes) {
+		return nil, fmt.Errorf("file type not allowed: %s", fileExt)
+	}
+
 	// 打开上传的文件
 	src, err := file.Open()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open uploaded file: %v", err)
+		return nil, fmt.Errorf("failed to open uploaded file: %w", err)
 	}
 	defer src.Close()
 
 	// 计算文件MD5
 	md5Hash, err := s.calculateMD5(src)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate MD5: %v", err)
+		return nil, fmt.Errorf("failed to calculate MD5: %w", err)
 	}
 
 	// 检查文件是否已存在（基于MD5和租户）
@@ -66,31 +78,20 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 	// 生成唯一文件名
 	fileName := s.generateFileName(file.Filename)
 
-	// 创建目标文件路径
+	// 生成存储路径
 	dateDir := time.Now().Format("2006/01/02")
-	destDir := filepath.Join(s.uploadDir, dateDir)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create destination directory: %v", err)
-	}
+	storagePath := storage.GenerateStoragePath(tenantID, dateDir, fileName, isPublic)
 
-	destPath := filepath.Join(destDir, fileName)
-
-	// 创建目标文件
-	dst, err := os.Create(destPath)
+	// 创建存储管理器
+	storageManager, err := storage.NewManager(storageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create destination file: %v", err)
-	}
-	defer dst.Close()
-
-	// 复制文件内容
-	if _, err := io.Copy(dst, src); err != nil {
-		return nil, fmt.Errorf("failed to save file: %v", err)
+		return nil, fmt.Errorf("failed to create storage manager: %w", err)
 	}
 
-	// 获取文件信息
-	fileInfo, err := dst.Stat()
+	// 上传文件到存储系统
+	accessURL, err := storageManager.Upload(src, storagePath, isPublic)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get file info: %v", err)
+		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
 	// 创建文件记录
@@ -100,20 +101,23 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 		},
 		OriginalName: file.Filename,
 		FileName:     fileName,
-		FilePath:     destPath,
-		FileSize:     fileInfo.Size(),
-		FileType:     s.getFileExtension(file.Filename),
+		FilePath:     storagePath,
+		FileSize:     file.Size,
+		FileType:     fileExt,
 		MimeType:     s.getMimeType(file.Header.Get("Content-Type"), file.Filename),
 		MD5:          md5Hash,
 		UploadUserID: userID,
 		UsageType:    usageType,
+		StorageType:  storageConfig.Type,
+		IsPublic:     isPublic,
+		AccessURL:    accessURL,
 	}
 
 	// 保存到数据库
 	if err := s.fileRepo.Create(fileModel); err != nil {
 		// 删除已上传的文件
-		os.Remove(destPath)
-		return nil, fmt.Errorf("failed to save file record: %v", err)
+		storageManager.Delete(storagePath)
+		return nil, fmt.Errorf("failed to save file record: %w", err)
 	}
 
 	return fileModel, nil
@@ -124,22 +128,40 @@ func (s *FileService) GetFileByID(id uint64) (*model.File, error) {
 	return s.fileRepo.GetByID(id)
 }
 
-// DeleteFile 删除文件
+// DeleteFile 删除文件（支持新的存储架构）
 func (s *FileService) DeleteFile(id uint64) error {
 	// 获取文件信息
 	file, err := s.fileRepo.GetByID(id)
 	if err != nil {
-		return fmt.Errorf("file not found: %v", err)
+		return fmt.Errorf("file not found: %w", err)
+	}
+
+	// 获取租户的存储配置
+	tenant, err := s.tenantService.GetTenant(file.TenantID)
+	if err != nil {
+		return fmt.Errorf("failed to get tenant: %w", err)
+	}
+
+	storageConfig, err := tenant.GetFileStorageConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get storage config: %w", err)
+	}
+
+	// 创建存储管理器
+	storageManager, err := storage.NewManager(storageConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create storage manager: %w", err)
 	}
 
 	// 删除物理文件
-	if err := os.Remove(file.FilePath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to delete physical file: %v", err)
+	if err := storageManager.Delete(file.FilePath); err != nil {
+		// 记录错误但不阻止数据库删除
+		fmt.Printf("Warning: failed to delete physical file %s: %v\n", file.FilePath, err)
 	}
 
 	// 删除数据库记录
 	if err := s.fileRepo.Delete(id); err != nil {
-		return fmt.Errorf("failed to delete file record: %v", err)
+		return fmt.Errorf("failed to delete file record: %w", err)
 	}
 
 	return nil
@@ -155,6 +177,66 @@ func (s *FileService) GetFilesByUser(userID, tenantID uint64, page, pageSize int
 func (s *FileService) GetAllFiles(tenantID uint64, page, pageSize int, filters map[string]interface{}) ([]*model.File, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.fileRepo.GetAllFiles(tenantID, offset, pageSize, filters)
+}
+
+// GetDownloadURL 获取文件下载URL（用于私有文件）
+func (s *FileService) GetDownloadURL(id uint64, userID uint64) (string, error) {
+	file, err := s.fileRepo.GetByID(id)
+	if err != nil {
+		return "", fmt.Errorf("file not found: %w", err)
+	}
+
+	// 检查权限：用户只能下载自己上传的文件或公开文件
+	if !file.IsPublic && file.UploadUserID != userID {
+		return "", fmt.Errorf("access denied")
+	}
+
+	// 如果是公开文件，直接返回AccessURL
+	if file.IsPublic {
+		return file.AccessURL, nil
+	}
+
+	// 私有文件，根据存储类型处理
+	if file.StorageType == "local" {
+		// 本地存储的私有文件，返回需要认证的URL
+		return file.AccessURL, nil
+	} else if file.StorageType == "oss" {
+		// OSS存储的私有文件，生成临时访问URL
+		tenant, err := s.tenantService.GetTenant(file.TenantID)
+		if err != nil {
+			return "", fmt.Errorf("failed to get tenant: %w", err)
+		}
+
+		storageConfig, err := tenant.GetFileStorageConfig()
+		if err != nil {
+			return "", fmt.Errorf("failed to get storage config: %w", err)
+		}
+
+		storageManager, err := storage.NewManager(storageConfig)
+		if err != nil {
+			return "", fmt.Errorf("failed to create storage manager: %w", err)
+		}
+
+		// 生成1小时有效期的临时URL
+		return storageManager.GetURL(file.FilePath, false), nil
+	}
+
+	return file.AccessURL, nil
+}
+
+// isAllowedFileType 检查文件类型是否允许
+func (s *FileService) isAllowedFileType(fileExt string, allowedTypes []string) bool {
+	if len(allowedTypes) == 0 {
+		return true // 如果没有限制，则允许所有类型
+	}
+
+	ext := "." + strings.ToLower(fileExt)
+	for _, allowedType := range allowedTypes {
+		if strings.ToLower(allowedType) == ext {
+			return true
+		}
+	}
+	return false
 }
 
 // calculateMD5 计算文件MD5
@@ -197,6 +279,10 @@ func (s *FileService) getMimeType(contentType, filename string) string {
 		return "image/png"
 	case ".gif":
 		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	case ".svg":
+		return "image/svg+xml"
 	case ".pdf":
 		return "application/pdf"
 	case ".doc":
@@ -209,6 +295,10 @@ func (s *FileService) getMimeType(contentType, filename string) string {
 		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 	case ".txt":
 		return "text/plain"
+	case ".zip":
+		return "application/zip"
+	case ".rar":
+		return "application/x-rar-compressed"
 	default:
 		return "application/octet-stream"
 	}

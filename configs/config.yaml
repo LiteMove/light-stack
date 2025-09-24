@@ -38,3 +38,9 @@ log:
   level: "info"     # debug, info, warn, error
   format: "json"    # json, text
   output: "stdout"  # stdout, file
+
+# 文件存储配置
+file:
+  local_path: "uploads"           # 本地存储路径
+  base_url: "/api/static"         # 文件访问基础URL
+  max_file_size: 52428800         # 默认最大文件大小 50MB (字节)
