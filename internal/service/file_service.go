@@ -43,7 +43,10 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 	}
 
 	// 如果没有明确指定isPublic，则使用租户配置的默认值
-	if !isPublic {
+	// 特殊处理：某些类型的文件应该强制为公开访问
+	if usageType == "system-logo" || usageType == "avatar" {
+		isPublic = true // 系统logo和头像强制公开访问
+	} else if !isPublic {
 		isPublic = storageConfig.DefaultPublic
 	}
 

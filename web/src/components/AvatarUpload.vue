@@ -1,9 +1,9 @@
 <template>
-  <div class="avatar-upload">
-    <!-- 头像显示区域 -->
-    <div class="avatar-section">
+  <div class="image-upload">
+    <!-- 图片显示区域 -->
+    <div class="image-section">
       <div
-        class="avatar-container"
+        class="image-container"
         @click="handleClick"
         :class="{ 'is-uploading': uploading }"
       >
@@ -17,12 +17,13 @@
         <el-avatar
           v-else
           :size="size"
-          :src="avatarUrl"
-          class="user-avatar"
+          :src="imageUrl"
+          class="user-image"
+          :class="imageClass"
         >
           <el-icon><UserFilled /></el-icon>
         </el-avatar>
-        <div v-if="!uploading" class="avatar-overlay">
+        <div v-if="!uploading" class="image-overlay">
           <el-icon><Camera /></el-icon>
           <span>点击更换</span>
         </div>
@@ -39,22 +40,24 @@
     />
 
     <!-- 操作按钮 -->
-    <div v-if="avatarUrl && !uploading" class="avatar-actions">
+    <div v-if="imageUrl && !uploading" class="image-actions">
       <el-button size="small" @click.stop="handleClick">
         <el-icon><Upload /></el-icon>
-        更换头像
+        {{ uploadButtonText }}
       </el-button>
-      <el-button type="danger" size="small" @click.stop="removeAvatar">
+      <el-button type="danger" size="small" @click.stop="removeImage">
         <el-icon><Delete /></el-icon>
-        删除头像
+        {{ deleteButtonText }}
       </el-button>
     </div>
 
     <!-- 提示信息 -->
-    <div class="avatar-tips">
+    <div class="image-tips">
       <p>• 支持 JPG、PNG、GIF 格式</p>
       <p>• 文件大小不超过 {{ maxSize }}MB</p>
       <p>• 建议尺寸 {{ size }}x{{ size }} 像素</p>
+      <p v-if="usageType === 'system-logo'">• 系统Logo将默认设为公开访问</p>
+      <p v-if="usageType === 'avatar'">• 头像将默认设为公开访问</p>
     </div>
   </div>
 </template>
@@ -92,9 +95,40 @@ const uploadProgress = ref(0)
 const fileInputRef = ref<HTMLInputElement>()
 
 // 计算属性
-const avatarUrl = computed({
+const imageUrl = computed({
   get: () => props.modelValue || '',
   set: (value) => emit('update:modelValue', value)
+})
+
+// 根据使用类型动态设置按钮文本
+const uploadButtonText = computed(() => {
+  const textMap: Record<string, string> = {
+    'avatar': '更换头像',
+    'system-logo': '更换Logo',
+    'banner': '更换横幅',
+    'icon': '更换图标'
+  }
+  return textMap[props.usageType] || '更换图片'
+})
+
+const deleteButtonText = computed(() => {
+  const textMap: Record<string, string> = {
+    'avatar': '删除头像',
+    'system-logo': '删除Logo',
+    'banner': '删除横幅',
+    'icon': '删除图标'
+  }
+  return textMap[props.usageType] || '删除图片'
+})
+
+// 根据使用类型设置图片样式类
+const imageClass = computed(() => {
+  const classMap: Record<string, string> = {
+    'system-logo': 'logo-style',
+    'banner': 'banner-style',
+    'icon': 'icon-style'
+  }
+  return classMap[props.usageType] || ''
 })
 
 // 验证文件
@@ -109,7 +143,9 @@ const validateFile = (file: File): boolean => {
   // 检查文件类型
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
   if (!allowedTypes.includes(file.type)) {
-    ElMessage.error('头像只能是 JPG、PNG、GIF 格式')
+    const fileTypeName = props.usageType === 'avatar' ? '头像' :
+                        props.usageType === 'system-logo' ? '系统Logo' : '图片'
+    ElMessage.error(`${fileTypeName}只能是 JPG、PNG、GIF 格式`)
     return false
   }
 
@@ -134,7 +170,10 @@ const uploadFileHandler = async (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('usageType', props.usageType)
-    formData.append('isPublic', 'true') // TODO, 头像默认公有，头像通常设为公有
+
+    // 根据使用类型设置默认公开访问权限
+    const shouldBePublic = props.usageType === 'system-logo' || props.usageType === 'avatar'
+    formData.append('isPublic', shouldBePublic.toString())
 
     const response = await uploadFile(formData)
 
@@ -145,12 +184,17 @@ const uploadFileHandler = async (file: File) => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     const fileData = response.data
-    avatarUrl.value = fileData.accessUrl || fileData.filePath
+    imageUrl.value = fileData.accessUrl || fileData.filePath
     emit('success', fileData)
-    ElMessage.success('头像上传成功')
+
+    const fileTypeName = props.usageType === 'avatar' ? '头像' :
+                        props.usageType === 'system-logo' ? '系统Logo' : '图片'
+    ElMessage.success(`${fileTypeName}上传成功`)
   } catch (error: any) {
-    ElMessage.error(error.message || '头像上传失败')
-    emit('error', error.message || '头像上传失败')
+    const fileTypeName = props.usageType === 'avatar' ? '头像' :
+                        props.usageType === 'system-logo' ? '系统Logo' : '图片'
+    ElMessage.error(error.message || `${fileTypeName}上传失败`)
+    emit('error', error.message || `${fileTypeName}上传失败`)
   } finally {
     uploading.value = false
     uploadProgress.value = 0
@@ -174,46 +218,64 @@ const handleFileChange = (e: Event) => {
   target.value = ''
 }
 
-// 删除头像
-const removeAvatar = async () => {
+// 删除图片
+const removeImage = async () => {
   try {
-    await ElMessageBox.confirm('确定要删除当前头像吗？', '确认删除', {
+    const fileTypeName = props.usageType === 'avatar' ? '头像' :
+                        props.usageType === 'system-logo' ? 'Logo' : '图片'
+
+    await ElMessageBox.confirm(`确定要删除当前${fileTypeName}吗？`, '确认删除', {
       type: 'warning'
     })
 
-    avatarUrl.value = ''
-    ElMessage.success('头像删除成功')
+    imageUrl.value = ''
+    ElMessage.success(`${fileTypeName}删除成功`)
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除头像失败')
+      const fileTypeName = props.usageType === 'avatar' ? '头像' :
+                          props.usageType === 'system-logo' ? 'Logo' : '图片'
+      ElMessage.error(`删除${fileTypeName}失败`)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.avatar-upload {
+.image-upload {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
 
-  .avatar-section {
+  .image-section {
     position: relative;
     display: flex;
     justify-content: center;
 
-    .avatar-container {
+    .image-container {
       position: relative;
       cursor: pointer;
-      border-radius: 50%;
+      border-radius: 50%; // 默认圆形，会被 logo-style 等覆盖
       overflow: hidden;
       transition: all 0.3s ease;
+
+      // 根据使用类型调整容器形状
+      &:has(.logo-style) {
+        border-radius: 8px;
+      }
+
+      &:has(.banner-style) {
+        border-radius: 12px;
+      }
+
+      &:has(.icon-style) {
+        border-radius: 6px;
+      }
 
       &:hover {
         transform: scale(1.05);
 
-        .avatar-overlay {
+        .image-overlay {
           opacity: 1;
         }
       }
@@ -232,7 +294,7 @@ const removeAvatar = async () => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          border-radius: 50%;
+          border-radius: inherit; // 继承父元素的圆角
           color: white;
           z-index: 1;
 
@@ -256,10 +318,29 @@ const removeAvatar = async () => {
         }
       }
 
-      .user-avatar {
+      .user-image {
         border: 3px solid #fff;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         background: #f5f7fa;
+
+        // 系统Logo样式
+        &.logo-style {
+          border-radius: 8px; // Logo通常用圆角矩形
+          background: #ffffff;
+          border: 2px solid #dcdfe6;
+        }
+
+        // 横幅样式
+        &.banner-style {
+          border-radius: 12px;
+          background: #f8f9fa;
+        }
+
+        // 图标样式
+        &.icon-style {
+          border-radius: 6px;
+          background: #fafafa;
+        }
 
         :deep(.el-icon) {
           font-size: 48px;
@@ -267,7 +348,7 @@ const removeAvatar = async () => {
         }
       }
 
-      .avatar-overlay {
+      .image-overlay {
         position: absolute;
         top: 0;
         left: 0;
@@ -278,7 +359,7 @@ const removeAvatar = async () => {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
+        border-radius: inherit; // 继承父元素的圆角
         color: white;
         opacity: 0;
         transition: opacity 0.3s ease;
@@ -292,12 +373,12 @@ const removeAvatar = async () => {
     }
   }
 
-  .avatar-actions {
+  .image-actions {
     display: flex;
     gap: 8px;
   }
 
-  .avatar-tips {
+  .image-tips {
     text-align: center;
 
     p {
@@ -320,8 +401,8 @@ const removeAvatar = async () => {
 
 // 响应式设计
 @media (max-width: 768px) {
-  .avatar-upload {
-    .avatar-actions {
+  .image-upload {
+    .image-actions {
       flex-direction: column;
       width: 120px;
 

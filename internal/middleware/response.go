@@ -48,7 +48,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// 从请求头中获取token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			response.Unauthorized(c, "缺少Authorization头")
+			response.Unauthorized(c, "未登录或登陆已过期!")
 			c.Abort()
 			return
 		}
@@ -56,7 +56,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// 检查Bearer格式
 		const bearerPrefix = "Bearer "
 		if !strings.HasPrefix(authHeader, bearerPrefix) {
-			response.Unauthorized(c, "无效的Authorization格式")
+			response.Unauthorized(c, "未登录或登陆已过期!")
 			c.Abort()
 			return
 		}
@@ -64,7 +64,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// 提取token
 		tokenString := strings.TrimPrefix(authHeader, bearerPrefix)
 		if tokenString == "" {
-			response.Unauthorized(c, "Token不能为空")
+			response.Unauthorized(c, "未登录或登陆已过期!")
 			c.Abort()
 			return
 		}
@@ -72,7 +72,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// 解析token
 		claims, err := jwt.ParseToken(tokenString)
 		if err != nil {
-			response.Unauthorized(c, "无效的token")
+			response.Unauthorized(c, "未登录或登陆已过期!")
 			c.Abort()
 			return
 		}

@@ -260,12 +260,31 @@
                 </el-form-item>
 
                 <el-form-item label="系统Logo" prop="logo">
-                  <el-input
-                    v-model="tenantConfigForm.logo"
-                    placeholder="请输入Logo URL地址"
-                    clearable
-                  />
-                  <div class="form-tip">支持本地文件路径或网络图片URL</div>
+                  <div class="logo-upload-wrapper">
+<!--                    <div class="logo-preview" v-if="tenantConfigForm.logo">-->
+<!--                      <img-->
+<!--                        :src="tenantConfigForm.logo"-->
+<!--                        alt="系统Logo预览"-->
+<!--                        class="logo-preview-image"-->
+<!--                        @error="handleLogoImageError"-->
+<!--                      />-->
+<!--                    </div>-->
+                    <AvatarUpload
+                      v-model="tenantConfigForm.logo"
+                      :size="80"
+                      :max-size="5"
+                      usage-type="system-logo"
+                      @success="handleLogoUploadSuccess"
+                      @error="handleLogoUploadError"
+                    />
+                    <el-input
+                      v-model="tenantConfigForm.logo"
+                      placeholder="或直接输入Logo URL地址"
+                      clearable
+                      class="logo-url-input"
+                    />
+                  </div>
+                  <div class="form-tip">支持上传图片文件（推荐）或输入网络图片URL，建议尺寸80x80像素</div>
                 </el-form-item>
 
                 <el-form-item label="系统描述" prop="description">
@@ -699,6 +718,23 @@ const handleAvatarSuccess = async (file: any) => {
 // 头像上传错误处理
 const handleAvatarError = (error: string) => {
   ElMessage.error(error || '头像上传失败')
+}
+
+// Logo上传成功处理
+const handleLogoUploadSuccess = (file: any) => {
+  ElMessage.success('系统Logo上传成功')
+  // Logo URL已经通过v-model自动更新到tenantConfigForm.logo
+}
+
+// Logo上传错误处理
+const handleLogoUploadError = (error: string) => {
+  ElMessage.error(error || '系统Logo上传失败')
+}
+
+// Logo图片加载错误处理
+const handleLogoImageError = (event: Event) => {
+  console.error('Logo图片加载失败:', tenantConfigForm.logo)
+  // 可以在这里显示默认图片或提示
 }
 
 // 单独更新头像
@@ -1205,18 +1241,62 @@ watch(
   }
 }
 
+.logo-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .logo-preview {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+
+    .logo-preview-image {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      background-color: #f8f9fa;
+      padding: 8px;
+    }
+  }
+
+  .logo-url-input {
+    margin-top: 8px;
+  }
+}
+
 @media (max-width: 768px) {
   .profile-container {
     padding: 16px;
     height: calc(100vh - 60px);
   }
-  
+
   .profile-form {
     max-width: 100%;
   }
-  
+
   .profile-card {
     margin-bottom: 16px;
+  }
+
+  .logo-upload-wrapper {
+    gap: 12px;
+
+    .logo-preview {
+      margin-bottom: 6px;
+
+      .logo-preview-image {
+        width: 60px;
+        height: 60px;
+        padding: 6px;
+      }
+    }
+
+    .logo-url-input {
+      margin-top: 6px;
+    }
   }
 }
 </style>
