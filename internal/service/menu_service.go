@@ -167,6 +167,20 @@ func (s *menuService) GetMenuTree() ([]model.MenuTreeNode, error) {
 
 // GetUserMenuTree 获取用户菜单树
 func (s *menuService) GetUserMenuTree(userID uint64) ([]model.MenuTreeNode, error) {
+	// 检查用户是否为超级管理员
+	userRoles, err := s.roleRepo.GetUserRoles(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果用户是超级管理员，返回所有菜单
+	for _, role := range userRoles {
+		if role.Code == "super_admin" {
+			return s.GetMenuTree()
+		}
+	}
+
+	// 普通用户获取分配的菜单
 	menus, err := s.menuRepo.GetUserMenus(userID)
 	if err != nil {
 		return nil, err
@@ -223,6 +237,32 @@ func (s *menuService) AssignMenusToRole(roleID uint64, menuIDs []uint64) error {
 
 // GetMenuPermissions 获取用户菜单权限
 func (s *menuService) GetMenuPermissions(userID uint64) ([]string, error) {
+	// 检查用户是否为超级管理员
+	userRoles, err := s.roleRepo.GetUserRoles(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果用户是超级管理员，返回所有菜单权限
+	for _, role := range userRoles {
+		if role.Code == "super_admin" {
+			// 获取所有菜单来提取权限
+			allMenus, err := s.menuRepo.GetAll()
+			if err != nil {
+				return nil, err
+			}
+
+			permissions := make([]string, 0, len(allMenus))
+			for _, menu := range allMenus {
+				if menu.Code != "" {
+					permissions = append(permissions, menu.Code)
+				}
+			}
+			return permissions, nil
+		}
+	}
+
+	// 普通用户获取分配的菜单权限
 	menus, err := s.menuRepo.GetUserMenus(userID)
 	if err != nil {
 		return nil, err
