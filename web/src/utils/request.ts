@@ -39,18 +39,16 @@ request.interceptors.request.use(
 
     // 添加租户ID到请求头
     const currentTenant = tenantStore.getCurrentTenant()
+    const isSuperAdmin = tenantStore.checkIsSuperAdmin()
 
     if (currentTenant) {
-      config.headers['X-Tenant-ID'] = currentTenant.id.toString()
+      config.headers['X-Tenant-Id'] = currentTenant.id.toString()
       console.log('Added tenant ID to request:', currentTenant.id)
-    } else {
+    } else if (isSuperAdmin) {
       // 如果是超级管理员但没有选择租户，在某些请求中可能需要特殊处理
-      const isSuperAdmin = tenantStore.checkIsSuperAdmin()
-      if (isSuperAdmin) {
-        console.log('Super admin without tenant selection')
-        // 可以选择性地添加一个特殊标头来标识这是超级管理员请求
-        config.headers['X-Super-Admin'] = 'true'
-      }
+      console.log('Super admin without tenant selection')
+      // 对于超级管理员，如果没有选择租户，可能需要默认处理
+      // 这里可以根据具体业务需求处理
     }
 
     return config
@@ -84,10 +82,6 @@ request.interceptors.response.use(
 
     if (response) {
       const { status, data } = response
-
-      // 如果有响应体且包含具体错误信息，优先使用响应体中的信息
-
-
 
       // 否则根据HTTP状态码显示通用错误信息
       let errorMessage = ''

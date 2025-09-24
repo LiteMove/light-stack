@@ -145,21 +145,28 @@ func (s *profileService) IsTenantAdmin(userID, tenantID uint64) (bool, error) {
 		return false, fmt.Errorf("获取用户信息失败: %w", err)
 	}
 
-	// 检查用户是否属于该租户
-	if user.TenantID != tenantID {
-		return false, nil
-	}
-
 	// 获取用户角色
 	roles, err := s.roleRepo.GetUserRoles(userID)
 	if err != nil {
 		return false, fmt.Errorf("获取用户角色失败: %w", err)
 	}
 
+	// 检查是否为超级管理员（超级管理员可以管理任何租户）
+	for _, role := range roles {
+		if role.Code == "super_admin" || role.Name == "super_admin" || role.Name == "超级管理员" {
+			return true, nil
+		}
+	}
+
+	// 检查用户是否属于该租户
+	if user.TenantID != tenantID {
+		return false, nil
+	}
+
 	// 检查是否有租户管理员角色
 	for _, role := range roles {
 		// 假设角色名称为 "tenant_admin" 或者角色类型为管理员类型
-		if role.Name == "tenant_admin" || role.Name == "租户管理员" {
+		if role.Name == "tenant_admin" || role.Name == "租户管理员" || role.Code == "tenant_admin" {
 			return true, nil
 		}
 	}
@@ -179,6 +186,20 @@ func (s *profileService) GetTenantConfig(tenantID uint64) (*model.TenantConfig, 
 	config, err := tenant.GetConfig()
 	if err != nil {
 		return nil, fmt.Errorf("解析租户配置失败: %w", err)
+	}
+
+	// 确保配置有默认值
+	if config.FileStorage.Type == "" {
+		config.FileStorage.Type = "local"
+	}
+	if config.FileStorage.MaxFileSize == 0 {
+		config.FileStorage.MaxFileSize = 50 * 1024 * 1024 // 50MB
+	}
+	if len(config.FileStorage.AllowedTypes) == 0 {
+		config.FileStorage.AllowedTypes = []string{".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"}
+	}
+	if config.FileStorage.OSSProvider == "" {
+		config.FileStorage.OSSProvider = "aliyun"
 	}
 
 	return config, nil

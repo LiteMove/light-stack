@@ -100,11 +100,12 @@ func RegisterRoutes(r *gin.Engine) {
 			files := v1.Group("/files")
 			files.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
 			{
-				files.POST("/upload", fileController.UploadFile) // 文件上传
-				files.GET("", fileController.GetAllFiles)        // 获取文件列表（按租户）
-				files.GET("/list", fileController.GetAllFiles)   // 获取文件列表（兼容旧接口）
-				files.GET("/:id", fileController.GetFile)        // 获取文件信息（包含access_url用于下载/预览）
-				files.DELETE("/:id", fileController.DeleteFile)  // 删除文件
+				files.POST("/upload", fileController.UploadFile)         // 文件上传
+				files.GET("", fileController.GetAllFiles)                // 获取文件列表（按租户）
+				files.GET("/list", fileController.GetAllFiles)           // 获取文件列表（兼容旧接口）
+				files.GET("/:id", fileController.GetFile)                // 获取文件信息（包含access_url用于下载/预览）
+				files.GET("/:id/private", fileController.GetPrivateFile) // 获取私有文件内容
+				files.DELETE("/:id", fileController.DeleteFile)          // 删除文件
 			}
 
 			//// 个人中心相关路由（需要认证）

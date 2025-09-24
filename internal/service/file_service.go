@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -188,8 +189,67 @@ func (s *FileService) GetAllFiles(tenantID uint64, page, pageSize int, filters m
 	return s.fileRepo.GetAllFiles(tenantID, offset, pageSize, filters)
 }
 
-// 下载功能已移除，客户端直接使用 file.AccessURL 进行下载、预览和复制链接操作
-// 权限控制通过静态文件服务的中间件和路由控制实现
+// GetPrivateFileContent 获取私有文件内容（带权限验证）
+func (s *FileService) GetPrivateFileContent(fileID, userID, tenantID uint64) (*model.File, []byte, error) {
+	// 获取文件信息
+	file, err := s.GetFileByID(fileID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("file not found")
+	}
+
+	// 验证文件是否属于指定租户
+	if file.TenantID != tenantID {
+		return nil, nil, fmt.Errorf("access denied")
+	}
+
+	// 验证文件是否为私有文件
+	if file.IsPublic {
+		return nil, nil, fmt.Errorf("public file should be accessed directly")
+	}
+
+	// 验证用户权限（基本权限验证，用户必须属于同一租户）
+	// 这里可以添加更复杂的权限逻辑，比如检查用户角色等
+	// 目前简化为：只要是同一租户的用户就可以访问私有文件
+
+	// 读取文件内容
+	fileContent, err := s.readFileContent(file)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read file content: %w", err)
+	}
+
+	return file, fileContent, nil
+}
+
+// readFileContent 从存储中读取文件内容
+func (s *FileService) readFileContent(file *model.File) ([]byte, error) {
+	// 获取租户的存储配置
+	tenant, err := s.tenantService.GetTenant(file.TenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
+	}
+
+	storageConfig, err := tenant.GetFileStorageConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storage config: %w", err)
+	}
+
+	// 创建存储管理器
+	storageManager, err := storage.NewManager(storageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create storage manager: %w", err)
+	}
+
+	// 获取文件完整路径
+	fullPath := storageManager.GetFullPath(file.FilePath, file.IsPublic)
+
+	// 读取文件内容
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	return content, nil
+}
 
 // isAllowedFileType 检查文件类型是否允许
 func (s *FileService) isAllowedFileType(fileExt string, allowedTypes []string) bool {

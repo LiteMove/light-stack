@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -74,6 +75,41 @@ func (fc *FileController) GetFile(c *gin.Context) {
 	}
 
 	response.Success(c, file.ToProfile())
+}
+
+// GetPrivateFile 获取私有文件内容（需要权限验证）
+func (fc *FileController) GetPrivateFile(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "无效的文件ID")
+		return
+	}
+
+	// 获取当前用户和租户信息
+	userID := middleware.GetUserIDFromContext(c)
+	tenantID, _ := middleware.GetTenantIDFromContext(c)
+
+	// 获取文件信息并验证权限
+	file, fileContent, err := fc.fileService.GetPrivateFileContent(id, userID, tenantID)
+	if err != nil {
+		if err.Error() == "file not found" {
+			response.Error(c, http.StatusNotFound, "文件不存在")
+		} else if err.Error() == "access denied" {
+			response.Error(c, http.StatusForbidden, "无权访问此文件")
+		} else {
+			response.Error(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	// 设置响应头
+	c.Header("Content-Type", file.MimeType)
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", file.OriginalName))
+	c.Header("Content-Length", fmt.Sprintf("%d", len(fileContent)))
+
+	// 返回文件内容
+	c.Data(http.StatusOK, file.MimeType, fileContent)
 }
 
 // 下载、预览、复制链接功能已移除，统一使用文件的 access_url 字段

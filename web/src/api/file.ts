@@ -48,7 +48,47 @@ export const getFile = (id: number) => {
   })
 }
 
-// 使用access_url进行文件下载
+// 获取私有文件内容（用于预览和下载）
+export const getPrivateFileContent = (id: number) => {
+  return request({
+    url: `/v1/files/${id}/private`,
+    method: 'get',
+    responseType: 'blob'  // 重要：设置响应类型为blob以获取文件内容
+  })
+}
+
+// 下载私有文件
+export const downloadPrivateFile = async (id: number, originalName: string) => {
+  try {
+    const res = await getPrivateFileContent(id)
+    const blob = new Blob([res.data], { type: 'application/octet-stream' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = originalName
+    link.style.display = 'none'
+    document.body.appendChild(link)
+
+    // 触发下载
+    setTimeout(() => {
+      link.click()
+      console.log('Private file download triggered for:', originalName)
+    }, 10)
+
+    // 清理DOM和URL对象
+    setTimeout(() => {
+      if (document.body.contains(link)) {
+        document.body.removeChild(link)
+      }
+      window.URL.revokeObjectURL(url)
+    }, 1000)
+
+    return true
+  } catch (err) {
+    console.error('私有文件下载失败:', err)
+    return false
+  }
+}
 export const downloadFileByUrl = (accessUrl: string, originalName: string) => {
   const link = document.createElement('a')
   link.href = accessUrl

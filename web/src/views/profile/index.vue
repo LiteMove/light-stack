@@ -226,14 +226,27 @@
             租户配置
           </span>
         </template>
-        
-        <!-- 当前租户信息显示 -->
-        <div class="tenant-info-bar" v-if="currentTenantInfo">
-          <el-tag type="info" size="large" effect="dark">
-            <el-icon><Setting /></el-icon>
-            正在配置租户：{{ currentTenantInfo.name }}
-          </el-tag>
+
+        <!-- 超级管理员没有选择租户时的提示 -->
+        <div v-if="isSuperAdmin && !currentTenantInfo" class="tenant-select-tip">
+          <el-alert
+            title="请先选择要配置的租户"
+            type="warning"
+            description="作为超级管理员，您需要先选择一个租户才能进行配置管理。请使用顶部的租户切换器选择目标租户。"
+            :closable="false"
+            show-icon>
+          </el-alert>
         </div>
+
+        <!-- 有租户信息时显示配置界面 -->
+        <div v-else>
+          <!-- 当前租户信息显示 -->
+          <div class="tenant-info-bar" v-if="currentTenantInfo">
+            <el-tag type="info" size="large" effect="dark">
+              <el-icon><Setting /></el-icon>
+              正在配置租户：{{ currentTenantInfo.name }}
+            </el-tag>
+          </div>
         
         <div class="tenant-config-layout">
           <!-- 左侧：系统基本信息 -->
@@ -451,7 +464,7 @@
         </div>
         
         <!-- 底部操作按钮 -->
-        <div class="config-actions">
+        <div class="config-actions" v-if="currentTenantInfo">
           <el-button type="primary" @click="updateTenantConfig" :loading="updatingTenantConfig">
             <el-icon v-if="!updatingTenantConfig"><Check /></el-icon>
             保存配置
@@ -461,6 +474,7 @@
             重置
           </el-button>
         </div>
+        </div> <!-- 关闭 v-else div -->
       </el-tab-pane>
     </el-tabs>
     </div>
@@ -541,14 +555,25 @@ const fileSizeMB = ref(50)
 // 是否为租户管理员或超级管理员
 const isTenantAdmin = computed(() => {
   if (!profileInfo.value?.roles) return false
-  
+
   return profileInfo.value.roles.some(role =>
-    role.name === '租户管理员' || 
+    role.name === '租户管理员' ||
     role.name === 'tenant_admin' ||
     role.name === 'super_admin' ||
     role.name === '超级管理员' ||
     role.code === 'super_admin' ||
     role.code === 'tenant_admin'
+  )
+})
+
+// 是否为超级管理员
+const isSuperAdmin = computed(() => {
+  if (!profileInfo.value?.roles) return false
+
+  return profileInfo.value.roles.some(role =>
+    role.name === 'super_admin' ||
+    role.name === '超级管理员' ||
+    role.code === 'super_admin'
   )
 })
 
@@ -737,11 +762,48 @@ const getTenantConfig = async () => {
 
   try {
     // 获取当前租户信息用于显示
-    currentTenantInfo.value = tenantStore.getCurrentTenant()
-    
+    const currentTenant = tenantStore.getCurrentTenant()
+
+    // 如果是超级管理员但没有选择租户，提示用户选择
+    if (isSuperAdmin.value && !currentTenant) {
+      ElMessage.warning('请先选择要配置的租户')
+      return
+    }
+
+    currentTenantInfo.value = currentTenant
+
     const { data } = await profileApi.getTenantConfig()
-    Object.assign(tenantConfigForm, data)
-    fileSizeMB.value = Math.round(data.fileStorage.maxFileSize / (1024 * 1024))
+
+    // 正确更新配置数据，确保响应式更新
+    tenantConfigForm.systemName = data.systemName || ''
+    tenantConfigForm.logo = data.logo || ''
+    tenantConfigForm.description = data.description || ''
+    tenantConfigForm.copyright = data.copyright || ''
+
+    // 更新文件存储配置
+    const fileStorage = data.fileStorage || {}
+    tenantConfigForm.fileStorage.type = fileStorage.type || 'local'
+    tenantConfigForm.fileStorage.defaultPublic = fileStorage.defaultPublic || false
+    tenantConfigForm.fileStorage.maxFileSize = fileStorage.maxFileSize || (50 * 1024 * 1024)
+
+    // 重要：正确更新数组，确保Vue能够检测到变化
+    const allowedTypes = fileStorage.allowedTypes || ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt']
+    tenantConfigForm.fileStorage.allowedTypes.length = 0  // 清空现有数组
+    tenantConfigForm.fileStorage.allowedTypes.push(...allowedTypes)  // 添加新数据
+
+    // 本地存储配置
+    tenantConfigForm.fileStorage.localAccessDomain = fileStorage.localAccessDomain || ''
+
+    // OSS配置
+    tenantConfigForm.fileStorage.ossProvider = fileStorage.ossProvider || 'aliyun'
+    tenantConfigForm.fileStorage.ossEndpoint = fileStorage.ossEndpoint || ''
+    tenantConfigForm.fileStorage.ossRegion = fileStorage.ossRegion || ''
+    tenantConfigForm.fileStorage.ossBucket = fileStorage.ossBucket || ''
+    tenantConfigForm.fileStorage.ossAccessKey = fileStorage.ossAccessKey || ''
+    tenantConfigForm.fileStorage.ossSecretKey = fileStorage.ossSecretKey || ''
+    tenantConfigForm.fileStorage.ossCustomDomain = fileStorage.ossCustomDomain || ''
+
+    fileSizeMB.value = Math.round((tenantConfigForm.fileStorage.maxFileSize || 0) / (1024 * 1024))
   } catch (error) {
     console.error('获取租户配置失败:', error)
     ElMessage.error('获取租户配置失败')
@@ -805,18 +867,30 @@ const changePassword = async () => {
 
 // 更新租户配置
 const updateTenantConfig = async () => {
+  // 检查权限
+  if (!isTenantAdmin.value) {
+    ElMessage.error('没有权限修改租户配置')
+    return
+  }
+
+  // 如果是超级管理员，检查是否选择了租户
+  if (isSuperAdmin.value && !tenantStore.getCurrentTenant()) {
+    ElMessage.warning('请先选择要配置的租户')
+    return
+  }
+
   // 验证系统信息表单
   let systemInfoValid = true
   if (systemInfoFormRef.value) {
     systemInfoValid = await systemInfoFormRef.value.validate().catch(() => false)
   }
-  
+
   // 验证文件存储配置表单
   let tenantConfigValid = true
   if (tenantConfigFormRef.value) {
     tenantConfigValid = await tenantConfigFormRef.value.validate().catch(() => false)
   }
-  
+
   if (!systemInfoValid || !tenantConfigValid) return
 
   try {
@@ -1029,17 +1103,27 @@ watch(
   margin-bottom: 20px;
   display: flex;
   justify-content: center;
-  
+
   .el-tag {
     padding: 8px 16px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    
+
     .el-icon {
       font-size: 16px;
     }
+  }
+}
+
+.tenant-select-tip {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+
+  .el-alert {
+    max-width: 600px;
   }
 }
 

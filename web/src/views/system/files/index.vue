@@ -229,7 +229,7 @@
             <div class="file-info">
               <div class="file-preview">
                 <el-image
-                  v-if="isImageFile(row.mimeType)"
+                  v-if="isImageFile(row.mimeType) && row.isPublic"
                   :src="row.accessUrl"
                   fit="cover"
                   class="file-thumbnail"
@@ -243,6 +243,10 @@
                     </div>
                   </template>
                 </el-image>
+                <div v-else-if="isImageFile(row.mimeType) && !row.isPublic" class="file-icon">
+                  <el-icon color="#f56c6c"><Lock /></el-icon>
+                  <span class="private-tip">私有图片</span>
+                </div>
                 <div v-else class="file-icon">
                   <el-icon v-if="isDocumentFile(row.mimeType)" color="#67c23a">
                     <Document />
@@ -274,6 +278,19 @@
               {{ getUsageTypeLabel(row.usageType) }}
             </el-tag>
             <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="访问权限" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag
+              size="small"
+              :type="row.isPublic ? 'success' : 'warning'"
+              :icon="row.isPublic ? View : Lock"
+              effect="light"
+            >
+              {{ row.isPublic ? '公开' : '私有' }}
+            </el-tag>
           </template>
         </el-table-column>
 
@@ -488,6 +505,7 @@ import {
   User,
   Link,
   View,
+  Lock,
   Loading
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
@@ -495,6 +513,8 @@ import { useTenantStore } from '@/store/tenant'
 import {
   getAllFiles,
   downloadFileByUrl,
+  downloadPrivateFile,
+  getPrivateFileContent,
   copyFileUrl,
   previewImage as previewImageApi,
   deleteFile,
@@ -753,9 +773,18 @@ const downloadFile = async (file: FileProfile) => {
   try {
     downloadingIds.value.push(file.id)
 
-    // 使用文件的 access_url 进行下载
-    downloadFileByUrl(file.accessUrl, file.originalName)
-    
+    if (file.isPublic) {
+      // 公有文件使用 access_url 直接下载
+      downloadFileByUrl(file.accessUrl, file.originalName)
+    } else {
+      // 私有文件通过专门的API下载
+      const success = await downloadPrivateFile(file.id, file.originalName)
+      if (!success) {
+        ElMessage.error('私有文件下载失败')
+        return
+      }
+    }
+
     ElMessage.success(`文件 "${file.originalName}" 开始下载`)
   } catch (error: any) {
     console.error('Download error:', error)
@@ -768,11 +797,17 @@ const downloadFile = async (file: FileProfile) => {
 // 复制文件链接
 const copyFileLink = async (file: FileProfile) => {
   try {
-    const success = await copyFileUrl(file.accessUrl)
-    if (success) {
-      ElMessage.success('文件链接已复制到剪贴板')
+    if (file.isPublic) {
+      // 公有文件直接复制 access_url
+      const success = await copyFileUrl(file.accessUrl)
+      if (success) {
+        ElMessage.success('文件链接已复制到剪贴板')
+      } else {
+        ElMessage.error('复制链接失败')
+      }
     } else {
-      ElMessage.error('复制链接失败')
+      // 私有文件提示用户无法直接复制链接
+      ElMessage.warning('私有文件无法直接复制访问链接，请使用下载功能')
     }
   } catch (error) {
     ElMessage.error('复制链接失败')
@@ -849,8 +884,22 @@ const previewImage = async (file: FileProfile) => {
     previewFile.value = file
     showImagePreview.value = true
 
-    // 直接使用文件的 access_url 作为预览URL
-    previewImageUrl.value = previewImageApi(file.accessUrl)
+    if (file.isPublic) {
+      // 公有文件直接使用 access_url 作为预览URL
+      previewImageUrl.value = previewImageApi(file.accessUrl)
+    } else {
+      // 私有文件通过API获取文件内容并创建blob URL
+      try {
+        const res = await getPrivateFileContent(file.id)
+        const blob = new Blob([res.data], { type: 'application/octet-stream' })
+        const url = window.URL.createObjectURL(blob)
+        previewImageUrl.value = url
+      } catch (error: any) {
+        console.error('获取私有文件预览失败:', error)
+        ElMessage.error('获取私有文件预览失败：' + (error.message || '未知错误'))
+        showImagePreview.value = false
+      }
+    }
   } catch (error: any) {
     console.error('获取图片预览失败:', error)
     ElMessage.error('获取图片预览失败：' + (error.message || '未知错误'))
@@ -860,6 +909,10 @@ const previewImage = async (file: FileProfile) => {
 
 // 清理预览URL
 const cleanupPreviewUrl = () => {
+  if (previewImageUrl.value && previewImageUrl.value.startsWith('blob:')) {
+    // 如果是私有文件的blob URL，需要释放内存
+    window.URL.revokeObjectURL(previewImageUrl.value)
+  }
   previewImageUrl.value = ''
 }
 
@@ -1091,10 +1144,17 @@ onMounted(() => {
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background: #f8f9fa;
             font-size: 20px;
+
+            .private-tip {
+              font-size: 10px;
+              color: #f56c6c;
+              margin-top: 2px;
+            }
           }
         }
 
