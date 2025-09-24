@@ -2,11 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/LiteMove/light-stack/internal/middleware"
 	"github.com/LiteMove/light-stack/internal/service"
@@ -42,8 +38,15 @@ func (fc *FileController) UploadFile(c *gin.Context) {
 	// 获取使用类型（可选）
 	usageType := c.PostForm("usageType")
 
-	// 获取是否公开（可选，默认为false）
-	isPublic := c.PostForm("isPublic") == "true"
+	// 获取是否公开（如果未指定，则使用租户配置的默认值）
+	isPublicStr := c.PostForm("isPublic")
+	var isPublic bool
+	if isPublicStr != "" {
+		isPublic = isPublicStr == "true"
+	} else {
+		// 使用租户配置的默认公开设置，由FileService处理
+		isPublic = false // 这里先设为false，在FileService中会应用租户默认设置
+	}
 
 	// 上传文件（现在由FileService根据租户配置处理所有验证）
 	uploadedFile, err := fc.fileService.UploadFile(file, userID, tenantID, usageType, isPublic)
@@ -73,104 +76,8 @@ func (fc *FileController) GetFile(c *gin.Context) {
 	response.Success(c, file.ToProfile())
 }
 
-// DownloadFile 下载文件（支持新的存储架构）
-func (fc *FileController) DownloadFile(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "无效的文件ID")
-		return
-	}
-
-	// 获取当前用户ID
-	userID := middleware.GetUserIDFromContext(c)
-
-	// 获取文件下载URL
-	downloadURL, err := fc.fileService.GetDownloadURL(id, userID)
-	if err != nil {
-		if err.Error() == "access denied" {
-			response.Error(c, http.StatusForbidden, "访问被拒绝")
-			return
-		}
-		if err.Error() == "file not found: record not found" {
-			response.Error(c, http.StatusNotFound, "文件不存在")
-			return
-		}
-		response.Error(c, http.StatusInternalServerError, "获取下载链接失败")
-		return
-	}
-
-	// 如果是外部URL（OSS等），重定向到该URL
-	if strings.HasPrefix(downloadURL, "http://") || strings.HasPrefix(downloadURL, "https://") {
-		c.Redirect(http.StatusFound, downloadURL)
-		return
-	}
-
-	// 对于本地存储的私有文件，需要通过认证后下载
-	// 这里downloadURL应该是类似 /static/private/tenant_1/2024/01/01/file.jpg 的格式
-	// 我们需要将其转换为实际的文件路径进行下载
-	file, err := fc.fileService.GetFileByID(id)
-	if err != nil {
-		response.Error(c, http.StatusNotFound, "文件不存在")
-		return
-	}
-
-	// 如果是本地存储，直接提供文件下载
-	if file.StorageType == "local" {
-		// 设置下载头
-		c.Header("Content-Description", "File Transfer")
-		c.Header("Content-Transfer-Encoding", "binary")
-		c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(file.OriginalName))
-		c.Header("Content-Type", file.MimeType)
-		c.Header("Content-Length", strconv.FormatInt(file.FileSize, 10))
-
-		// 构建实际文件路径
-		// file.FilePath 格式类似：private/tenant_1/2024/01/01/filename.ext
-		actualPath := filepath.Join("uploads", file.FilePath)
-
-		// 检查文件是否存在
-		if _, err := os.Stat(actualPath); os.IsNotExist(err) {
-			response.Error(c, http.StatusNotFound, "文件已被删除")
-			return
-		}
-
-		c.File(actualPath)
-		return
-	}
-
-	// OSS等外部存储，返回下载URL
-	response.Success(c, gin.H{"downloadUrl": downloadURL})
-}
-
-// GetDownloadURL 获取文件下载URL（新增API）
-func (fc *FileController) GetDownloadURL(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "无效的文件ID")
-		return
-	}
-
-	// 获取当前用户ID
-	userID := middleware.GetUserIDFromContext(c)
-
-	// 获取文件下载URL
-	downloadURL, err := fc.fileService.GetDownloadURL(id, userID)
-	if err != nil {
-		if err.Error() == "access denied" {
-			response.Error(c, http.StatusForbidden, "访问被拒绝")
-			return
-		}
-		if err.Error() == "file not found: record not found" {
-			response.Error(c, http.StatusNotFound, "文件不存在")
-			return
-		}
-		response.Error(c, http.StatusInternalServerError, "获取下载链接失败")
-		return
-	}
-
-	response.Success(c, gin.H{"downloadUrl": downloadURL})
-}
+// 下载、预览、复制链接功能已移除，统一使用文件的 access_url 字段
+// 客户端可以直接使用 GetFile 接口获取文件信息，然后使用 access_url 进行操作
 
 // DeleteFile 删除文件
 func (fc *FileController) DeleteFile(c *gin.Context) {
@@ -292,6 +199,9 @@ func (fc *FileController) GetAllFiles(c *gin.Context) {
 				"md5":          profile.MD5,
 				"uploadUserId": profile.UploadUserID,
 				"usageType":    profile.UsageType,
+				"storageType":  profile.StorageType,
+				"isPublic":     profile.IsPublic,
+				"accessUrl":    profile.AccessURL,
 				"createdAt":    profile.CreatedAt,
 				"updatedAt":    profile.UpdatedAt,
 				"uploadUser": gin.H{

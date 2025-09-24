@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/LiteMove/light-stack/internal/model"
 )
@@ -17,6 +18,11 @@ type LocalProvider struct {
 
 // NewLocalProvider 创建本地存储提供者
 func NewLocalProvider(config *model.FileStorageConfig) (*LocalProvider, error) {
+	// 验证租户域名配置（必填）
+	if config.LocalAccessDomain == "" {
+		return nil, fmt.Errorf("租户本地访问域名配置不能为空，请在租户配置中设置 LocalAccessDomain")
+	}
+
 	// 确保基础目录存在
 	sysConfig := sysConfig.Get()
 	basePath := sysConfig.File.LocalPath
@@ -71,38 +77,40 @@ func (p *LocalProvider) Upload(file io.Reader, path string, isPublic bool) (stri
 
 // GetURL 获取文件访问URL
 func (p *LocalProvider) GetURL(path string, isPublic bool) string {
+	// 获取系统配置的静态路由路径
 	sysConfig := sysConfig.Get()
-	baseURL := sysConfig.File.BaseURL
-	if baseURL == "" {
-		baseURL = "/static"
+	staticPath := sysConfig.File.BaseURL
+	if staticPath == "" {
+		staticPath = "/api/static" // 默认静态路由路径
 	}
 
-	accessType := "private"
-	if isPublic {
-		accessType = "public"
-	}
+	// 租户域名 + 系统静态路径 (租户域名已在创建时验证为必填)
+	baseURL := p.storageConfig.LocalAccessDomain + staticPath
 
-	return fmt.Sprintf("%s/%s/%s", baseURL, accessType, path)
+	// 将Windows路径分隔符转换为URL路径分隔符
+	urlPath := strings.ReplaceAll(path, "\\", "/")
+
+	// 确保baseURL和urlPath之间有正确的分隔符
+	if strings.HasSuffix(baseURL, "/") {
+		return fmt.Sprintf("%s%s", baseURL, urlPath)
+	} else {
+		return fmt.Sprintf("%s/%s", baseURL, urlPath)
+	}
 }
 
 // Delete 删除文件
 func (p *LocalProvider) Delete(path string) error {
-	// 尝试删除public和private两个位置的文件
-	publicPath := p.GetFullPath(path, true)
-	privatePath := p.GetFullPath(path, false)
+	// path已经包含完整的路径信息，直接删除
+	fullPath := p.GetFullPath(path, false) // isPublic参数已不影响结果
 
-	// 删除public文件（如果存在）
-	if _, err := os.Stat(publicPath); err == nil {
-		if err := os.Remove(publicPath); err != nil {
-			return fmt.Errorf("failed to delete public file %s: %w", publicPath, err)
-		}
+	// 检查文件是否存在
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return fmt.Errorf("file not found: %s", fullPath)
 	}
 
-	// 删除private文件（如果存在）
-	if _, err := os.Stat(privatePath); err == nil {
-		if err := os.Remove(privatePath); err != nil {
-			return fmt.Errorf("failed to delete private file %s: %w", privatePath, err)
-		}
+	// 删除文件
+	if err := os.Remove(fullPath); err != nil {
+		return fmt.Errorf("failed to delete file %s: %w", fullPath, err)
 	}
 
 	return nil
@@ -117,10 +125,6 @@ func (p *LocalProvider) GetFullPath(path string, isPublic bool) string {
 		basePath = "uploads"
 	}
 
-	accessType := "private"
-	if isPublic {
-		accessType = "public"
-	}
-
-	return filepath.Join(basePath, accessType, path)
+	// path已经包含了public/private信息，直接拼接基础路径
+	return filepath.Join(basePath, path)
 }

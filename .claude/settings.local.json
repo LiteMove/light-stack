@@ -20,7 +20,8 @@
       "Bash(taskkill:*)",
       "Bash(bin/server.exe)",
       "Bash(findstr:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

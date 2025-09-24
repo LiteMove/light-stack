@@ -85,21 +85,21 @@ const (
 // FileStorageConfig 文件存储配置
 type FileStorageConfig struct {
 	Type          string   `json:"type"`          // local/oss
-	BaseURL       string   `json:"baseUrl"`       // 文件访问基础URL (如: https://cdn.example.com)
 	DefaultPublic bool     `json:"defaultPublic"` // 默认是否公开
 	MaxFileSize   int64    `json:"maxFileSize"`   // 最大文件大小(字节)
 	AllowedTypes  []string `json:"allowedTypes"`  // 允许的文件类型
 
-	// 本地存储配置 (使用系统配置，这里不需要额外配置)
+	// 本地存储配置
+	LocalAccessDomain string `json:"localAccessDomain,omitempty"` // 本地存储文件访问域名 (如: https://files.example.com)
 
-	// OSS配置 - 支持多平台
-	OSSProvider     string `json:"ossProvider,omitempty"` // aliyun/tencent/aws/qiniu/upyun
-	OSSEndpoint     string `json:"ossEndpoint,omitempty"`
-	OSSRegion       string `json:"ossRegion,omitempty"` // AWS S3等需要
-	OSSBucket       string `json:"ossBucket,omitempty"`
-	OSSAccessKey    string `json:"ossAccessKey,omitempty"`
-	OSSSecretKey    string `json:"ossSecretKey,omitempty"`
-	OSSCustomDomain string `json:"ossCustomDomain,omitempty"` // 自定义域名
+	// OSS配置 - 使用自定义域名直接访问，不需要额外的域名配置
+	OSSProvider     string `json:"ossProvider,omitempty"`     // aliyun/tencent/aws/qiniu/upyun
+	OSSEndpoint     string `json:"ossEndpoint,omitempty"`     // OSS服务端点
+	OSSRegion       string `json:"ossRegion,omitempty"`       // AWS S3等需要
+	OSSBucket       string `json:"ossBucket,omitempty"`       // OSS存储桶名称
+	OSSAccessKey    string `json:"ossAccessKey,omitempty"`    // OSS访问密钥
+	OSSSecretKey    string `json:"ossSecretKey,omitempty"`    // OSS访问密钥
+	OSSCustomDomain string `json:"ossCustomDomain,omitempty"` // OSS自定义域名，直接用于文件访问
 }
 
 // TenantConfig 租户配置结构
@@ -154,8 +154,10 @@ func (t *Tenant) GetFileStorageConfig() (*FileStorageConfig, error) {
 	if len(config.FileStorage.AllowedTypes) == 0 {
 		config.FileStorage.AllowedTypes = []string{".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"}
 	}
-	if config.FileStorage.BaseURL == "" && config.FileStorage.Type == "local" {
-		config.FileStorage.BaseURL = "/static"
+	// 为本地存储设置默认访问域名（必填）
+	if config.FileStorage.Type == "local" && config.FileStorage.LocalAccessDomain == "" {
+		// 如果未配置，需要管理员在租户配置中设置域名
+		// 这里不设置默认值，强制要求租户配置域名
 	}
 
 	return &config.FileStorage, nil

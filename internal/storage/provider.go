@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"github.com/LiteMove/light-stack/internal/model"
 )
@@ -90,5 +89,6 @@ func GenerateStoragePath(tenantID uint64, dateDir, filename string, isPublic boo
 	if isPublic {
 		accessType = "public"
 	}
-	return filepath.Join(accessType, fmt.Sprintf("tenant_%d", tenantID), dateDir, filename)
+	// 使用斜杠作为路径分隔符，确保URL路径正确
+	return fmt.Sprintf("%s/tenant_%d/%s/%s", accessType, tenantID, dateDir, filename)
 }

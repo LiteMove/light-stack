@@ -40,15 +40,7 @@ export const uploadFile = (formData: FormData) => {
   })
 }
 
-// 获取文件下载URL
-export const getFileDownloadURL = (id: number) => {
-  return request({
-    url: `/v1/files/${id}/download-url`,
-    method: 'get'
-  })
-}
-
-// 获取文件信息
+// 获取文件信息（包含access_url用于下载、预览、复制链接）
 export const getFile = (id: number) => {
   return request({
     url: `/v1/files/${id}`,
@@ -56,151 +48,59 @@ export const getFile = (id: number) => {
   })
 }
 
-// 获取文件预览（用于图片预览）
-export const getFilePreview = (id: number) => {
-  return request({
-    url: `/v1/files/${id}/download`,
-    method: 'get',
-    responseType: 'blob'
-  }).then(response => {
-    // 检查响应是否有效
-    if (!response.data) {
-      throw new Error('获取文件预览失败：无响应数据')
+// 使用access_url进行文件下载
+export const downloadFileByUrl = (accessUrl: string, originalName: string) => {
+  const link = document.createElement('a')
+  link.href = accessUrl
+  link.download = originalName
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  
+  // 触发下载
+  setTimeout(() => {
+    link.click()
+    console.log('Download triggered for:', originalName)
+  }, 10)
+  
+  // 清理DOM
+  setTimeout(() => {
+    if (document.body.contains(link)) {
+      document.body.removeChild(link)
     }
-
-    // 检查响应状态
-    if (response.status !== 200) {
-      throw new Error(`获取文件预览失败：HTTP ${response.status}`)
-    }
-
-    // 获取Content-Type
-    const contentType = response.headers['content-type'] || response.headers['Content-Type'] || 'application/octet-stream'
-
-    // 创建Blob URL用于预览
-    const blob = new Blob([response.data], { type: contentType })
-    const url = window.URL.createObjectURL(blob)
-
-    return url
-  }).catch(error => {
-    console.error('获取文件预览失败:', error)
-    throw error
-  })
+  }, 1000)
 }
 
-// 下载文件
-export const downloadFile = (id: number, fileInfo?: { originalName: string; mimeType: string }) => {
-  return request({
-    url: `/v1/files/${id}/download`,
-    method: 'get',
-    responseType: 'blob'
-  }).then(response => {
-    // 检查响应是否有效
-    if (!response.data) {
-      throw new Error('下载文件失败：无响应数据')
+// 复制文件链接到剪贴板
+export const copyFileUrl = async (accessUrl: string) => {
+  try {
+    await navigator.clipboard.writeText(accessUrl)
+    return true
+  } catch (err) {
+    console.error('复制链接失败:', err)
+    // 降级方案：使用传统方法
+    const textArea = document.createElement('textarea')
+    textArea.value = accessUrl
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    textArea.style.top = '-999999px'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    
+    try {
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      return true
+    } catch (err) {
+      document.body.removeChild(textArea)
+      return false
     }
+  }
+}
 
-    // 检查响应状态
-    if (response.status !== 200) {
-      throw new Error(`下载文件失败：HTTP ${response.status}`)
-    }
-
-    // 获取响应中的Content-Type，如果没有则使用文件信息中的mimeType
-    let contentType = response.headers['content-type'] || response.headers['Content-Type'] || 'application/octet-stream'
-
-    // 如果响应的Content-Type是通用类型，且我们有文件的真实MIME类型，使用真实的
-    if (fileInfo && (contentType === 'application/octet-stream' || contentType === 'application/binary')) {
-      contentType = fileInfo.mimeType
-      console.log('Using file mimeType instead of response Content-Type:', contentType)
-    }
-
-    console.log('Final Content-Type:', contentType)
-
-    // 创建下载链接，使用正确的MIME类型
-    const blob = new Blob([response.data], { type: contentType })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-
-    // 从响应头获取文件名
-    const contentDisposition = response.headers['content-disposition'] || response.headers['Content-Disposition']
-    let filename = fileInfo?.originalName || `file_${id}`
-
-    if (contentDisposition) {
-      console.log('Content-Disposition:', contentDisposition)
-      // 支持多种文件名格式
-      const patterns = [
-        /filename\*=UTF-8''([^;]+)/i,  // RFC 5987 格式
-        /filename="([^"]+)"/i,         // 标准格式
-        /filename=([^;]+)/i            // 简单格式
-      ]
-
-      for (const pattern of patterns) {
-        const match = contentDisposition.match(pattern)
-        if (match && match[1]) {
-          filename = match[1]
-          // 如果是 URL 编码的，解码它
-          if (filename.includes('%')) {
-            try {
-              filename = decodeURIComponent(filename)
-            } catch (e) {
-              console.warn('Failed to decode filename:', filename)
-            }
-          }
-          break
-        }
-      }
-    }
-
-    // 如果文件名没有扩展名，尝试从Content-Type推断
-    if (!filename.includes('.') && contentType !== 'application/octet-stream') {
-      const extension = getExtensionFromMimeType(contentType)
-      if (extension) {
-        filename += extension
-      }
-    }
-
-    console.log('Download filename:', filename)
-    console.log('Blob type:', blob.type)
-
-    // 设置下载属性并触发下载
-    link.download = filename
-    link.style.display = 'none'
-    document.body.appendChild(link)
-
-    // 使用 setTimeout 确保 DOM 操作完成
-    setTimeout(() => {
-      link.click()
-      console.log('Download triggered for:', filename)
-    }, 10)
-
-    // 清理资源
-    setTimeout(() => {
-      if (document.body.contains(link)) {
-        document.body.removeChild(link)
-      }
-      window.URL.revokeObjectURL(url)
-    }, 1000)
-
-    return filename
-  }).catch(error => {
-    console.error('文件下载失败:', error)
-
-    // 检查是否是网络错误或权限错误
-    if (error.response) {
-      const status = error.response.status
-      if (status === 401) {
-        throw new Error('未授权：请重新登录')
-      } else if (status === 403) {
-        throw new Error('权限不足：无法下载该文件')
-      } else if (status === 404) {
-        throw new Error('文件不存在')
-      } else {
-        throw new Error(`下载失败：HTTP ${status}`)
-      }
-    } else {
-      throw new Error('网络错误：请检查网络连接')
-    }
-  })
+// 预览图片文件（直接使用access_url）
+export const previewImage = (accessUrl: string) => {
+  return accessUrl // 直接返回URL，用于img标签的src
 }
 
 // 根据MIME类型获取文件扩展名

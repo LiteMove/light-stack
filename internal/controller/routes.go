@@ -1,12 +1,12 @@
 package controller
 
 import (
+	"github.com/LiteMove/light-stack/internal/config"
 	"github.com/LiteMove/light-stack/internal/middleware"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/service"
 	"github.com/LiteMove/light-stack/pkg/database"
 	"github.com/LiteMove/light-stack/pkg/response"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -100,13 +100,11 @@ func RegisterRoutes(r *gin.Engine) {
 			files := v1.Group("/files")
 			files.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
 			{
-				files.POST("/upload", fileController.UploadFile)              // 文件上传
-				files.GET("", fileController.GetAllFiles)                     // 获取文件列表（按租户）
-				files.GET("/list", fileController.GetAllFiles)                // 获取文件列表（兼容旧接口）
-				files.GET("/:id", fileController.GetFile)                     // 获取文件信息
-				files.GET("/:id/download", fileController.DownloadFile)       // 下载文件
-				files.GET("/:id/download-url", fileController.GetDownloadURL) // 获取下载链接
-				files.DELETE("/:id", fileController.DeleteFile)               // 删除文件
+				files.POST("/upload", fileController.UploadFile) // 文件上传
+				files.GET("", fileController.GetAllFiles)        // 获取文件列表（按租户）
+				files.GET("/list", fileController.GetAllFiles)   // 获取文件列表（兼容旧接口）
+				files.GET("/:id", fileController.GetFile)        // 获取文件信息（包含access_url用于下载/预览）
+				files.DELETE("/:id", fileController.DeleteFile)  // 删除文件
 			}
 
 			//// 个人中心相关路由（需要认证）
@@ -198,12 +196,18 @@ func RegisterRoutes(r *gin.Engine) {
 			}
 		}
 
-		// 静态文件服务
+		// 静态文件服务 - 使用配置文件中的base_url
+		cfg := config.Get()
+		baseURL := cfg.File.BaseURL
+		if baseURL == "" {
+			baseURL = "/api/static"
+		}
+
 		// 公开文件 - 无需认证
-		api.Static("/static/public", "./uploads/public")
+		r.Static(baseURL+"/public", "./uploads/public")
 
 		// 私有文件 - 需要认证和权限验证
-		privateFiles := api.Group("/static/private")
+		privateFiles := r.Group(baseURL + "/private")
 		privateFiles.Use(middleware.JWTAuthMiddleware())
 		privateFiles.Use(middleware.TenantMiddleware(tenantService))
 		{

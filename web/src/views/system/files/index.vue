@@ -230,7 +230,7 @@
               <div class="file-preview">
                 <el-image
                   v-if="isImageFile(row.mimeType)"
-                  :src="`/api/v1/files/${row.id}/download`"
+                  :src="row.accessUrl"
                   fit="cover"
                   class="file-thumbnail"
                   @error="handleImageError"
@@ -494,9 +494,10 @@ import { useUserStore } from '@/store/user'
 import { useTenantStore } from '@/store/tenant'
 import {
   getAllFiles,
-  downloadFile as downloadFileApi,
+  downloadFileByUrl,
+  copyFileUrl,
+  previewImage as previewImageApi,
   deleteFile,
-  getFilePreview,
   type FileProfile
 } from '@/api/file'
 import FileUpload from '@/components/FileUpload.vue'
@@ -752,13 +753,10 @@ const downloadFile = async (file: FileProfile) => {
   try {
     downloadingIds.value.push(file.id)
 
-    // 传递文件信息给下载函数，以便在需要时使用
-    const filename = await downloadFileApi(file.id, {
-      originalName: file.originalName,
-      mimeType: file.mimeType
-    })
-
-    ElMessage.success(`文件 "${filename}" 下载成功`)
+    // 使用文件的 access_url 进行下载
+    downloadFileByUrl(file.accessUrl, file.originalName)
+    
+    ElMessage.success(`文件 "${file.originalName}" 开始下载`)
   } catch (error: any) {
     console.error('Download error:', error)
     ElMessage.error(error.message || '下载失败')
@@ -770,9 +768,12 @@ const downloadFile = async (file: FileProfile) => {
 // 复制文件链接
 const copyFileLink = async (file: FileProfile) => {
   try {
-    const url = `${window.location.origin}/api/v1/files/${file.id}/download`
-    await navigator.clipboard.writeText(url)
-    ElMessage.success('文件链接已复制到剪贴板')
+    const success = await copyFileUrl(file.accessUrl)
+    if (success) {
+      ElMessage.success('文件链接已复制到剪贴板')
+    } else {
+      ElMessage.error('复制链接失败')
+    }
   } catch (error) {
     ElMessage.error('复制链接失败')
   }
@@ -846,12 +847,10 @@ const exportFiles = () => {
 const previewImage = async (file: FileProfile) => {
   try {
     previewFile.value = file
-    previewImageUrl.value = ''
     showImagePreview.value = true
 
-    // 获取图片预览URL
-    const url = await getFilePreview(file.id)
-    previewImageUrl.value = url
+    // 直接使用文件的 access_url 作为预览URL
+    previewImageUrl.value = previewImageApi(file.accessUrl)
   } catch (error: any) {
     console.error('获取图片预览失败:', error)
     ElMessage.error('获取图片预览失败：' + (error.message || '未知错误'))
@@ -861,10 +860,7 @@ const previewImage = async (file: FileProfile) => {
 
 // 清理预览URL
 const cleanupPreviewUrl = () => {
-  if (previewImageUrl.value) {
-    window.URL.revokeObjectURL(previewImageUrl.value)
-    previewImageUrl.value = ''
-  }
+  previewImageUrl.value = ''
 }
 
 // 处理预览图片加载成功

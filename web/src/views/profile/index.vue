@@ -319,9 +319,23 @@
                 <el-form-item label="存储类型" prop="fileStorage.type">
                   <el-radio-group v-model="tenantConfigForm.fileStorage.type">
                     <el-radio label="local">本地存储</el-radio>
-                    <el-radio label="oss" disabled>OSS存储（暂未实现）</el-radio>
+                    <el-radio label="oss">OSS存储</el-radio>
                   </el-radio-group>
                 </el-form-item>
+
+                <!-- 本地存储配置 -->
+                <template v-if="tenantConfigForm.fileStorage.type === 'local'">
+                  <el-divider content-position="left">本地存储配置</el-divider>
+                  
+                  <el-form-item label="访问域名" prop="fileStorage.localAccessDomain">
+                    <el-input
+                      v-model="tenantConfigForm.fileStorage.localAccessDomain"
+                      placeholder="请输入文件访问域名（如：https://files.example.com）"
+                      clearable
+                    />
+                    <div class="form-tip">留空则使用默认的 /static 路径</div>
+                  </el-form-item>
+                </template>
 
                 <el-form-item label="默认公开访问" prop="fileStorage.defaultPublic">
                   <el-switch
@@ -357,12 +371,15 @@
                   </el-checkbox-group>
                 </el-form-item>
 
-                <!-- OSS配置（预留，当前禁用） -->
+                <!-- OSS配置 -->
                 <template v-if="tenantConfigForm.fileStorage.type === 'oss'">
                   <el-divider content-position="left">OSS配置</el-divider>
 
-                  <el-form-item label="OSS提供商">
-                    <el-select v-model="tenantConfigForm.fileStorage.ossProvider" disabled>
+                  <el-form-item label="OSS提供商" prop="fileStorage.ossProvider">
+                    <el-select 
+                      v-model="tenantConfigForm.fileStorage.ossProvider" 
+                      placeholder="请选择OSS提供商"
+                    >
                       <el-option label="阿里云OSS" value="aliyun" />
                       <el-option label="腾讯云COS" value="tencent" />
                       <el-option label="AWS S3" value="aws" />
@@ -371,20 +388,61 @@
                     </el-select>
                   </el-form-item>
 
-                  <el-form-item label="Endpoint">
-                    <el-input v-model="tenantConfigForm.fileStorage.ossEndpoint" disabled />
+                  <el-form-item label="Endpoint" prop="fileStorage.ossEndpoint">
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossEndpoint" 
+                      placeholder="请输入OSS服务端点"
+                      clearable
+                    />
+                    <div class="form-tip">例如：oss-cn-beijing.aliyuncs.com</div>
                   </el-form-item>
 
-                  <el-form-item label="Bucket">
-                    <el-input v-model="tenantConfigForm.fileStorage.ossBucket" disabled />
+                  <el-form-item 
+                    v-if="tenantConfigForm.fileStorage.ossProvider === 'aws'" 
+                    label="Region" 
+                    prop="fileStorage.ossRegion"
+                  >
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossRegion" 
+                      placeholder="请输入AWS区域"
+                      clearable
+                    />
+                    <div class="form-tip">例如：us-east-1</div>
                   </el-form-item>
 
-                  <el-form-item label="Access Key">
-                    <el-input v-model="tenantConfigForm.fileStorage.ossAccessKey" disabled />
+                  <el-form-item label="Bucket" prop="fileStorage.ossBucket">
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossBucket" 
+                      placeholder="请输入存储桶名称"
+                      clearable
+                    />
                   </el-form-item>
 
-                  <el-form-item label="Secret Key">
-                    <el-input v-model="tenantConfigForm.fileStorage.ossSecretKey" type="password" disabled />
+                  <el-form-item label="Access Key" prop="fileStorage.ossAccessKey">
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossAccessKey" 
+                      placeholder="请输入访问密钥"
+                      clearable
+                    />
+                  </el-form-item>
+
+                  <el-form-item label="Secret Key" prop="fileStorage.ossSecretKey">
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossSecretKey" 
+                      type="password" 
+                      placeholder="请输入访问密钥"
+                      show-password
+                      clearable
+                    />
+                  </el-form-item>
+
+                  <el-form-item label="自定义域名" prop="fileStorage.ossCustomDomain">
+                    <el-input 
+                      v-model="tenantConfigForm.fileStorage.ossCustomDomain" 
+                      placeholder="请输入OSS自定义域名（如：https://cdn.example.com）"
+                      clearable
+                    />
+                    <div class="form-tip">设置后将使用此域名访问文件，否则使用OSS默认域名</div>
                   </el-form-item>
                 </template>
               </el-form>
@@ -461,10 +519,12 @@ const tenantConfigForm = reactive<TenantConfig>({
   copyright: '',
   fileStorage: {
     type: 'local',
-    baseUrl: '',
     defaultPublic: false,
     maxFileSize: 50 * 1024 * 1024, // 50MB
     allowedTypes: ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'],
+    // 本地存储配置
+    localAccessDomain: '',
+    // OSS配置
     ossProvider: 'aliyun',
     ossEndpoint: '',
     ossRegion: '',
@@ -540,6 +600,69 @@ const tenantConfigRules: FormRules = {
   ],
   'fileStorage.allowedTypes': [
     { required: true, type: 'array', min: 1, message: '请至少选择一种文件类型', trigger: 'change' }
+  ],
+  'fileStorage.localAccessDomain': [
+    { max: 500, message: '访问域名长度不能超过500个字符', trigger: 'blur' }
+  ],
+  'fileStorage.ossProvider': [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (tenantConfigForm.fileStorage.type === 'oss' && !value) {
+          callback(new Error('使用OSS存储时，请选择OSS提供商'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  'fileStorage.ossEndpoint': [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (tenantConfigForm.fileStorage.type === 'oss' && !value) {
+          callback(new Error('使用OSS存储时，请填写Endpoint'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  'fileStorage.ossBucket': [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (tenantConfigForm.fileStorage.type === 'oss' && !value) {
+          callback(new Error('使用OSS存储时，请填写Bucket名称'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  'fileStorage.ossAccessKey': [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (tenantConfigForm.fileStorage.type === 'oss' && !value) {
+          callback(new Error('使用OSS存储时，请填写Access Key'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  'fileStorage.ossSecretKey': [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (tenantConfigForm.fileStorage.type === 'oss' && !value) {
+          callback(new Error('使用OSS存储时，请填写Secret Key'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }
 

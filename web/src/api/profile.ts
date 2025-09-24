@@ -34,10 +34,12 @@ export interface ChangePasswordData {
 
 export interface FileStorageConfig {
   type: 'local' | 'oss'
-  baseUrl?: string
   defaultPublic: boolean
   maxFileSize: number
   allowedTypes: string[]
+  // 本地存储配置
+  localAccessDomain?: string
+  // OSS配置 - 使用自定义域名直接访问
   ossProvider?: 'aliyun' | 'tencent' | 'aws' | 'qiniu' | 'upyun'
   ossEndpoint?: string
   ossRegion?: string

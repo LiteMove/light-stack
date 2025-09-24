@@ -2,10 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"io"
 	"strings"
+
+	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
 // AliyunOSSProvider 阿里云OSS存储提供者
@@ -66,12 +67,12 @@ func (p *AliyunOSSProvider) GetURL(path string, isPublic bool) string {
 	objectKey := p.generateObjectKey(path)
 
 	if isPublic {
-		// 公开文件直接返回公开URL
+		// 公开文件直接返回自定义域名URL
 		if p.config.OSSCustomDomain != "" {
-			// 使用自定义域名
+			// 使用OSS自定义域名，不需要填写访问域名
 			return fmt.Sprintf("https://%s/%s", p.config.OSSCustomDomain, objectKey)
 		} else {
-			// 使用默认域名
+			// 使用默认OSS域名
 			return fmt.Sprintf("https://%s.%s/%s", p.config.OSSBucket, p.config.OSSEndpoint, objectKey)
 		}
 	} else {

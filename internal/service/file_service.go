@@ -41,6 +41,11 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 		return nil, fmt.Errorf("failed to get storage config: %w", err)
 	}
 
+	// 如果没有明确指定isPublic，则使用租户配置的默认值
+	if !isPublic {
+		isPublic = storageConfig.DefaultPublic
+	}
+
 	// 验证文件大小限制
 	if file.Size > storageConfig.MaxFileSize {
 		return nil, fmt.Errorf("file size exceeds limit: %d > %d", file.Size, storageConfig.MaxFileSize)
@@ -85,7 +90,11 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 	// 创建存储管理器
 	storageManager, err := storage.NewManager(storageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create storage manager: %w", err)
+		// 提供更友好的错误信息
+		if strings.Contains(err.Error(), "租户本地访问域名配置不能为空") {
+			return nil, fmt.Errorf("租户配置错误：请在租户配置中设置本地访问域名(LocalAccessDomain)，例如：http://127.0.0.1:8080")
+		}
+		return nil, fmt.Errorf("存储管理器初始化失败: %w", err)
 	}
 
 	// 上传文件到存储系统
@@ -179,50 +188,8 @@ func (s *FileService) GetAllFiles(tenantID uint64, page, pageSize int, filters m
 	return s.fileRepo.GetAllFiles(tenantID, offset, pageSize, filters)
 }
 
-// GetDownloadURL 获取文件下载URL（用于私有文件）
-func (s *FileService) GetDownloadURL(id uint64, userID uint64) (string, error) {
-	file, err := s.fileRepo.GetByID(id)
-	if err != nil {
-		return "", fmt.Errorf("file not found: %w", err)
-	}
-
-	// 检查权限：用户只能下载自己上传的文件或公开文件
-	if !file.IsPublic && file.UploadUserID != userID {
-		return "", fmt.Errorf("access denied")
-	}
-
-	// 如果是公开文件，直接返回AccessURL
-	if file.IsPublic {
-		return file.AccessURL, nil
-	}
-
-	// 私有文件，根据存储类型处理
-	if file.StorageType == "local" {
-		// 本地存储的私有文件，返回需要认证的URL
-		return file.AccessURL, nil
-	} else if file.StorageType == "oss" {
-		// OSS存储的私有文件，生成临时访问URL
-		tenant, err := s.tenantService.GetTenant(file.TenantID)
-		if err != nil {
-			return "", fmt.Errorf("failed to get tenant: %w", err)
-		}
-
-		storageConfig, err := tenant.GetFileStorageConfig()
-		if err != nil {
-			return "", fmt.Errorf("failed to get storage config: %w", err)
-		}
-
-		storageManager, err := storage.NewManager(storageConfig)
-		if err != nil {
-			return "", fmt.Errorf("failed to create storage manager: %w", err)
-		}
-
-		// 生成1小时有效期的临时URL
-		return storageManager.GetURL(file.FilePath, false), nil
-	}
-
-	return file.AccessURL, nil
-}
+// 下载功能已移除，客户端直接使用 file.AccessURL 进行下载、预览和复制链接操作
+// 权限控制通过静态文件服务的中间件和路由控制实现
 
 // isAllowedFileType 检查文件类型是否允许
 func (s *FileService) isAllowedFileType(fileExt string, allowedTypes []string) bool {

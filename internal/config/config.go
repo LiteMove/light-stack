@@ -144,7 +144,7 @@ func setDefaults() {
 
 	// 文件存储配置
 	viper.SetDefault("file.local_path", "uploads")
-	viper.SetDefault("file.base_url", "/api/static")
+	viper.SetDefault("file.base_url", "/static")
 	viper.SetDefault("file.max_file_size", 50*1024*1024) // 50MB
 }
 

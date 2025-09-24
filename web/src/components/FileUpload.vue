@@ -82,7 +82,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Loading, Document } from '@element-plus/icons-vue'
-import { uploadFile, downloadFile as downloadFileApi, deleteFile } from '@/api/file'
+import { uploadFile, deleteFile } from '@/api/file'
 
 interface FileProfile {
   id: number
