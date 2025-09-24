@@ -273,6 +273,29 @@ const fetchMenuTree = async () => {
   }
 }
 
+// 获取菜单的叶子节点（用于回显时只显示用户真正选择的菜单）
+const getLeafMenuIds = (allMenuIds: number[]): number[] => {
+  const leafIds: number[] = []
+  
+  allMenuIds.forEach(menuId => {
+    const menu = menuMap.value.get(menuId)
+    if (!menu) return
+    
+    // 检查是否有子菜单也在选中列表中
+    const hasSelectedChildren = allMenuIds.some(id => {
+      const childMenu = menuMap.value.get(id)
+      return childMenu && childMenu.parentId === menuId
+    })
+    
+    // 如果没有子菜单被选中，则这是一个叶子节点
+    if (!hasSelectedChildren) {
+      leafIds.push(menuId)
+    }
+  })
+  
+  return leafIds
+}
+
 // 获取角色菜单
 const fetchRoleMenus = async () => {
   if (!props.roleData?.id) return
@@ -280,12 +303,19 @@ const fetchRoleMenus = async () => {
   try {
     const { data } = await roleApi.getRoleMenus(props.roleData.id)
     const menuIds = data.map(menu => menu.id)
-    selectedMenus.value = [...menuIds]
-    originalMenus.value = [...menuIds]
+    
+    // 获取叶子节点（用户真正选择的菜单）
+    const leafMenuIds = getLeafMenuIds(menuIds)
+    
+    console.log('从后端获取的所有菜单ID:', menuIds)
+    console.log('提取的叶子节点ID（用于显示）:', leafMenuIds)
+    
+    selectedMenus.value = [...leafMenuIds]
+    originalMenus.value = [...leafMenuIds]
     
     // 设置树形控件的选中状态
     if (treeRef.value) {
-      treeRef.value.setCheckedKeys(menuIds)
+      treeRef.value.setCheckedKeys(leafMenuIds)
     }
   } catch (error) {
     console.error('获取角色菜单失败:', error)
@@ -364,6 +394,37 @@ const removeMenu = (menuId: number) => {
   }
 }
 
+// 获取包含父菜单的完整菜单ID列表
+const getCompleteMenuIds = (selectedIds: number[]): number[] => {
+  const completeIds = new Set<number>()
+  
+  // 递归函数：获取菜单的所有父菜单ID
+  const getParentIds = (menuId: number): number[] => {
+    const parentIds: number[] = []
+    const menu = menuMap.value.get(menuId)
+    
+    if (menu && menu.parentId && menu.parentId !== 0) {
+      parentIds.push(menu.parentId)
+      // 递归获取父菜单的父菜单
+      parentIds.push(...getParentIds(menu.parentId))
+    }
+    
+    return parentIds
+  }
+  
+  // 遍历所有选中的菜单ID
+  selectedIds.forEach(id => {
+    // 添加当前菜单ID
+    completeIds.add(id)
+    
+    // 添加所有父菜单ID
+    const parentIds = getParentIds(id)
+    parentIds.forEach(parentId => completeIds.add(parentId))
+  })
+  
+  return Array.from(completeIds)
+}
+
 // 提交菜单配置
 const handleSubmit = async () => {
   if (!props.roleData?.id) return
@@ -371,8 +432,14 @@ const handleSubmit = async () => {
   try {
     submitting.value = true
     
+    // 获取包含父菜单的完整菜单ID列表
+    const completeMenuIds = getCompleteMenuIds(selectedMenus.value)
+    
+    console.log('原始选中的菜单ID:', selectedMenus.value)
+    console.log('包含父菜单的完整ID列表:', completeMenuIds)
+    
     await roleApi.assignMenusToRole(props.roleData.id, {
-      menuIds: selectedMenus.value
+      menuIds: completeMenuIds
     })
     
     //ElMessage.success('菜单权限配置保存成功')

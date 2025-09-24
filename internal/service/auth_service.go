@@ -9,6 +9,7 @@ import (
 	"github.com/LiteMove/light-stack/internal/utils"
 	"github.com/LiteMove/light-stack/pkg/jwt"
 	"github.com/LiteMove/light-stack/pkg/logger"
+	"github.com/LiteMove/light-stack/pkg/permission"
 )
 
 // AuthService 认证服务接口
@@ -147,6 +148,11 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 	// 更新最后登录信息
 	if err := s.userRepo.UpdateLoginInfo(user.ID, ""); err != nil {
 		logger.WithField("userId", user.ID).Warn("Failed to update login info:", err)
+	}
+
+	// 加载用户权限和角色到缓存
+	if err := permission.LoadUserData(user.ID, s.menuRepo, s.roleRepo); err != nil {
+		logger.WithField("userId", user.ID).Warn("Failed to load permissions and roles:", err)
 	}
 
 	logger.WithField("userId", user.ID).Info("User logged in successfully")

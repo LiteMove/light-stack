@@ -7,7 +7,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import App from './App.vue'
 import router from './router'
-import { setupPermissionDirectives } from './utils/permission'
+import { setupPermissionDirectives, hasPer, hasRole, hasAnyPer, hasAllPer, hasAnyRole, hasAllRole, isAdmin, isSuperAdmin, hasAuth } from './utils/permission'
 
 import './style.css'
 
@@ -20,6 +20,17 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 // 注册权限指令
 setupPermissionDirectives(app)
+
+// 注册全局权限检查函数
+app.config.globalProperties.$hasPer = hasPer
+app.config.globalProperties.$hasRole = hasRole
+app.config.globalProperties.$hasAnyPer = hasAnyPer
+app.config.globalProperties.$hasAllPer = hasAllPer
+app.config.globalProperties.$hasAnyRole = hasAnyRole
+app.config.globalProperties.$hasAllRole = hasAllRole
+app.config.globalProperties.$isAdmin = isAdmin
+app.config.globalProperties.$isSuperAdmin = isSuperAdmin
+app.config.globalProperties.$hasAuth = hasAuth
 
 app.use(createPinia())
 app.use(router)

@@ -95,15 +95,6 @@
               <div class="menu-info">
                 <span class="menu-name">{{ row.name }}</span>
                 <div class="menu-meta">
-                  <el-tag 
-                    v-if="row.isSystem"
-                    type="info" 
-                    size="small" 
-                    effect="plain"
-                    class="system-tag"
-                  >
-                    系统
-                  </el-tag>
                   <span v-if="row.code" class="menu-code">{{ row.code }}</span>
                 </div>
               </div>
@@ -237,7 +228,6 @@
                   size="small"
                   :icon="Delete"
                   @click="handleDelete(row)"
-                  :disabled="row.isSystem"
                 />
               </el-tooltip>
             </div>
@@ -872,13 +862,6 @@ onMounted(() => {
             align-items: center;
             gap: 8px;
             margin-top: 4px;
-
-            .system-tag {
-              font-size: 11px;
-              height: 18px;
-              line-height: 16px;
-              padding: 0 6px;
-            }
 
             .menu-code {
               font-size: 12px;

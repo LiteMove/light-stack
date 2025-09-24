@@ -5,6 +5,7 @@ import (
 
 	"github.com/LiteMove/light-stack/internal/model"
 	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/utils"
 	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -19,9 +20,11 @@ type MenuController struct {
 
 // NewMenuController 创建菜单控制器
 func NewMenuController(menuService service.MenuService) *MenuController {
+	validator := validator.New()
+	utils.RegisterCustomValidators(validator)
 	return &MenuController{
 		menuService: menuService,
-		validator:   validator.New(),
+		validator:   validator,
 	}
 }
 
@@ -29,13 +32,11 @@ func NewMenuController(menuService service.MenuService) *MenuController {
 type CreateMenuRequest struct {
 	ParentID  uint64 `json:"parentId" validate:""`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
-	Code      string `json:"code" validate:"required,min=1,max=100"`
+	Code      string `json:"code" validate:"required_if_permission,permission_code,max=100"`
 	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
 	Path      string `json:"path" validate:"max=255"`
 	Component string `json:"component" validate:"max=255"`
 	Icon      string `json:"icon" validate:"max=100"`
-	Resource  string `json:"resource" validate:"max=255"`
-	Action    string `json:"action" validate:"max=50"`
 	SortOrder int    `json:"sortOrder"`
 	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
@@ -45,13 +46,11 @@ type CreateMenuRequest struct {
 type UpdateMenuRequest struct {
 	ParentID  uint64 `json:"parentId"`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
-	Code      string `json:"code" validate:"required,min=1,max=100"`
+	Code      string `json:"code" validate:"required_if_permission,permission_code,max=100"`
 	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
 	Path      string `json:"path" validate:"max=255"`
 	Component string `json:"component" validate:"max=255"`
 	Icon      string `json:"icon" validate:"max=100"`
-	Resource  string `json:"resource" validate:"max=255"`
-	Action    string `json:"action" validate:"max=50"`
 	SortOrder int    `json:"sortOrder"`
 	IsHidden  bool   `json:"isHidden"`
 	Status    int    `json:"status" validate:"required,oneof=1 2"`
@@ -96,8 +95,6 @@ func (mc *MenuController) CreateMenu(c *gin.Context) {
 		Path:      req.Path,
 		Component: req.Component,
 		Icon:      req.Icon,
-		Resource:  req.Resource,
-		Action:    req.Action,
 		SortOrder: req.SortOrder,
 		IsHidden:  req.IsHidden,
 		Status:    req.Status,
@@ -193,8 +190,6 @@ func (mc *MenuController) UpdateMenu(c *gin.Context) {
 		Path:      req.Path,
 		Component: req.Component,
 		Icon:      req.Icon,
-		Resource:  req.Resource,
-		Action:    req.Action,
 		SortOrder: req.SortOrder,
 		IsHidden:  req.IsHidden,
 		Status:    req.Status,

@@ -122,14 +122,9 @@ func (s *menuService) UpdateMenu(menu *model.Menu) error {
 // DeleteMenu 删除菜单
 func (s *menuService) DeleteMenu(id uint64) error {
 	// 检查菜单是否存在
-	menu, err := s.menuRepo.GetByID(id)
+	_, err := s.menuRepo.GetByID(id)
 	if err != nil {
 		return errors.New("菜单不存在")
-	}
-
-	// 检查是否为系统菜单
-	if menu.IsSystem {
-		return errors.New("系统菜单不能删除")
 	}
 
 	// 检查是否有子菜单
@@ -198,14 +193,9 @@ func (s *menuService) GetRoleMenus(roleID uint64) ([]model.MenuProfile, error) {
 // UpdateMenuStatus 更新菜单状态
 func (s *menuService) UpdateMenuStatus(id uint64, status int) error {
 	// 检查菜单是否存在
-	menu, err := s.menuRepo.GetByID(id)
+	_, err := s.menuRepo.GetByID(id)
 	if err != nil {
 		return errors.New("菜单不存在")
-	}
-
-	// 检查是否为系统菜单
-	if menu.IsSystem && status != 1 {
-		return errors.New("系统菜单不能禁用")
 	}
 
 	return s.menuRepo.UpdateStatus(id, status)

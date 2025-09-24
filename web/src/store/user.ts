@@ -77,7 +77,6 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = info
     permissions.value = info.permissions || []
     userMenus.value = info.menus || []
-    console.log('User info set:', info)
     // 检查是否为超级管理员
     const tenantStore = useTenantStore()
     const isSuperAdmin = info.roles?.includes('super_admin') || info.roles?.includes('admin')
@@ -204,9 +203,44 @@ export const useUserStore = defineStore('user', () => {
     return permissions.value.includes(permission) || menuPermissions.value.includes(permission)
   }
 
+  // 检查菜单权限
+  const hasMenuPermission = (permission: string): boolean => {
+    return menuPermissions.value.includes(permission)
+  }
+
+  // 检查是否拥有任意一个权限
+  const hasAnyPermission = (permissionList: string[]): boolean => {
+    return permissionList.some(permission => hasPermission(permission))
+  }
+
+  // 检查是否拥有所有权限
+  const hasAllPermissions = (permissionList: string[]): boolean => {
+    return permissionList.every(permission => hasPermission(permission))
+  }
+
   // 检查角色
   const hasRole = (role: string): boolean => {
     return userInfo.value?.roles?.includes(role) || false
+  }
+
+  // 检查是否拥有任意一个角色
+  const hasAnyRole = (roleList: string[]): boolean => {
+    return roleList.some(role => hasRole(role))
+  }
+
+  // 检查是否拥有所有角色
+  const hasAllRoles = (roleList: string[]): boolean => {
+    return roleList.every(role => hasRole(role))
+  }
+
+  // 检查是否为管理员
+  const isAdmin = (): boolean => {
+    return hasRole('admin') || hasRole('super_admin')
+  }
+
+  // 检查是否为超级管理员
+  const isSuperAdmin = (): boolean => {
+    return hasRole('super_admin')
   }
 
   // 初始化用户数据
@@ -235,9 +269,7 @@ export const useUserStore = defineStore('user', () => {
 
   // 将菜单转换为路由
   const menuToRoute = (menu: Menu, isChild: boolean = false): RouteRecordRaw => {
-      console.log('[USER STORE] Converting menu to route:', menu.name, menu.path, menu.component, 'isChild:', isChild)
       let modules = import.meta.glob('../views/**/*.vue')
-      console.log('[USER STORE] Available modules:', Object.keys(modules))
 
       const route: RouteRecordRaw = {
       path: menu.path || `/${menu.code}`,
@@ -250,11 +282,9 @@ export const useUserStore = defineStore('user', () => {
         permission: menu.code // 添加权限标识
       }
     }
-    console.log('[USER STORE] Initial route object:', route)
 
     // 根据菜单类型设置组件
     if (menu.type === 'directory') {
-      console.log('[USER STORE] Setting directory component for:', menu.name)
       // 顶级目录使用Layout组件，子级目录不使用Layout
       if (!isChild) {
         route.component = Layout
@@ -267,7 +297,6 @@ export const useUserStore = defineStore('user', () => {
           )
           if (firstVisibleChild) {
             route.redirect = firstVisibleChild.path || `/${firstVisibleChild.code}`
-            console.log('[USER STORE] Set redirect to:', route.redirect)
           }
         }
       } else {
@@ -275,12 +304,9 @@ export const useUserStore = defineStore('user', () => {
         route.component = undefined
       }
     } else if (menu.type === 'menu') {
-      console.log('[USER STORE] Setting menu component for:', menu.name, 'component:', menu.component)
-      
+
       if (menu.component) {
         const componentPath = `../views/${menu.component}.vue`
-        console.log('[USER STORE] Looking for component at:', componentPath)
-        console.log('[USER STORE] Available modules include:', Object.keys(modules).slice(0, 5))
 
         if (!isChild) {
           // 顶级菜单：需要包装在Layout中，作为子路由
@@ -300,7 +326,6 @@ export const useUserStore = defineStore('user', () => {
             for (const altPath of altPaths) {
               if (modules[altPath]) {
                 componentLoader = modules[altPath]
-                console.log('[USER STORE] Found component at alternative path:', altPath)
                 break
               }
             }
@@ -333,7 +358,6 @@ export const useUserStore = defineStore('user', () => {
             for (const altPath of altPaths) {
               if (modules[altPath]) {
                 componentLoader = modules[altPath]
-                console.log('[USER STORE] Found component at alternative path:', altPath)
                 break
               }
             }
@@ -341,16 +365,9 @@ export const useUserStore = defineStore('user', () => {
           
           route.component = componentLoader || (() => import('../views/error/404.vue'))
         }
-        
-        if (modules[componentPath]) {
-          console.log('[USER STORE] Found component:', componentPath)
-        } else {
-          console.error('[USER STORE] Component not found for path:', componentPath)
-          console.log('[USER STORE] Menu component value:', menu.component)
-        }
+
       } else {
-        console.log('[USER STORE] No component specified for menu:', menu.name)
-        
+
         if (!isChild) {
           // 顶级菜单：仍然使用布局包装
           route.component = Layout
@@ -375,11 +392,9 @@ export const useUserStore = defineStore('user', () => {
 
     // 处理子菜单
     if (menu.children && menu.children.length > 0) {
-      console.log('[USER STORE] Processing children for:', menu.name, 'children count:', menu.children.length)
       const childRoutes = menu.children
         .filter(child => {
           const isValid = !child.isHidden && child.status === 1 && child.type !== 'permission'
-          console.log('[USER STORE] Child menu filter:', child.name, 'valid:', isValid)
           return isValid
         })
         .map(child => menuToRoute(child, true)) // 传递isChild=true
@@ -391,37 +406,28 @@ export const useUserStore = defineStore('user', () => {
         } else {
           route.children = childRoutes
         }
-        console.log('[USER STORE] Added children routes:', childRoutes.length)
       }
     }
 
-    console.log('[USER STORE] Final route:', route)
     return route
   }
 
   // 获取动态路由
   const getDynamicRoutes = (): RouteRecordRaw[] => {
-    console.log('[USER STORE] getDynamicRoutes called')
-    console.log('[USER STORE] userMenus length:', userMenus.value.length)
-
     if (!userMenus.value.length) {
-      console.log('[USER STORE] No user menus, returning empty routes')
       return []
     }
 
     // 构建菜单树
     const menuTree = userMenus.value
-    console.log('[USER STORE] menuTree:', JSON.stringify(menuTree, null, 2))
 
     // 如果没有可用的菜单，返回空数组
     if (!menuTree.length) {
-      console.log('[USER STORE] Empty menu tree, returning empty routes')
       return []
     }
 
     // 转换为路由配置
     const routes = menuTree.map(menu => menuToRoute(menu))
-    console.log('[USER STORE] Generated routes:', JSON.stringify(routes, null, 2))
     return routes
   }
 
@@ -440,7 +446,14 @@ export const useUserStore = defineStore('user', () => {
     getUserMenus,
     getPermissions,
     hasPermission,
+    hasMenuPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     hasRole,
+    hasAnyRole,
+    hasAllRoles,
+    isAdmin,
+    isSuperAdmin,
     initUserData,
     logout,
     getDynamicRoutes

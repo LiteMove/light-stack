@@ -11,16 +11,13 @@ type Menu struct {
 	ID        uint64         `json:"id" gorm:"primarykey"`
 	ParentID  uint64         `json:"parentId" gorm:"not null;default:0;index"`
 	Name      string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
-	Code      string         `json:"code" gorm:"not null;size:100;uniqueIndex" validate:"required,max=100"`
+	Code      string         `json:"code" gorm:"size:100;index" validate:"required_if_permission,permission_code,max=100"`
 	Type      string         `json:"type" gorm:"not null;default:menu;size:20" validate:"required,oneof=directory menu permission"`
 	Path      string         `json:"path" gorm:"size:255" validate:"max=255"`
 	Component string         `json:"component" gorm:"size:255" validate:"max=255"`
 	Icon      string         `json:"icon" gorm:"size:100" validate:"max=100"`
-	Resource  string         `json:"resource" gorm:"size:255" validate:"max=255"`
-	Action    string         `json:"action" gorm:"size:50" validate:"max=50"`
 	SortOrder int            `json:"sortOrder" gorm:"not null;default:0"`
 	IsHidden  bool           `json:"isHidden" gorm:"not null;default:false"`
-	IsSystem  bool           `json:"isSystem" gorm:"not null;default:false"`
 	Status    int            `json:"status" gorm:"not null;default:1" validate:"required,oneof=1 2"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
@@ -46,11 +43,8 @@ type MenuProfile struct {
 	Path      string        `json:"path"`
 	Component string        `json:"component"`
 	Icon      string        `json:"icon"`
-	Resource  string        `json:"resource"`
-	Action    string        `json:"action"`
 	SortOrder int           `json:"sortOrder"`
 	IsHidden  bool          `json:"isHidden"`
-	IsSystem  bool          `json:"isSystem"`
 	Status    int           `json:"status"`
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
@@ -68,11 +62,8 @@ func (m *Menu) ToProfile() MenuProfile {
 		Path:      m.Path,
 		Component: m.Component,
 		Icon:      m.Icon,
-		Resource:  m.Resource,
-		Action:    m.Action,
 		SortOrder: m.SortOrder,
 		IsHidden:  m.IsHidden,
-		IsSystem:  m.IsSystem,
 		Status:    m.Status,
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,

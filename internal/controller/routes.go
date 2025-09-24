@@ -111,15 +111,6 @@ func RegisterRoutes(r *gin.Engine) {
 				files.DELETE("/:id", fileController.DeleteFile)          // 删除文件
 			}
 
-			//// 个人中心相关路由（需要认证）
-			//profile := v1.Group("/profile")
-			//profile.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
-			//{
-			//	profile.GET("", profileController.GetProfile)              // 获取个人信息
-			//	profile.PUT("", profileController.UpdateProfile)           // 更新个人信息
-			//	profile.PUT("/password", profileController.ChangePassword) // 修改密码
-			//
-			//}
 			// TODO 看后续怎么优化，现在是根据路由地址来区分用户和超管以及管理员的
 			admin := v1.Group("/admin")
 			admin.Use(middleware.JWTAuthMiddleware()) // 应用JWT认证中间件
@@ -127,21 +118,21 @@ func RegisterRoutes(r *gin.Engine) {
 				// 用户角色管理
 				users := admin.Group("/users")
 				{
-					users.POST("", userController.CreateUser)                        // 创建用户
-					users.GET("", userController.GetUsers)                           // 获取用户列表
-					users.GET("/:id", userController.GetUser)                        // 获取用户详情
-					users.PUT("/:id", userController.UpdateUser)                     // 更新用户
-					users.DELETE("/:id", userController.DeleteUser)                  // 删除用户
-					users.PUT("/:id/status", userController.UpdateUserStatus)        // 更新用户状态
-					users.PUT("/batch/status", userController.BatchUpdateUserStatus) // 批量更新用户状态
-					users.POST("/:id/reset-password", userController.ResetPassword)  // 重置密码
-					users.PUT("/:id/roles", userController.AssignUserRoles)          // 为用户分配角色
-					users.GET("/:id/roles", userController.GetUserRoles)             // 获取用户角色
+					users.POST("", middleware.CheckPermission("system:user:create"), userController.CreateUser)                        // 创建用户
+					users.GET("", middleware.CheckPermission("system:user:list"), userController.GetUsers)                             // 获取用户列表
+					users.GET("/:id", middleware.CheckPermission("system:user:detail"), userController.GetUser)                        // 获取用户详情
+					users.PUT("/:id", middleware.CheckPermission("system:user:update"), userController.UpdateUser)                     // 更新用户
+					users.DELETE("/:id", middleware.CheckPermission("system:user:delete"), userController.DeleteUser)                  // 删除用户
+					users.PUT("/:id/status", middleware.CheckPermission("system:user:update"), userController.UpdateUserStatus)        // 更新用户状态
+					users.PUT("/batch/status", middleware.CheckPermission("system:user:update"), userController.BatchUpdateUserStatus) // 批量更新用户状态
+					users.POST("/:id/reset-password", middleware.CheckPermission("system:user:update"), userController.ResetPassword)  // 重置密码
+					users.PUT("/:id/roles", middleware.CheckPermission("system:user:role:assign"), userController.AssignUserRoles)     // 为用户分配角色
+					users.GET("/:id/roles", middleware.CheckPermission("system:user:role:list"), userController.GetUserRoles)          // 获取用户角色
 				}
 				// 角色管理
 				roles := admin.Group("/roles")
 				{
-					roles.GET("/select-list", roleController.GetEnabledRoles) // 获取角色列表
+					roles.GET("/select-list", roleController.GetEnabledRoles) // 获取角色列表 - 管理员角色
 				}
 
 				// 文件管理

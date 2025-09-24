@@ -127,10 +127,23 @@ const fetchRoleMenus = async () => {
   
   try {
     const { data } = await menuApi.getRoleMenus(props.roleInfo.id)
-    checkedMenuIds.value = data.map(menu => menu.id)
-    selectedMenuIds.value = [...checkedMenuIds.value]
+    const menuIds = data.map(menu => menu.id)
+    
+    // 构建菜单映射表
+    const menuMap = buildMenuMap(menuTree.value)
+    
+    // 获取叶子节点（用户真正选择的菜单）
+    const leafMenuIds = getLeafMenuIds(menuIds, menuMap)
+    
+    console.log('从后端获取的所有菜单ID:', menuIds)
+    console.log('提取的叶子节点ID（用于显示）:', leafMenuIds)
+    
+    checkedMenuIds.value = leafMenuIds
+    selectedMenuIds.value = [...leafMenuIds]
   } catch (error) {
     ElMessage.error('获取角色菜单失败')
+    checkedMenuIds.value = []
+    selectedMenuIds.value = []
   }
 }
 
@@ -146,6 +159,76 @@ const getMenusByIds = (nodes: Menu[], ids: number[]): Menu[] => {
     }
   })
   return menus
+}
+
+// 构建菜单映射表
+const buildMenuMap = (nodes: Menu[]): Map<number, Menu> => {
+  const map = new Map<number, Menu>()
+  const traverse = (items: Menu[]) => {
+    items.forEach(item => {
+      map.set(item.id, item)
+      if (item.children && item.children.length > 0) {
+        traverse(item.children)
+      }
+    })
+  }
+  traverse(nodes)
+  return map
+}
+
+// 获取菜单的叶子节点（用于回显时只显示用户真正选择的菜单）
+const getLeafMenuIds = (allMenuIds: number[], menuMap: Map<number, Menu>): number[] => {
+  const leafIds: number[] = []
+  
+  allMenuIds.forEach(menuId => {
+    const menu = menuMap.get(menuId)
+    if (!menu) return
+    
+    // 检查是否有子菜单也在选中列表中
+    const hasSelectedChildren = allMenuIds.some(id => {
+      const childMenu = menuMap.get(id)
+      return childMenu && childMenu.parentId === menuId
+    })
+    
+    // 如果没有子菜单被选中，则这是一个叶子节点
+    if (!hasSelectedChildren) {
+      leafIds.push(menuId)
+    }
+  })
+  
+  return leafIds
+}
+
+// 获取包含父菜单的完整菜单ID列表
+const getCompleteMenuIds = (selectedIds: number[]): number[] => {
+  const completeIds = new Set<number>()
+  const menuMap = buildMenuMap(menuTree.value)
+  
+  // 递归函数：获取菜单的所有父菜单ID
+  const getParentIds = (menuId: number): number[] => {
+    const parentIds: number[] = []
+    const menu = menuMap.get(menuId)
+    
+    if (menu && menu.parentId && menu.parentId !== 0) {
+      parentIds.push(menu.parentId)
+      // 递归获取父菜单的父菜单
+      parentIds.push(...getParentIds(menu.parentId))
+    }
+    
+    return parentIds
+  }
+  
+  // 遍历所有选中的菜单ID
+  selectedIds.forEach(id => {
+    // 添加当前菜单ID
+    completeIds.add(id)
+    
+    // 添加所有父菜单ID
+    const parentIds = getParentIds(id)
+    parentIds.forEach(parentId => completeIds.add(parentId))
+  })
+  
+  return Array.from(completeIds)
 }
 
 // 获取指定类型的菜单数量
@@ -167,8 +250,15 @@ const handleSave = async () => {
 
   try {
     saving.value = true
+    
+    // 获取包含父菜单的完整菜单ID列表
+    const completeMenuIds = getCompleteMenuIds(selectedMenuIds.value)
+    
+    console.log('原始选中的菜单ID:', selectedMenuIds.value)
+    console.log('包含父菜单的完整ID列表:', completeMenuIds)
+    
     await menuApi.assignMenusToRole(props.roleInfo.id, {
-      menuIds: selectedMenuIds.value
+      menuIds: completeMenuIds
     })
     console.log('菜单权限分配成功')
 

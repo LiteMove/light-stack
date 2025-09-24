@@ -8,3 +8,17 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
+
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $hasPer: (permission: string) => boolean
+    $hasRole: (role: string) => boolean
+    $hasAnyPer: (permissions: string[]) => boolean
+    $hasAllPer: (permissions: string[]) => boolean
+    $hasAnyRole: (roles: string[]) => boolean
+    $hasAllRole: (roles: string[]) => boolean
+    $isAdmin: () => boolean
+    $isSuperAdmin: () => boolean
+    $hasAuth: (config: { permissions?: string[], roles?: string[], requireAll?: boolean }) => boolean
+  }
+}

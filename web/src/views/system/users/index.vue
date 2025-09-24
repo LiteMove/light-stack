@@ -21,7 +21,13 @@
         </p>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Plus" @click="handleAdd" size="default">
+        <el-button 
+          v-if="$hasPer('system:user:create')"
+          type="primary" 
+          :icon="Plus" 
+          @click="handleAdd" 
+          size="default"
+        >
           新建用户
         </el-button>
         <el-button 
@@ -33,6 +39,7 @@
           刷新
         </el-button>
         <el-button 
+          v-if="$hasPer('system:user:export')"
           :icon="Download" 
           @click="exportUsers"
           size="default"
@@ -95,13 +102,31 @@
             已选择 <strong class="selected-count">{{ selectedRows.length }}</strong> 个用户
           </div>
           <div class="batch-actions">
-            <el-button type="success" size="small" :icon="Check" @click="batchEnable">
+            <el-button 
+              v-if="$hasPer('system:user:update')"
+              type="success" 
+              size="small" 
+              :icon="Check" 
+              @click="batchEnable"
+            >
               批量启用
             </el-button>
-            <el-button type="warning" size="small" :icon="Close" @click="batchDisable">
+            <el-button 
+              v-if="$hasPer('system:user:update')"
+              type="warning" 
+              size="small" 
+              :icon="Close" 
+              @click="batchDisable"
+            >
               批量禁用
             </el-button>
-            <el-button type="danger" size="small" :icon="Delete" @click="batchDelete">
+            <el-button 
+              v-if="$hasPer('system:user:delete')"
+              type="danger" 
+              size="small" 
+              :icon="Delete" 
+              @click="batchDelete"
+            >
               批量删除
             </el-button>
           </div>
@@ -235,7 +260,7 @@
               :active-value="1"
               :inactive-value="2"
               @change="handleStatusChange(row)"
-              :disabled="row.isSystem"
+              :disabled="row.isSystem || !$hasPer('system:user:update')"
               size="small"
             />
           </template>
@@ -267,7 +292,11 @@
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-tooltip content="编辑用户" placement="top">
+              <el-tooltip 
+                v-if="$hasPer('system:user:update')"
+                content="编辑用户" 
+                placement="top"
+              >
                 <el-button
                   type="primary"
                   link
@@ -276,7 +305,11 @@
                   @click="handleEdit(row)"
                 />
               </el-tooltip>
-              <el-tooltip content="分配角色" placement="top">
+              <el-tooltip 
+                v-if="$hasPer('system:user:assign')"
+                content="分配角色" 
+                placement="top"
+              >
                 <el-button
                   type="warning"
                   link
@@ -286,7 +319,11 @@
                   :disabled="row.id == 1"
                 />
               </el-tooltip>
-              <el-tooltip content="重置密码" placement="top">
+              <el-tooltip 
+                v-if="$hasPer('system:user:reset')"
+                content="重置密码" 
+                placement="top"
+              >
                 <el-button
                   type="info"
                   link
@@ -296,7 +333,11 @@
                   :disabled="row.isSystem"
                 />
               </el-tooltip>
-              <el-tooltip content="删除用户" placement="top">
+              <el-tooltip 
+                v-if="$hasPer('system:user:delete')"
+                content="删除用户" 
+                placement="top"
+              >
                 <el-button
                   type="danger"
                   link
@@ -387,6 +428,8 @@ const formVisible = ref(false)
 const roleAssignVisible = ref(false)
 const formData = ref<Partial<User>>({})
 const selectedUser = ref<User | null>(null)
+const abortController = ref<AbortController | null>(null)
+const isUnmounting = ref(false)
 
 // 计算属性
 const isSuperAdmin = computed(() => tenantStore.checkIsSuperAdmin())
@@ -416,6 +459,12 @@ const getAvatarColor = (username: string): string => {
 
 // 获取用户列表
 const fetchUsers = async () => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过获取用户列表')
+    return
+  }
+  
   // 如果是超级管理员但没有选择租户，不加载数据
   if (isSuperAdmin.value && !currentTenant.value) {
     ElMessage.warning('请先选择要管理的租户')
@@ -423,6 +472,14 @@ const fetchUsers = async () => {
     pagination.total = 0
     return
   }
+  
+  // 取消之前的请求
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+  
+  // 创建新的 AbortController
+  abortController.value = new AbortController()
   
   try {
     loading.value = true
@@ -435,23 +492,47 @@ const fetchUsers = async () => {
     
     // 租户ID现在通过请求头自动添加，不需要在参数中指定
     const { data } = await userApi.getUsers(params)
+    
+    // 检查请求是否被取消或组件是否正在销毁
+    if (abortController.value?.signal.aborted || isUnmounting.value) {
+      return
+    }
+    
     userList.value = data.list
     pagination.total = data.total
     
-  } catch (error) {
+  } catch (error: any) {
+    // 如果是请求被取消或401错误，不显示错误信息
+    if (error.name === 'AbortError' || error.message?.includes('登录') || isUnmounting.value) {
+      console.log('请求已取消或用户未登录')
+      return
+    }
     // 错误信息已在响应拦截器中处理
     console.error('获取用户列表失败:', error)
   } finally {
-    loading.value = false
+    if (!isUnmounting.value) {
+      loading.value = false
+    }
   }
 }
 
 // 获取角色列表
 const fetchRoles = async () => {
+  // 检查是否已登录
+  if (!userStore.getToken()) {
+    console.log('用户未登录，跳过获取角色列表')
+    return
+  }
+  
   try {
     const { data } = await roleApi.getActiveRoles()
     roles.value = data
-  } catch (error) {
+  } catch (error: any) {
+    // 如果是401错误，不显示错误信息
+    if (error.message?.includes('登录')) {
+      console.log('用户未登录，跳过获取角色列表')
+      return
+    }
     // 错误信息已在响应拦截器中处理
     console.error('获取角色列表失败:', error)
   }
@@ -459,18 +540,36 @@ const fetchRoles = async () => {
 
 // 刷新用户列表
 const refreshUsers = () => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过刷新用户列表')
+    return
+  }
+  
   fetchUsers()
   fetchRoles()
 }
 
 // 搜索
 const handleSearch = () => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过搜索')
+    return
+  }
+  
   pagination.page = 1
   fetchUsers()
 }
 
 // 重置搜索
 const handleResetSearch = () => {
+  // 检查组件是否正在销毁
+  if (isUnmounting.value) {
+    console.log('组件销毁中，跳过重置搜索')
+    return
+  }
+  
   Object.assign(searchForm, {
     keyword: '',
     status: 0,
@@ -634,23 +733,45 @@ const batchDelete = async () => {
 
 // 分页相关
 const handlePageSizeChange = (size: number) => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过分页大小变更')
+    return
+  }
+  
   pagination.pageSize = size
   pagination.page = 1
   fetchUsers()
 }
 
 const handleCurrentChange = (page: number) => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过页码变更')
+    return
+  }
+  
   pagination.page = page
   fetchUsers()
 }
 
 // 表单成功回调
 const handleFormSuccess = () => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过表单成功回调')
+    return
+  }
   refreshUsers()
 }
 
 // 角色分配成功回调
 const handleRoleAssignSuccess = () => {
+  // 检查组件是否正在销毁或用户是否已登录
+  if (isUnmounting.value || !userStore.getToken()) {
+    console.log('组件销毁中或用户未登录，跳过角色分配成功回调')
+    return
+  }
   refreshUsers()
 }
 
@@ -661,13 +782,38 @@ onMounted(() => {
 
 // 监听租户变化，自动刷新用户列表
 const stopTenantWatcher = tenantStore.$subscribe((mutation, state) => {
-  // 当租户发生变化时，重新获取用户列表
-  fetchUsers()
+  // 只有在组件没有销毁且用户已登录时才重新获取数据
+  if (!isUnmounting.value && userStore.getToken()) {
+    console.log('租户变化，重新获取用户列表')
+    fetchUsers()
+  } else {
+    console.log('组件销毁中或用户未登录，跳过租户变化响应')
+  }
 })
 
-// 组件销毁时停止监听
+// 组件销毁时停止监听并清理资源
 onUnmounted(() => {
-  stopTenantWatcher()
+  console.log('用户管理组件开始销毁，清理资源')
+  isUnmounting.value = true
+  
+  // 停止租户监听器
+  if (stopTenantWatcher) {
+    stopTenantWatcher()
+  }
+  
+  // 取消所有进行中的请求
+  if (abortController.value) {
+    abortController.value.abort()
+    abortController.value = null
+  }
+  
+  // 清空数据
+  userList.value = []
+  roles.value = []
+  selectedRows.value = []
+  loading.value = false
+  
+  console.log('用户管理组件资源清理完成')
 })
 </script>
 

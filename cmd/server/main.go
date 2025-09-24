@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
@@ -22,6 +23,10 @@ func main() {
 
 	// 初始化日志
 	logger.Init()
+
+	// 注册自定义验证器
+	validate := validator.New()
+	utils.RegisterCustomValidators(validate)
 
 	// 初始化数据库
 	if err := database.Init(); err != nil {

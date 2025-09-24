@@ -21,7 +21,11 @@
       "Bash(bin/server.exe)",
       "Bash(findstr:*)",
       "Bash(bash:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(./menu_validation.exe)",
+      "Bash(menu_validation)",
+      "Bash(menu_validation.exe)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

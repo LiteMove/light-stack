@@ -2,54 +2,174 @@ import type { App, DirectiveBinding } from 'vue'
 import { useUserStore } from '@/store'
 
 /**
- * 权限指令
- * 用法：
- * v-permission="'menu_management'"
- * v-permission="['menu_management', 'user_management']"
- * v-role="'admin'"
- * v-role="['admin', 'manager']"
+ * 权限指令和工具函数
+ * 
+ * 使用方式：
+ * 1. 指令方式：
+ *    v-permission="'user:create'"
+ *    v-permission="['user:create', 'user:update']"
+ *    v-permission.all="['user:create', 'user:update']"
+ *    v-role="'admin'"
+ *    v-auth="{ permissions: ['user:create'], roles: ['admin'] }"
+ * 
+ * 2. v-if 方式：
+ *    v-if="hasPer('user:create')"
+ *    v-if="hasRole('admin')"
+ *    v-if="hasAnyPer(['user:create', 'user:update'])"
+ *    v-if="hasAllPer(['user:create', 'user:update'])"
  */
+
+// 全局权限检查函数 - 用于 v-if
+export function hasPer(permission: string): boolean {
+  const userStore = useUserStore()
+  return userStore.hasPermission(permission)
+}
+
+export function hasRole(role: string): boolean {
+  const userStore = useUserStore()
+  return userStore.hasRole(role)
+}
+
+export function hasAnyPer(permissions: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAnyPermission(permissions)
+}
+
+export function hasAllPer(permissions: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAllPermissions(permissions)
+}
+
+export function hasAnyRole(roles: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAnyRole(roles)
+}
+
+export function hasAllRole(roles: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAllRoles(roles)
+}
+
+export function isAdmin(): boolean {
+  const userStore = useUserStore()
+  return userStore.isAdmin()
+}
+
+export function isSuperAdmin(): boolean {
+  const userStore = useUserStore()
+  return userStore.isSuperAdmin()
+}
+
+// 综合权限检查函数
+export function hasAuth(config: { 
+  permissions?: string[], 
+  roles?: string[], 
+  requireAll?: boolean 
+}): boolean {
+  return checkAuth(config)
+}
+
+// 权限检查工具函数
+export function checkPermission(permission: string | string[]): boolean {
+  const userStore = useUserStore()
+  
+  if (Array.isArray(permission)) {
+    return permission.some(p => userStore.hasPermission(p))
+  }
+  return userStore.hasPermission(permission)
+}
+
+export function checkAllPermissions(permissions: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAllPermissions(permissions)
+}
+
+export function checkRole(role: string | string[]): boolean {
+  const userStore = useUserStore()
+  
+  if (Array.isArray(role)) {
+    return role.some(r => userStore.hasRole(r))
+  }
+  return userStore.hasRole(role)
+}
+
+export function checkAllRoles(roles: string[]): boolean {
+  const userStore = useUserStore()
+  return userStore.hasAllRoles(roles)
+}
+
+export function checkAuth(config: { 
+  permissions?: string[], 
+  roles?: string[], 
+  requireAll?: boolean 
+}): boolean {
+  const userStore = useUserStore()
+  const { permissions, roles, requireAll = false } = config
+
+  let hasPermission = true
+  let hasRole = true
+
+  if (permissions && permissions.length > 0) {
+    hasPermission = requireAll 
+      ? userStore.hasAllPermissions(permissions)
+      : userStore.hasAnyPermission(permissions)
+  }
+
+  if (roles && roles.length > 0) {
+    hasRole = requireAll
+      ? userStore.hasAllRoles(roles) 
+      : userStore.hasAnyRole(roles)
+  }
+
+  // 权限和角色只要有一个满足即可
+  return hasPermission || hasRole
+}
 
 // 权限检查指令
 export const permission = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
+    const { value, modifiers } = binding
     const userStore = useUserStore()
 
     if (value) {
       let hasPermission = false
 
       if (Array.isArray(value)) {
-        // 数组形式，只要有一个权限即可显示
-        hasPermission = value.some(permission => 
-          userStore.hasPermission(permission) || userStore.hasMenuPermission(permission)
-        )
+        hasPermission = modifiers.all 
+          ? userStore.hasAllPermissions(value)
+          : userStore.hasAnyPermission(value)
       } else {
-        // 字符串形式
-        hasPermission = userStore.hasPermission(value) || userStore.hasMenuPermission(value)
+        hasPermission = userStore.hasPermission(value)
       }
 
       if (!hasPermission) {
         el.style.display = 'none'
+        el.setAttribute('data-permission-hidden', 'true')
       }
     }
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
+    const { value, modifiers } = binding
     const userStore = useUserStore()
 
     if (value) {
       let hasPermission = false
 
       if (Array.isArray(value)) {
-        hasPermission = value.some(permission => 
-          userStore.hasPermission(permission) || userStore.hasMenuPermission(permission)
-        )
+        hasPermission = modifiers.all 
+          ? userStore.hasAllPermissions(value)
+          : userStore.hasAnyPermission(value)
       } else {
-        hasPermission = userStore.hasPermission(value) || userStore.hasMenuPermission(value)
+        hasPermission = userStore.hasPermission(value)
       }
 
-      el.style.display = hasPermission ? '' : 'none'
+      if (hasPermission) {
+        el.style.display = ''
+        el.removeAttribute('data-permission-hidden')
+      } else {
+        el.style.display = 'none'
+        el.setAttribute('data-permission-hidden', 'true')
+      }
     }
   }
 }
@@ -57,39 +177,79 @@ export const permission = {
 // 角色检查指令
 export const role = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
+    const { value, modifiers } = binding
     const userStore = useUserStore()
 
     if (value) {
       let hasRole = false
 
       if (Array.isArray(value)) {
-        // 数组形式，只要有一个角色即可显示
-        hasRole = value.some(role => userStore.hasRole(role))
+        hasRole = modifiers.all
+          ? userStore.hasAllRoles(value)
+          : userStore.hasAnyRole(value)
       } else {
-        // 字符串形式
         hasRole = userStore.hasRole(value)
       }
 
       if (!hasRole) {
         el.style.display = 'none'
+        el.setAttribute('data-role-hidden', 'true')
       }
     }
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
+    const { value, modifiers } = binding
     const userStore = useUserStore()
 
     if (value) {
       let hasRole = false
 
       if (Array.isArray(value)) {
-        hasRole = value.some(role => userStore.hasRole(role))
+        hasRole = modifiers.all
+          ? userStore.hasAllRoles(value)
+          : userStore.hasAnyRole(value)
       } else {
         hasRole = userStore.hasRole(value)
       }
 
-      el.style.display = hasRole ? '' : 'none'
+      if (hasRole) {
+        el.style.display = ''
+        el.removeAttribute('data-role-hidden')
+      } else {
+        el.style.display = 'none'
+        el.setAttribute('data-role-hidden', 'true')
+      }
+    }
+  }
+}
+
+// 综合权限检查指令
+export const auth = {
+  mounted(el: HTMLElement, binding: DirectiveBinding) {
+    const { value } = binding
+
+    if (value) {
+      const hasAuth = checkAuth(value)
+      
+      if (!hasAuth) {
+        el.style.display = 'none'
+        el.setAttribute('data-auth-hidden', 'true')
+      }
+    }
+  },
+  updated(el: HTMLElement, binding: DirectiveBinding) {
+    const { value } = binding
+
+    if (value) {
+      const hasAuth = checkAuth(value)
+      
+      if (hasAuth) {
+        el.style.display = ''
+        el.removeAttribute('data-auth-hidden')
+      } else {
+        el.style.display = 'none'
+        el.setAttribute('data-auth-hidden', 'true')
+      }
     }
   }
 }
@@ -99,14 +259,44 @@ export const admin = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    if (!userStore.hasRole('admin') && !userStore.hasRole('super_admin')) {
+    if (!userStore.isAdmin()) {
       el.style.display = 'none'
+      el.setAttribute('data-admin-hidden', 'true')
     }
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
     const userStore = useUserStore()
     
-    el.style.display = (userStore.hasRole('admin') || userStore.hasRole('super_admin')) ? '' : 'none'
+    if (userStore.isAdmin()) {
+      el.style.display = ''
+      el.removeAttribute('data-admin-hidden')
+    } else {
+      el.style.display = 'none'
+      el.setAttribute('data-admin-hidden', 'true')
+    }
+  }
+}
+
+// 超级管理员权限指令
+export const superAdmin = {
+  mounted(el: HTMLElement, binding: DirectiveBinding) {
+    const userStore = useUserStore()
+    
+    if (!userStore.isSuperAdmin()) {
+      el.style.display = 'none'
+      el.setAttribute('data-super-admin-hidden', 'true')
+    }
+  },
+  updated(el: HTMLElement, binding: DirectiveBinding) {
+    const userStore = useUserStore()
+    
+    if (userStore.isSuperAdmin()) {
+      el.style.display = ''
+      el.removeAttribute('data-super-admin-hidden')
+    } else {
+      el.style.display = 'none'
+      el.setAttribute('data-super-admin-hidden', 'true')
+    }
   }
 }
 
@@ -114,13 +304,54 @@ export const admin = {
 export function setupPermissionDirectives(app: App) {
   app.directive('permission', permission)
   app.directive('role', role)
+  app.directive('auth', auth)
   app.directive('admin', admin)
+  app.directive('super-admin', superAdmin)
+}
+
+// Composition API 权限检查 Hook
+export function usePermission() {
+  const userStore = useUserStore()
+
+  return {
+    // 权限检查
+    hasPermission: (permission: string) => userStore.hasPermission(permission),
+    hasAnyPermission: (permissions: string[]) => userStore.hasAnyPermission(permissions),
+    hasAllPermissions: (permissions: string[]) => userStore.hasAllPermissions(permissions),
+    
+    // 角色检查
+    hasRole: (role: string) => userStore.hasRole(role),
+    hasAnyRole: (roles: string[]) => userStore.hasAnyRole(roles),
+    hasAllRoles: (roles: string[]) => userStore.hasAllRoles(roles),
+    
+    // 管理员检查
+    isAdmin: () => userStore.isAdmin(),
+    isSuperAdmin: () => userStore.isSuperAdmin(),
+    
+    // 综合检查
+    checkAuth: (config: { permissions?: string[], roles?: string[], requireAll?: boolean }) => 
+      checkAuth(config),
+    
+    // 工具函数
+    checkPermission,
+    checkAllPermissions,
+    checkRole,
+    checkAllRoles
+  }
 }
 
 // 默认导出
 export default {
   permission,
   role,
+  auth,
   admin,
-  setupPermissionDirectives
+  superAdmin,
+  setupPermissionDirectives,
+  usePermission,
+  checkPermission,
+  checkAllPermissions,
+  checkRole,
+  checkAllRoles,
+  checkAuth
 }

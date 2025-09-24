@@ -56,13 +56,16 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="菜单编码" prop="code">
+          <el-form-item :label="form.type === 'permission' ? '权限标识' : '菜单编码'" prop="code">
             <el-input
               v-model="form.code"
-              placeholder="请输入菜单编码"
+              :placeholder="form.type === 'permission' ? '请输入权限标识，如：system:user:create' : '请输入菜单编码'"
               maxlength="100"
               show-word-limit
             />
+            <div v-if="form.type === 'permission'" class="el-form-item__hint">
+              支持冒号分隔的多级权限，如：system:user:create
+            </div>
           </el-form-item>
         </el-col>
       </el-row>
@@ -106,30 +109,6 @@
             <template #append>.vue</template>
           </el-input>
         </el-form-item>
-      </template>
-
-      <!-- 权限配置 -->
-      <template v-if="form.type === 'permission'">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="资源" prop="resource">
-              <el-input
-                v-model="form.resource"
-                placeholder="请输入资源路径"
-                maxlength="255"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="操作" prop="action">
-              <el-input
-                v-model="form.action"
-                placeholder="请输入操作名称"
-                maxlength="50"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
       </template>
 
       <el-row :gutter="20">
@@ -216,8 +195,6 @@ const form = ref<MenuFormData>({
   path: '',
   component: '',
   icon: '',
-  resource: '',
-  action: '',
   sortOrder: 0,
   isHidden: false,
   status: 1,
@@ -238,9 +215,22 @@ const rules = computed<FormRules>(() => ({
     { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
   ],
   code: [
-    { required: true, message: '请输入菜单编码', trigger: 'blur' },
-    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_-]+$/, message: '只能包含字母、数字、下划线和横线', trigger: 'blur' }
+    { 
+      required: form.value.type === 'permission', 
+      message: form.value.type === 'permission' ? '权限标识不能为空' : '菜单编码不能为空', 
+      trigger: 'blur' 
+    },
+    { 
+      min: form.value.type === 'permission' ? 1 : 0, 
+      max: 100, 
+      message: '长度在 1 到 100 个字符', 
+      trigger: 'blur' 
+    },
+    { 
+      pattern: /^[a-zA-Z0-9:_-]*$/, 
+      message: '只能包含字母、数字、冒号、下划线和横线', 
+      trigger: 'blur' 
+    }
   ],
   type: [
     { required: true, message: '请选择菜单类型', trigger: 'change' }
@@ -264,12 +254,6 @@ const rules = computed<FormRules>(() => ({
   icon: [
     { max: 100, message: '长度不能超过 100 个字符', trigger: 'blur' }
   ],
-  resource: [
-    { max: 255, message: '长度不能超过 255 个字符', trigger: 'blur' }
-  ],
-  action: [
-    { max: 50, message: '长度不能超过 50 个字符', trigger: 'blur' }
-  ],
   sortOrder: [
     { type: 'number', min: 0, max: 999, message: '排序值应在 0-999 之间', trigger: 'blur' }
   ],
@@ -291,8 +275,6 @@ watch(
         path: newData.path || '',
         component: newData.component || '',
         icon: newData.icon || '',
-        resource: newData.resource || '',
-        action: newData.action || '',
         sort_order: newData.sortOrder || 0,
         isHidden: newData.isHidden || false,
         status: newData.status || 1,
@@ -311,11 +293,11 @@ const handleTypeChange = (type: string) => {
     form.value.icon = ''
   } else if (type === 'directory') {
     form.value.component = ''
-    form.value.resource = ''
-    form.value.action = ''
-  } else if (type === 'menu') {
-    form.value.resource = ''
-    form.value.action = ''
+  }
+  
+  // 如果类型不是权限，清空权限标识
+  if (type !== 'permission') {
+    form.value.code = ''
   }
   
   // 触发表单验证
@@ -459,5 +441,12 @@ watch(() => form.value.code, () => {
 :deep(.el-textarea__inner) {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 13px;
+}
+
+.el-form-item__hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 </style>
