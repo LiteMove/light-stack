@@ -16,6 +16,7 @@ var (
 	menuRepo   repository.MenuRepository
 	tenantRepo repository.TenantRepository
 	fileRepo   *repository.FileRepository
+	dictRepo   repository.DictRepository
 
 	// Service 层
 	authSvc      service.AuthService
@@ -26,6 +27,7 @@ var (
 	fileSvc      *service.FileService
 	profileSvc   service.ProfileService
 	dashboardSvc service.DashboardService
+	dictSvc      service.DictService
 
 	// Controller 层
 	authCtrl      *controller.AuthController
@@ -36,6 +38,7 @@ var (
 	fileCtrl      *controller.FileController
 	profileCtrl   *controller.ProfileController
 	dashboardCtrl *controller.DashboardController
+	dictCtrl      *controller.DictController
 )
 
 // Init 初始化所有服务
@@ -56,6 +59,7 @@ func initRepositories(db *gorm.DB) {
 	menuRepo = repository.NewMenuRepository(db)
 	tenantRepo = repository.NewTenantRepository(db)
 	fileRepo = repository.NewFileRepository(db)
+	dictRepo = repository.NewDictRepository(db)
 }
 
 func initServices() {
@@ -67,6 +71,7 @@ func initServices() {
 	profileSvc = service.NewProfileService(userRepo, roleRepo, tenantRepo)
 	fileSvc = service.NewFileService(fileRepo, tenantSvc)
 	dashboardSvc = service.NewDashboardService(userRepo, tenantRepo, fileRepo)
+	dictSvc = service.NewDictService(dictRepo)
 }
 
 func initControllers() {
@@ -78,6 +83,7 @@ func initControllers() {
 	fileCtrl = controller.NewFileController(fileSvc)
 	profileCtrl = controller.NewProfileController(profileSvc)
 	dashboardCtrl = controller.NewDashboardController(dashboardSvc)
+	dictCtrl = controller.NewDictController(dictSvc)
 }
 
 // === Service 获取函数 ===
@@ -89,6 +95,7 @@ func TenantSvc() service.TenantService       { return tenantSvc }
 func FileSvc() *service.FileService          { return fileSvc }
 func ProfileSvc() service.ProfileService     { return profileSvc }
 func DashboardSvc() service.DashboardService { return dashboardSvc }
+func DictSvc() service.DictService           { return dictSvc }
 
 // === Controller 获取函数 ===
 func AuthCtrl() *controller.AuthController           { return authCtrl }
@@ -99,6 +106,7 @@ func TenantCtrl() *controller.TenantController       { return tenantCtrl }
 func FileCtrl() *controller.FileController           { return fileCtrl }
 func ProfileCtrl() *controller.ProfileController     { return profileCtrl }
 func DashboardCtrl() *controller.DashboardController { return dashboardCtrl }
+func DictCtrl() *controller.DictController           { return dictCtrl }
 
 // === 权限检查函数 ===
 func CheckUserRole(userID uint64, roleCode string) bool {

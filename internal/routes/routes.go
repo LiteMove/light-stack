@@ -105,6 +105,13 @@ func registerUserRoutes(api *gin.RouterGroup) {
 		{
 			dashboard.GET("/stats", globals.DashboardCtrl().GetDashboardStats) // 获取仪表盘统计数据
 		}
+
+		// 字典选项接口（需要认证，供前端下拉框使用）
+		dict := v1.Group("/dict")
+		dict.Use(middleware.Auth()) // 应用JWT认证中间件
+		{
+			dict.GET("/options/:type", globals.DictCtrl().GetDictOptions) // 获取字典选项
+		}
 	}
 }
 
@@ -201,6 +208,32 @@ func registerSuperAdminRoutes(api *gin.RouterGroup) {
 				menus.PUT("/:id", globals.MenuCtrl().UpdateMenu)              // 更新菜单
 				menus.DELETE("/:id", globals.MenuCtrl().DeleteMenu)           // 删除菜单
 				menus.PUT("/:id/status", globals.MenuCtrl().UpdateMenuStatus) // 更新菜单状态
+			}
+
+			// 字典管理
+			dict := superAdmin.Group("/dict")
+			{
+				// 字典类型管理
+				dictTypes := dict.Group("/types")
+				{
+					dictTypes.POST("", globals.DictCtrl().CreateType)       // 创建字典类型
+					dictTypes.GET("", globals.DictCtrl().GetTypeList)       // 获取字典类型列表
+					dictTypes.GET("/:id", globals.DictCtrl().GetType)       // 获取字典类型详情
+					dictTypes.PUT("/:id", globals.DictCtrl().UpdateType)    // 更新字典类型
+					dictTypes.DELETE("/:id", globals.DictCtrl().DeleteType) // 删除字典类型
+				}
+
+				// 字典数据管理
+				dictData := dict.Group("/data")
+				{
+					dictData.POST("", globals.DictCtrl().CreateData)                        // 创建字典数据
+					dictData.GET("/type/:type", globals.DictCtrl().GetDataList)             // 获取字典数据列表
+					dictData.GET("/:id", globals.DictCtrl().GetData)                        // 获取字典数据详情
+					dictData.PUT("/:id", globals.DictCtrl().UpdateData)                     // 更新字典数据
+					dictData.DELETE("/:id", globals.DictCtrl().DeleteData)                  // 删除字典数据
+					dictData.PUT("/batch/status", globals.DictCtrl().BatchUpdateDataStatus) // 批量更新状态
+					dictData.DELETE("/batch", globals.DictCtrl().BatchDeleteData)           // 批量删除
+				}
 			}
 		}
 	}
