@@ -132,5 +132,15 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+// IsSuperAdmin 检查用户是否为超级管理员
+func (u *User) IsSuperAdmin() bool {
+	return u.HasRole("super_admin")
+}
+
+// IsAdmin 检查用户是否为管理员（包括超管和租户管理员）
+func (u *User) IsAdmin() bool {
+	return u.HasAnyRole("super_admin", "admin", "tenant_admin")
+}
+
 // 超级管理员用户ID
 const SuperAdminUserId = 1

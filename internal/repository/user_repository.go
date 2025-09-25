@@ -54,6 +54,10 @@ type UserRepository interface {
 	BatchAssignRoles(userID uint64, roleIDs []uint64) error
 	// 批量移除角色
 	BatchRemoveRoles(userID uint64, roleIDs []uint64) error
+	// 获取用户总数
+	GetTotalCount() (int64, error)
+	// 根据租户ID获取用户数量
+	GetCountByTenantID(tenantID uint64) (int64, error)
 }
 
 // userRepository 用户数据访问实现
@@ -300,4 +304,18 @@ func (r *userRepository) BatchRemoveRoles(userID uint64, roleIDs []uint64) error
 		// 删除指定的角色关联
 		return tx.Where("user_id = ? AND role_id IN ?", userID, roleIDs).Delete(&model.UserRole{}).Error
 	})
+}
+
+// GetTotalCount 获取用户总数
+func (r *userRepository) GetTotalCount() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Count(&count).Error
+	return count, err
+}
+
+// GetCountByTenantID 根据租户ID获取用户数量
+func (r *userRepository) GetCountByTenantID(tenantID uint64) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("tenant_id = ?", tenantID).Count(&count).Error
+	return count, err
 }

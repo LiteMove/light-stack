@@ -28,7 +28,9 @@
       "Bash(pkill:*)",
       "Bash(go test:*)",
       "Bash(rm:*)",
-      "Bash(go vet:*)"
+      "Bash(go vet:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -18,22 +18,24 @@ var (
 	fileRepo   *repository.FileRepository
 
 	// Service 层
-	authSvc    service.AuthService
-	userSvc    service.UserService
-	roleSvc    service.RoleService
-	menuSvc    service.MenuService
-	tenantSvc  service.TenantService
-	fileSvc    *service.FileService
-	profileSvc service.ProfileService
+	authSvc      service.AuthService
+	userSvc      service.UserService
+	roleSvc      service.RoleService
+	menuSvc      service.MenuService
+	tenantSvc    service.TenantService
+	fileSvc      *service.FileService
+	profileSvc   service.ProfileService
+	dashboardSvc service.DashboardService
 
 	// Controller 层
-	authCtrl    *controller.AuthController
-	userCtrl    *controller.UserController
-	roleCtrl    *controller.RoleController
-	menuCtrl    *controller.MenuController
-	tenantCtrl  *controller.TenantController
-	fileCtrl    *controller.FileController
-	profileCtrl *controller.ProfileController
+	authCtrl      *controller.AuthController
+	userCtrl      *controller.UserController
+	roleCtrl      *controller.RoleController
+	menuCtrl      *controller.MenuController
+	tenantCtrl    *controller.TenantController
+	fileCtrl      *controller.FileController
+	profileCtrl   *controller.ProfileController
+	dashboardCtrl *controller.DashboardController
 )
 
 // Init 初始化所有服务
@@ -64,6 +66,7 @@ func initServices() {
 	tenantSvc = service.NewTenantService(tenantRepo, userRepo)
 	profileSvc = service.NewProfileService(userRepo, roleRepo, tenantRepo)
 	fileSvc = service.NewFileService(fileRepo, tenantSvc)
+	dashboardSvc = service.NewDashboardService(userRepo, tenantRepo, fileRepo)
 }
 
 func initControllers() {
@@ -74,25 +77,28 @@ func initControllers() {
 	tenantCtrl = controller.NewTenantController(tenantSvc)
 	fileCtrl = controller.NewFileController(fileSvc)
 	profileCtrl = controller.NewProfileController(profileSvc)
+	dashboardCtrl = controller.NewDashboardController(dashboardSvc)
 }
 
 // === Service 获取函数 ===
-func AuthSvc() service.AuthService       { return authSvc }
-func UserSvc() service.UserService       { return userSvc }
-func RoleSvc() service.RoleService       { return roleSvc }
-func MenuSvc() service.MenuService       { return menuSvc }
-func TenantSvc() service.TenantService   { return tenantSvc }
-func FileSvc() *service.FileService      { return fileSvc }
-func ProfileSvc() service.ProfileService { return profileSvc }
+func AuthSvc() service.AuthService           { return authSvc }
+func UserSvc() service.UserService           { return userSvc }
+func RoleSvc() service.RoleService           { return roleSvc }
+func MenuSvc() service.MenuService           { return menuSvc }
+func TenantSvc() service.TenantService       { return tenantSvc }
+func FileSvc() *service.FileService          { return fileSvc }
+func ProfileSvc() service.ProfileService     { return profileSvc }
+func DashboardSvc() service.DashboardService { return dashboardSvc }
 
 // === Controller 获取函数 ===
-func AuthCtrl() *controller.AuthController       { return authCtrl }
-func UserCtrl() *controller.UserController       { return userCtrl }
-func RoleCtrl() *controller.RoleController       { return roleCtrl }
-func MenuCtrl() *controller.MenuController       { return menuCtrl }
-func TenantCtrl() *controller.TenantController   { return tenantCtrl }
-func FileCtrl() *controller.FileController       { return fileCtrl }
-func ProfileCtrl() *controller.ProfileController { return profileCtrl }
+func AuthCtrl() *controller.AuthController           { return authCtrl }
+func UserCtrl() *controller.UserController           { return userCtrl }
+func RoleCtrl() *controller.RoleController           { return roleCtrl }
+func MenuCtrl() *controller.MenuController           { return menuCtrl }
+func TenantCtrl() *controller.TenantController       { return tenantCtrl }
+func FileCtrl() *controller.FileController           { return fileCtrl }
+func ProfileCtrl() *controller.ProfileController     { return profileCtrl }
+func DashboardCtrl() *controller.DashboardController { return dashboardCtrl }
 
 // === 权限检查函数 ===
 func CheckUserRole(userID uint64, roleCode string) bool {

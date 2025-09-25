@@ -88,9 +88,24 @@ request.interceptors.response.use(
       switch (status) {
         case 401:
           errorMessage = '登录过期，请重新登录'
-          const userStore = useUserStore()
-          userStore.logout()
-          router.push('/login')
+          console.log('Received 401 response, handling logout and redirect')
+          // 使用setTimeout延迟执行，避免在响应处理过程中同步执行logout和路由跳转
+          setTimeout(() => {
+            try {
+              const userStore = useUserStore()
+              console.log('Calling userStore.logout()')
+              userStore.logout()
+              // 确保跳转到登录页
+              if (router.currentRoute.value.path !== '/login') {
+                console.log('Redirecting to login page from:', router.currentRoute.value.path)
+                router.replace('/login')
+              } else {
+                console.log('Already on login page, no redirect needed')
+              }
+            } catch (err) {
+              console.error('Error during logout/redirect:', err)
+            }
+          }, 100)
           break
         case 403:
           errorMessage = '权限不足'

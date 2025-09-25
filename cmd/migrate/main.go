@@ -205,7 +205,6 @@ func createFileManagementMenus() {
 			Icon:      "FolderOpened",
 			SortOrder: 500,
 			IsHidden:  false,
-			IsSystem:  true,
 			Status:    1,
 		},
 	}

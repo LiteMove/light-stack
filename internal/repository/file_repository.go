@@ -114,3 +114,17 @@ func (r *FileRepository) GetAllFiles(tenantID uint64, offset, limit int, filters
 func (r *FileRepository) UpdateFile(file *model.File) error {
 	return r.db.Save(file).Error
 }
+
+// GetTotalCount 获取文件总数（超管使用）
+func (r *FileRepository) GetTotalCount() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.File{}).Count(&count).Error
+	return count, err
+}
+
+// GetCountByTenantID 根据租户ID获取文件数量
+func (r *FileRepository) GetCountByTenantID(tenantID uint64) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.File{}).Where("tenant_id = ?", tenantID).Count(&count).Error
+	return count, err
+}

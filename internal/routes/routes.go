@@ -98,6 +98,13 @@ func registerUserRoutes(api *gin.RouterGroup) {
 			files.GET("/:id/private", globals.FileCtrl().GetPrivateFile) // 获取私有文件内容
 			files.DELETE("/:id", globals.FileCtrl().DeleteFile)          // 删除文件
 		}
+
+		// 仪表盘相关路由（需要认证）
+		dashboard := v1.Group("/dashboard")
+		dashboard.Use(middleware.Auth()) // 应用JWT认证中间件
+		{
+			dashboard.GET("/stats", globals.DashboardCtrl().GetDashboardStats) // 获取仪表盘统计数据
+		}
 	}
 }
 
@@ -164,6 +171,12 @@ func registerSuperAdminRoutes(api *gin.RouterGroup) {
 				tenants.GET("/check-name", globals.TenantCtrl().CheckName)          // 检查名称可用性
 				tenants.GET("/:id/config", globals.TenantCtrl().GetTenantConfig)    // 获取租户配置
 				tenants.PUT("/:id/config", globals.TenantCtrl().UpdateTenantConfig) // 更新租户配置
+			}
+
+			// 系统信息（超管专用）
+			system := superAdmin.Group("/system")
+			{
+				system.GET("/info", globals.DashboardCtrl().GetSystemInfo) // 获取系统信息
 			}
 
 			// 角色管理

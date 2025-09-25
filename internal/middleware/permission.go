@@ -177,7 +177,42 @@ func CheckPermissionAndRole(permissions []string, roles []string) gin.HandlerFun
 
 // SuperAdmin 超级管理员验证中间件 - 快捷方式
 func SuperAdmin() gin.HandlerFunc {
-	return CheckRole("super_admin")
+	return func(c *gin.Context) {
+		userID := c.GetUint64("userId")
+		if userID == 0 {
+			response.Unauthorized(c, "未登录")
+			c.Abort()
+			return
+		}
+
+		// 优先检查JWT token中的is_super_admin标记
+		if c.GetBool("is_super_admin") {
+			c.Next()
+			return
+		}
+
+		// 备用检查：从JWT token中的roles数组检查
+		userRoles, exists := c.Get("user_roles")
+		if exists {
+			if roles, ok := userRoles.([]string); ok {
+				for _, role := range roles {
+					if role == "super_admin" {
+						c.Next()
+						return
+					}
+				}
+			}
+		}
+
+		// 最后检查权限缓存
+		if permission.Cache.HasAnyRole(userID, "super_admin") {
+			c.Next()
+			return
+		}
+
+		response.Forbidden(c, "需要超级管理员权限")
+		c.Abort()
+	}
 }
 
 // Admin 管理员验证中间件 - 快捷方式（包含超级管理员）

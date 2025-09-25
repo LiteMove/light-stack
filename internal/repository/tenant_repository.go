@@ -32,6 +32,8 @@ type TenantRepository interface {
 	HasUsers(id uint64) (bool, error)
 	// 获取启用的租户列表
 	GetSelectList() ([]*model.Tenant, error)
+	// 获取租户总数
+	GetTotalCount() (int64, error)
 }
 
 // tenantRepository 租户数据访问实现
@@ -160,4 +162,11 @@ func (r *tenantRepository) GetSelectList() ([]*model.Tenant, error) {
 		return nil, err
 	}
 	return tenants, nil
+}
+
+// GetTotalCount 获取租户总数
+func (r *tenantRepository) GetTotalCount() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Tenant{}).Count(&count).Error
+	return count, err
 }
