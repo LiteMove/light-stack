@@ -420,16 +420,51 @@ func (c *TenantController) GetTenantByDomain(ctx *gin.Context) {
 		}
 	}
 
-	// 对于localhost或127.0.0.1，返回系统默认配置
+	// 对于localhost或127.0.0.1，获取系统租户配置
 	if domain == "localhost" || domain == "127.0.0.1" || domain == "" {
-		displayInfo := TenantDisplayInfo{
-			ID:          1,
-			Name:        "系统租户",
-			SystemName:  "Light Stack",
-			Logo:        "",
-			Description: "轻量级管理系统",
-			Copyright:   "© 2024 Light Stack. All rights reserved.",
+		// 获取系统租户（ID=1）的配置
+		tenant, err := c.tenantService.GetTenant(model.SystemTenantId)
+		if err != nil {
+			// 如果获取失败，返回默认配置
+			displayInfo := TenantDisplayInfo{
+				ID:          1,
+				Name:        "系统租户",
+				SystemName:  "Light Stack",
+				Logo:        "",
+				Description: "轻量级管理系统",
+				Copyright:   "© 2024 Light Stack. All rights reserved.",
+			}
+			response.Success(ctx, displayInfo)
+			return
 		}
+
+		// 解析租户配置
+		config, err := tenant.GetConfig()
+		if err != nil {
+			response.InternalServerError(ctx, "获取租户配置失败")
+			return
+		}
+
+		// 构建展示信息
+		displayInfo := TenantDisplayInfo{
+			ID:          tenant.ID,
+			Name:        tenant.Name,
+			SystemName:  config.SystemName,
+			Logo:        config.Logo,
+			Description: config.Description,
+			Copyright:   config.Copyright,
+		}
+
+		// 如果没有配置系统名称，使用租户名称
+		if displayInfo.SystemName == "" {
+			displayInfo.SystemName = tenant.Name
+		}
+
+		// 如果没有配置版权信息，使用默认值
+		if displayInfo.Copyright == "" {
+			displayInfo.Copyright = "© 2024 " + displayInfo.SystemName + ". All rights reserved."
+		}
+
 		response.Success(ctx, displayInfo)
 		return
 	}

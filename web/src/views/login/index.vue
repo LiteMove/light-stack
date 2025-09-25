@@ -12,7 +12,7 @@
         <div v-if="systemLogo" class="logo-container">
           <img :src="systemLogo" :alt="systemName" class="system-logo" @error="handleLogoError" />
         </div>
-        <h3 class="title">{{ systemName }} 管理平台</h3>
+        <h3 class="title">{{ systemName }}</h3>
       </div>
 
       <el-form-item prop="username">
