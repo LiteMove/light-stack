@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/LiteMove/light-stack/internal/config"
-	"github.com/LiteMove/light-stack/internal/controller"
 	"github.com/LiteMove/light-stack/internal/middleware"
+	"github.com/LiteMove/light-stack/internal/routes"
 	"github.com/LiteMove/light-stack/internal/utils"
 	"github.com/LiteMove/light-stack/pkg/cache"
 	"github.com/LiteMove/light-stack/pkg/database"
@@ -57,14 +56,8 @@ func main() {
 	}))
 	r.Use(middleware.ResponseMiddleware())
 
-	// 注册路由
-	controller.RegisterRoutes(r)
-
-	hashedPassword, err := utils.HashPassword("admin123")
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
-	fmt.Printf("Hashed Password: %s\n", hashedPassword)
+	// 注册路由 - 使用简化架构
+	routes.RegisterRoutes(r)
 
 	// 启动服务器
 	port := config.Get().Server.Port

@@ -306,7 +306,7 @@
                 />
               </el-tooltip>
               <el-tooltip 
-                v-if="$hasPer('system:user:assign')"
+                v-if="$hasPer('system:user:role:assign')"
                 content="分配角色" 
                 placement="top"
               >

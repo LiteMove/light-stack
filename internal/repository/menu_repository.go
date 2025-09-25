@@ -139,12 +139,33 @@ func (r *menuRepository) GetTree() ([]model.Menu, error) {
 
 // GetUserMenus 获取用户菜单
 func (r *menuRepository) GetUserMenus(userID uint64) ([]model.Menu, error) {
+	// 先检查用户是否为超级管理员
+	var isSuper bool
+	err := r.db.Table("user_roles").
+		Joins("JOIN roles ON user_roles.role_id = roles.id").
+		Where("user_roles.user_id = ? AND roles.code = 'super_admin' AND roles.status = 1", userID).
+		Select("COUNT(*)").
+		Row().Scan(&isSuper)
+	if err != nil {
+		return nil, err
+	}
+
 	var menus []model.Menu
-	err := r.db.Table("menus").
+
+	// 如果是超级管理员，返回所有菜单和目录（不包括权限类型）
+	if isSuper {
+		err := r.db.Where("status = ? AND type IN ('directory', 'menu')", 1).
+			Order("sort_order ASC, id ASC").
+			Find(&menus).Error
+		return menus, err
+	}
+
+	// 普通用户通过角色权限查询
+	err = r.db.Table("menus").
 		Select("DISTINCT menus.*").
 		Joins("JOIN role_menus ON menus.id = role_menus.menu_id").
 		Joins("JOIN user_roles ON role_menus.role_id = user_roles.role_id").
-		Where("user_roles.user_id = ? AND menus.status = ?", userID, 1).
+		Where("user_roles.user_id = ? AND menus.status = ? AND menus.type IN ('directory', 'menu')", userID, 1).
 		Order("menus.sort_order ASC, menus.id ASC").
 		Find(&menus).Error
 	return menus, err
@@ -152,8 +173,29 @@ func (r *menuRepository) GetUserMenus(userID uint64) ([]model.Menu, error) {
 
 // GetUserPermissions 获取用户权限代码
 func (r *menuRepository) GetUserPermissions(userID uint64) ([]string, error) {
+	// 先检查用户是否为超级管理员
+	var isSuper bool
+	err := r.db.Table("user_roles").
+		Joins("JOIN roles ON user_roles.role_id = roles.id").
+		Where("user_roles.user_id = ? AND roles.code = 'super_admin' AND roles.status = 1", userID).
+		Select("COUNT(*)").
+		Row().Scan(&isSuper)
+	if err != nil {
+		return nil, err
+	}
+
 	var permissions []string
-	err := r.db.Table("menus").
+
+	// 如果是超级管理员，返回所有权限代码（type='permission'的code）
+	if isSuper {
+		err := r.db.Model(&model.Menu{}).
+			Where("status = ? AND type = 'permission' AND code != ''", 1).
+			Pluck("code", &permissions).Error
+		return permissions, err
+	}
+
+	// 普通用户通过角色权限查询
+	err = r.db.Table("menus").
 		Select("DISTINCT menus.code").
 		Joins("JOIN role_menus ON menus.id = role_menus.menu_id").
 		Joins("JOIN user_roles ON role_menus.role_id = user_roles.role_id").
