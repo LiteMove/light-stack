@@ -25,7 +25,9 @@
       "Bash(./menu_validation.exe)",
       "Bash(menu_validation)",
       "Bash(menu_validation.exe)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(go test:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
