@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+
 	"github.com/LiteMove/light-stack/internal/model"
 	"gorm.io/gorm"
 )

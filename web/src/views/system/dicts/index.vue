@@ -767,48 +767,70 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .dict-management {
-  padding: 20px;
-  background: #f5f5f5;
-  min-height: calc(100vh - 60px);
+  padding: 24px;
+  background-color: #f5f6fa;
+  min-height: calc(100vh - 64px);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 
   .header-left {
     flex: 1;
+    color: white;
 
     .page-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 24px;
+      gap: 12px;
+      font-size: 28px;
       font-weight: 600;
-      color: #1f2937;
       margin: 0 0 8px 0;
 
       .title-icon {
-        color: #6366f1;
+        font-size: 32px;
       }
     }
 
     .page-desc {
-      color: #6b7280;
-      font-size: 14px;
       margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.4;
     }
   }
 
   .header-actions {
     display: flex;
     gap: 12px;
+
+    .el-button {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(10px);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      &.el-button--primary {
+        background: rgba(255, 255, 255, 0.2);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
   }
 }
 
@@ -821,6 +843,9 @@ onMounted(() => {
 .type-card {
   width: 350px;
   flex-shrink: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e4e7ed;
 
   .card-header {
     display: flex;
@@ -832,7 +857,7 @@ onMounted(() => {
       align-items: center;
       gap: 8px;
       font-weight: 600;
-      color: #1f2937;
+      color: #303133;
     }
   }
 
@@ -897,6 +922,9 @@ onMounted(() => {
 
 .data-card {
   flex: 1;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e4e7ed;
 
   .card-header {
     display: flex;
@@ -908,7 +936,7 @@ onMounted(() => {
       align-items: center;
       gap: 8px;
       font-weight: 600;
-      color: #1f2937;
+      color: #303133;
 
       .type-tag {
         margin-left: 8px;
