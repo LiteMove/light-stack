@@ -235,6 +235,33 @@ func registerSuperAdminRoutes(api *gin.RouterGroup) {
 					dictData.DELETE("/batch", globals.DictCtrl().BatchDeleteData)           // 批量删除
 				}
 			}
+
+			// 代码生成器管理
+			generator := superAdmin.Group("/gen")
+			{
+				// 数据库表分析
+				generator.GET("/tables", globals.GeneratorCtrl().GetTableList)                       // 获取数据库表列表
+				generator.GET("/tables/:tableName", globals.GeneratorCtrl().GetTableInfo)            // 获取表结构信息
+				generator.GET("/tables/:tableName/columns", globals.GeneratorCtrl().GetTableColumns) // 获取表字段信息
+
+				// 生成配置管理
+				generator.POST("/configs", globals.GenConfigCtrl().CreateConfig)                         // 创建生成配置
+				generator.GET("/configs", globals.GenConfigCtrl().GetConfigList)                         // 获取配置列表
+				generator.GET("/configs/:id", globals.GenConfigCtrl().GetConfig)                         // 获取配置详情
+				generator.PUT("/configs/:id", globals.GenConfigCtrl().UpdateConfig)                      // 更新配置
+				generator.DELETE("/configs/:id", globals.GenConfigCtrl().DeleteConfig)                   // 删除配置
+				generator.POST("/configs/import/:tableName", globals.GenConfigCtrl().ImportTableConfig)  // 导入表配置
+				generator.GET("/configs/table/:tableName", globals.GenConfigCtrl().GetConfigByTableName) // 根据表名获取配置
+
+				// 代码生成
+				generator.POST("/generate/:configId", globals.GeneratorCtrl().GenerateCode)            // 生成代码
+				generator.GET("/preview/:configId/:templateName", globals.GeneratorCtrl().PreviewCode) // 预览代码
+				generator.GET("/download/:configId", globals.GeneratorCtrl().DownloadCode)             // 下载代码包
+				generator.GET("/templates", globals.GeneratorCtrl().GetAvailableTemplates)             // 获取可用模板
+
+				// 生成历史
+				generator.GET("/history", globals.GeneratorCtrl().GetHistory) // 获取生成历史
+			}
 		}
 	}
 }

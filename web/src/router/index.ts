@@ -42,6 +42,55 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/generator',
+    component: Layout,
+    meta: {
+      title: '代码生成器',
+      icon: 'Tools',
+      roles: ['super_admin'] // 只有超级管理员可以访问
+    },
+    children: [
+      {
+        path: '/generator/tables',
+        name: 'GeneratorTables',
+        component: () => import('@/views/generator/TableSelection.vue'),
+        meta: {
+          title: '表选择',
+          icon: 'List'
+        }
+      },
+      {
+        path: '/generator/config/:tableId',
+        name: 'GeneratorConfig',
+        component: () => import('@/views/generator/Configuration.vue'),
+        meta: {
+          title: '代码配置',
+          icon: 'Setting',
+          hidden: true
+        }
+      },
+      {
+        path: '/generator/preview/:configId',
+        name: 'GeneratorPreview',
+        component: () => import('@/views/generator/Preview.vue'),
+        meta: {
+          title: '代码预览',
+          icon: 'View',
+          hidden: true
+        }
+      },
+      {
+        path: '/generator/history',
+        name: 'GeneratorHistory',
+        component: () => import('@/views/generator/History.vue'),
+        meta: {
+          title: '生成历史',
+          icon: 'Clock'
+        }
+      }
+    ]
+  },
+  {
     path: '/404',
     name: '404',
     component: () => import('@/views/error/404.vue'),

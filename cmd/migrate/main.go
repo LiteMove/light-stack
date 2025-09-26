@@ -36,6 +36,9 @@ func main() {
 		&model.UserRole{},
 		&model.RoleMenus{},
 		&model.File{},
+		&model.GenTableConfig{},
+		&model.GenTableColumn{},
+		&model.GenHistory{},
 	)
 
 	if err != nil {
