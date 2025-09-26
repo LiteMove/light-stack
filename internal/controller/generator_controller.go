@@ -19,6 +19,7 @@ type GeneratorController struct {
 	configService *service.GenConfigService
 	codeGenerator *generator.CodeGenerator
 	filePackager  *generator.FilePackager
+	menuService   service.MenuService
 }
 
 // NewGeneratorController 创建代码生成器控制器
@@ -27,12 +28,14 @@ func NewGeneratorController(
 	configService *service.GenConfigService,
 	codeGenerator *generator.CodeGenerator,
 	filePackager *generator.FilePackager,
+	menuService service.MenuService,
 ) *GeneratorController {
 	return &GeneratorController{
 		dbService:     dbService,
 		configService: configService,
 		codeGenerator: codeGenerator,
 		filePackager:  filePackager,
+		menuService:   menuService,
 	}
 }
 
@@ -224,37 +227,14 @@ func (c *GeneratorController) DownloadCode(ctx *gin.Context) {
 
 // GetSystemMenus 获取系统现有菜单树
 func (c *GeneratorController) GetSystemMenus(ctx *gin.Context) {
-	// 这里需要调用菜单服务获取系统菜单
-	// 简化实现，返回模拟数据
-	menus := []gin.H{
-		{
-			"id":   1,
-			"name": "系统管理",
-			"path": "/system",
-			"icon": "system",
-			"children": []gin.H{
-				{"id": 11, "name": "用户管理", "path": "/system/user", "icon": "user"},
-				{"id": 12, "name": "角色管理", "path": "/system/role", "icon": "role"},
-				{"id": 13, "name": "菜单管理", "path": "/system/menu", "icon": "menu"},
-			},
-		},
-		{
-			"id":   2,
-			"name": "内容管理",
-			"path": "/content",
-			"icon": "content",
-			"children": []gin.H{
-				{"id": 21, "name": "文章管理", "path": "/content/article", "icon": "article"},
-				{"id": 22, "name": "分类管理", "path": "/content/category", "icon": "category"},
-			},
-		},
+	// 复用菜单管理的代码获取菜单树
+	tree, err := c.menuService.GetMenuTree()
+	if err != nil {
+		response.BadRequest(ctx, "获取菜单树失败: "+err.Error())
+		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "获取成功",
-		"data": menus,
-	})
+	response.Success(ctx, tree)
 }
 
 // GetHistory 获取生成历史记录

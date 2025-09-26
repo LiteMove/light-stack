@@ -22,8 +22,9 @@
       </div>
     </div>
 
-    <!-- 配置表单 -->
-    <div class="config-container">
+    <!-- 配置表单 - 添加滚动容器 -->
+    <div class="config-scroll-container">
+      <div class="config-container">
       <el-form
         ref="configFormRef"
         :model="configForm"
@@ -147,28 +148,37 @@
           </el-row>
         </el-card>
 
-        <!-- 权限配置 -->
+        <!-- 权限配置 - 改为只读显示，不允许编辑 -->
         <el-card class="config-card" shadow="never">
           <template #header>
             <div class="card-header">
               <el-icon><Key /></el-icon>
               <span>权限配置</span>
-              <el-button
-                size="small"
-                type="text"
-                @click="generatePermissions"
-                style="margin-left: auto;"
-              >
-                自动生成
-              </el-button>
+              <span style="margin-left: auto; font-size: 12px; color: #909399; font-weight: normal;">
+                权限将根据模块名和业务名自动生成
+              </span>
             </div>
           </template>
 
-          <PermissionGenerator
-            v-model="configForm.permissions"
-            :module-name="configForm.moduleName"
-            :business-name="configForm.businessName"
-          />
+          <div class="permission-display">
+            <el-row v-if="generatedPermissions.length > 0">
+              <el-col :span="24">
+                <div class="permission-list">
+                  <el-tag
+                    v-for="permission in generatedPermissions"
+                    :key="permission"
+                    class="permission-tag"
+                    effect="plain"
+                  >
+                    {{ permission }}
+                  </el-tag>
+                </div>
+              </el-col>
+            </el-row>
+            <div v-else class="no-permission-tip">
+              <el-text type="info">请先配置模块名和业务名，权限将自动生成</el-text>
+            </div>
+          </div>
         </el-card>
 
         <!-- 字段配置 -->
@@ -195,6 +205,7 @@
         </el-card>
       </el-form>
     </div>
+    </div>
 
     <!-- 图标选择器对话框 -->
     <el-dialog v-model="showIconSelector" title="选择图标" width="60%">
@@ -214,7 +225,6 @@ import { ArrowLeft, View, Tools, InfoFilled, Menu, Key, Grid } from '@element-pl
 import { getTableColumns, getSystemMenus, saveGenConfig, generateCode, previewCode } from '@/api/generator'
 import type { TableColumn, GenTableConfig, SystemMenu, GenTableColumn } from '@/types/generator'
 import MenuSelector from '@/components/Generator/MenuSelector.vue'
-import PermissionGenerator from '@/components/Generator/PermissionGenerator.vue'
 import FieldConfigTable from '@/components/Generator/FieldConfigTable.vue'
 
 const route = useRoute()
@@ -270,6 +280,22 @@ const configRules = {
 
 // 计算属性
 const tableId = computed(() => route.params.tableId as string)
+
+// 根据模块名和业务名自动生成权限
+const generatedPermissions = computed(() => {
+  const moduleName = configForm.moduleName || ''
+  const businessName = configForm.businessName || ''
+
+  if (!moduleName || !businessName) return []
+
+  return [
+    `${moduleName}:${businessName}:list`,
+    `${moduleName}:${businessName}:add`,
+    `${moduleName}:${businessName}:edit`,
+    `${moduleName}:${businessName}:delete`,
+    `${moduleName}:${businessName}:view`
+  ]
+})
 
 // 方法
 const loadTableColumns = async () => {
@@ -355,20 +381,9 @@ const updateDerivedFields = () => {
     configForm.functionName = businessName + '管理'
     configForm.menuName = configForm.functionName
     configForm.menuUrl = `/${businessName}`
+    // 自动更新权限配置
+    configForm.permissions = generatedPermissions.value
   }
-}
-
-const generatePermissions = () => {
-  const moduleName = configForm.moduleName || 'system'
-  const businessName = configForm.businessName || 'example'
-
-  configForm.permissions = [
-    `${moduleName}:${businessName}:list`,
-    `${moduleName}:${businessName}:add`,
-    `${moduleName}:${businessName}:edit`,
-    `${moduleName}:${businessName}:delete`,
-    `${moduleName}:${businessName}:view`
-  ]
 }
 
 const resetFieldConfig = async () => {
@@ -399,6 +414,9 @@ const handlePreview = async () => {
 
   previewLoading.value = true
   try {
+    // 确保权限配置是最新的
+    configForm.permissions = generatedPermissions.value
+
     // 先保存配置
     const saveResponse = await saveGenConfig(configForm)
     const configId = saveResponse.data.id
@@ -439,6 +457,9 @@ const handleGenerate = async () => {
 
   generateLoading.value = true
   try {
+    // 确保权限配置是最新的
+    configForm.permissions = generatedPermissions.value
+
     // 保存配置
     const saveResponse = await saveGenConfig(configForm)
     const configId = saveResponse.data.id
@@ -479,7 +500,11 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .configuration-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -491,6 +516,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 
   .header-content {
     .title {
@@ -513,9 +539,16 @@ onMounted(() => {
   }
 }
 
+.config-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .config-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding-bottom: 40px;
 }
 
 .config-card {
@@ -542,5 +575,28 @@ onMounted(() => {
   .el-icon {
     color: #409eff;
   }
+}
+
+.permission-display {
+  padding: 20px 0;
+}
+
+.permission-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.permission-tag {
+  font-family: 'Monaco', 'Consolas', monospace;
+  padding: 4px 12px;
+  background-color: #f5f7fa;
+  border-color: #dcdfe6;
+}
+
+.no-permission-tip {
+  text-align: center;
+  padding: 40px 0;
+  color: #909399;
 }
 </style>

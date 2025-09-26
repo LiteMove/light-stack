@@ -107,7 +107,7 @@ export function downloadCode(taskId: string) {
 // 获取系统现有菜单树
 export function getSystemMenus() {
   return request<SystemMenu[]>({
-    url: '/v1/super-admin/gen/system/menus',
+    url: '/v1/super-admin/gen/menus/tree',
     method: 'get'
   })
 }

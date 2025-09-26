@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -30,10 +31,56 @@ func (s *GenConfigService) CreateConfig(req *CreateConfigRequest) (*model.GenTab
 		return nil, err
 	}
 
-	// 检查是否已存在配置
+	// 检查是否已存在配置，如果存在则更新
 	existing, _ := s.repo.GetByTableName(req.TableName)
 	if existing != nil {
-		return nil, fmt.Errorf("表 '%s' 的配置已存在", req.TableName)
+		// 构建更新请求
+		updateReq := &UpdateConfigRequest{
+			BusinessName: req.BusinessName,
+			ModuleName:   req.ModuleName,
+			FunctionName: req.FunctionName,
+			Author:       req.Author,
+			ParentMenuID: req.ParentMenuID,
+			MenuName:     req.MenuName,
+			MenuURL:      req.MenuURL,
+			MenuIcon:     req.MenuIcon,
+			Options:      req.Options,
+			Remark:       req.Remark,
+			UpdatedBy:    req.CreatedBy, // 使用创建人作为更新人
+		}
+
+		// 获取表信息以更新字段配置
+		tableInfo, err := s.dbService.GetTableInfo(req.TableName)
+		if err != nil {
+			return nil, fmt.Errorf("获取表信息失败: %v", err)
+		}
+
+		// 构建字段配置
+		var columns []UpdateColumnConfigRequest
+		for _, col := range tableInfo.Columns {
+			column := UpdateColumnConfigRequest{
+				ColumnName:    col.ColumnName,
+				ColumnComment: col.ColumnComment,
+				ColumnType:    col.ColumnType,
+				GoType:        col.GoType,
+				GoField:       col.GoField,
+				IsPk:          col.IsPk,
+				IsIncrement:   col.IsIncrement,
+				IsRequired:    col.IsRequired,
+				IsInsert:      col.IsInsert,
+				IsEdit:        col.IsEdit,
+				IsList:        col.IsList,
+				IsQuery:       col.IsQuery,
+				QueryType:     col.QueryType,
+				HtmlType:      col.HtmlType,
+				DictType:      col.DictType,
+			}
+			columns = append(columns, column)
+		}
+		updateReq.Columns = columns
+
+		// 调用更新方法
+		return s.UpdateConfig(existing.ID, updateReq)
 	}
 
 	// 获取表信息
@@ -43,6 +90,18 @@ func (s *GenConfigService) CreateConfig(req *CreateConfigRequest) (*model.GenTab
 	}
 
 	// 构建配置
+	// 序列化权限
+	permissionsJSON, err := json.Marshal(utils.GeneratePermissions(req.ModuleName, req.BusinessName))
+	if err != nil {
+		return nil, fmt.Errorf("序列化权限失败: %v", err)
+	}
+
+	// 序列化选项
+	optionsJSON, err := json.Marshal(req.Options)
+	if err != nil {
+		return nil, fmt.Errorf("序列化选项失败: %v", err)
+	}
+
 	config := &model.GenTableConfig{
 		TableName:    req.TableName,
 		TableComment: tableInfo.TableComment,
@@ -56,8 +115,8 @@ func (s *GenConfigService) CreateConfig(req *CreateConfigRequest) (*model.GenTab
 		MenuName:     req.MenuName,
 		MenuURL:      req.MenuURL,
 		MenuIcon:     req.MenuIcon,
-		Permissions:  utils.GeneratePermissions(req.ModuleName, req.BusinessName),
-		Options:      req.Options,
+		Permissions:  string(permissionsJSON),
+		Options:      string(optionsJSON),
 		Remark:       req.Remark,
 		CreatedBy:    req.CreatedBy,
 	}
@@ -109,12 +168,14 @@ func (s *GenConfigService) UpdateConfig(id int64, req *UpdateConfigRequest) (*mo
 	if req.BusinessName != "" {
 		config.BusinessName = req.BusinessName
 		config.ClassName = utils.ToPascalCase(req.BusinessName)
-		config.Permissions = utils.GeneratePermissions(config.ModuleName, req.BusinessName)
+		permissionsJSON, _ := json.Marshal(utils.GeneratePermissions(config.ModuleName, req.BusinessName))
+		config.Permissions = string(permissionsJSON)
 	}
 	if req.ModuleName != "" {
 		config.ModuleName = req.ModuleName
 		config.PackageName = strings.ToLower(req.ModuleName)
-		config.Permissions = utils.GeneratePermissions(req.ModuleName, config.BusinessName)
+		permissionsJSON, _ := json.Marshal(utils.GeneratePermissions(req.ModuleName, config.BusinessName))
+		config.Permissions = string(permissionsJSON)
 	}
 	if req.FunctionName != "" {
 		config.FunctionName = req.FunctionName
@@ -250,7 +311,7 @@ func (s *GenConfigService) ImportTableConfig(tableName string, req *ImportTableC
 		MenuName:     tableInfo.TableComment,
 		MenuURL:      "/" + strings.ToLower(moduleName) + "/" + strings.ToLower(businessName),
 		MenuIcon:     "table",
-		Options:      model.OptionConfig{},
+		Options:      model.OptionConfig{}, // 空的结构体，在CreateConfig中会被序列化为JSON
 		Remark:       fmt.Sprintf("从表 %s 导入的配置", tableName),
 		CreatedBy:    req.CreatedBy,
 	}

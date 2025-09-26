@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/LiteMove/light-stack/pkg/response"
 	"net/http"
 	"strconv"
 
@@ -24,7 +25,7 @@ func NewGenConfigController(service *service.GenConfigService) *GenConfigControl
 func (c *GenConfigController) CreateConfig(ctx *gin.Context) {
 	var req service.CreateConfigRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		response.BadRequest(ctx, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -37,15 +38,11 @@ func (c *GenConfigController) CreateConfig(ctx *gin.Context) {
 
 	config, err := c.service.CreateConfig(&req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "创建成功",
-		"data": config,
-	})
+	response.Success(ctx, config)
 }
 
 // UpdateConfig 更新配置
@@ -53,13 +50,13 @@ func (c *GenConfigController) UpdateConfig(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的配置ID"})
+		response.BadRequest(ctx, "无效的配置ID")
 		return
 	}
 
 	var req service.UpdateConfigRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		response.BadRequest(ctx, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -72,15 +69,11 @@ func (c *GenConfigController) UpdateConfig(ctx *gin.Context) {
 
 	config, err := c.service.UpdateConfig(id, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "更新成功",
-		"data": config,
-	})
+	response.Success(ctx, config)
 }
 
 // GetConfig 获取配置详情
@@ -88,21 +81,17 @@ func (c *GenConfigController) GetConfig(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的配置ID"})
+		response.BadRequest(ctx, "无效的配置ID")
 		return
 	}
 
 	config, err := c.service.GetConfig(id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "获取成功",
-		"data": config,
-	})
+	response.Success(ctx, config)
 }
 
 // GetConfigList 获取配置列表
@@ -130,7 +119,7 @@ func (c *GenConfigController) GetConfigList(ctx *gin.Context) {
 
 	configs, total, err := c.service.GetConfigList(&req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
@@ -144,6 +133,12 @@ func (c *GenConfigController) GetConfigList(ctx *gin.Context) {
 			"size":    size,
 		},
 	})
+	response.Success(ctx, gin.H{
+		"records": configs,
+		"total":   total,
+		"page":    page,
+		"size":    size,
+	})
 }
 
 // DeleteConfig 删除配置
@@ -151,32 +146,29 @@ func (c *GenConfigController) DeleteConfig(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的配置ID"})
+		response.BadRequest(ctx, "无效的配置ID")
 		return
 	}
 
 	if err := c.service.DeleteConfig(id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "删除成功",
-	})
+	response.Success(ctx, "删除成功")
 }
 
 // ImportTableConfig 导入表配置
 func (c *GenConfigController) ImportTableConfig(ctx *gin.Context) {
 	tableName := ctx.Param("tableName")
 	if tableName == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "表名不能为空"})
+		response.BadRequest(ctx, "表名不能为空")
 		return
 	}
 
 	var req service.ImportTableConfigRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		response.BadRequest(ctx, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -189,34 +181,26 @@ func (c *GenConfigController) ImportTableConfig(ctx *gin.Context) {
 
 	config, err := c.service.ImportTableConfig(tableName, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "导入成功",
-		"data": config,
-	})
+	response.Success(ctx, config)
 }
 
 // GetConfigByTableName 根据表名获取配置
 func (c *GenConfigController) GetConfigByTableName(ctx *gin.Context) {
 	tableName := ctx.Param("tableName")
 	if tableName == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "表名不能为空"})
+		response.BadRequest(ctx, "表名不能为空")
 		return
 	}
 
 	config, err := c.service.GetConfigByTableName(tableName)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		response.BadRequest(ctx, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "获取成功",
-		"data": config,
-	})
+	response.Success(ctx, config)
 }

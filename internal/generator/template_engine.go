@@ -168,8 +168,8 @@ func (e *TemplateEngine) PrepareTemplateData(config *model.GenTableConfig) *mode
 		MenuName:     config.MenuName,
 		MenuURL:      config.MenuURL,
 		MenuIcon:     config.MenuIcon,
-		Permissions:  config.Permissions,
-		Options:      config.Options,
+		Permissions:  config.GetPermissions(),
+		Options:      config.GetOptions(),
 	}
 
 	// 转换字段信息

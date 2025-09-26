@@ -111,7 +111,7 @@ func initControllers() {
 	profileCtrl = controller.NewProfileController(profileSvc)
 	dashboardCtrl = controller.NewDashboardController(dashboardSvc)
 	dictCtrl = controller.NewDictController(dictSvc)
-	generatorCtrl = controller.NewGeneratorController(dbAnalyzerSvc, genConfigSvc, codeGenerator, filePackager)
+	generatorCtrl = controller.NewGeneratorController(dbAnalyzerSvc, genConfigSvc, codeGenerator, filePackager, menuSvc)
 	genConfigCtrl = controller.NewGenConfigController(genConfigSvc)
 }
 

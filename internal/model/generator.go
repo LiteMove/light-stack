@@ -7,29 +7,67 @@ import (
 
 // GenTableConfig 代码生成表配置
 type GenTableConfig struct {
-	ID           int64             `json:"id" gorm:"primaryKey;autoIncrement;comment:配置ID"`
-	TableName    string            `json:"tableName" gorm:"size:64;not null;uniqueIndex:uk_table_name;comment:表名称"`
-	TableComment string            `json:"tableComment" gorm:"size:255;default:'';comment:表描述"`
-	BusinessName string            `json:"businessName" gorm:"size:64;not null;index:idx_business_name;comment:业务名称"`
-	ModuleName   string            `json:"moduleName" gorm:"size:64;not null;index:idx_module_name;comment:模块名称"`
-	FunctionName string            `json:"functionName" gorm:"size:64;not null;comment:功能名称"`
-	ClassName    string            `json:"className" gorm:"size:64;not null;comment:类名"`
-	PackageName  string            `json:"packageName" gorm:"size:64;not null;comment:包名"`
-	Author       string            `json:"author" gorm:"size:64;default:system;comment:作者"`
-	ParentMenuID *int64            `json:"parentMenuId" gorm:"comment:父级菜单ID"`
-	MenuName     string            `json:"menuName" gorm:"size:64;default:'';comment:菜单名称"`
-	MenuURL      string            `json:"menuUrl" gorm:"size:255;default:'';comment:菜单URL"`
-	MenuIcon     string            `json:"menuIcon" gorm:"size:64;default:'';comment:菜单图标"`
-	Permissions  PermissionStrings `json:"permissions" gorm:"type:text;comment:权限字符串(JSON数组)"`
-	Options      OptionConfig      `json:"options" gorm:"type:text;comment:其他配置选项(JSON)"`
-	Remark       string            `json:"remark" gorm:"size:500;default:'';comment:备注"`
-	CreatedAt    time.Time         `json:"createdAt" gorm:"autoCreateTime;comment:创建时间"`
-	UpdatedAt    time.Time         `json:"updatedAt" gorm:"autoUpdateTime;comment:更新时间"`
-	CreatedBy    *int64            `json:"createdBy" gorm:"comment:创建人"`
-	UpdatedBy    *int64            `json:"updatedBy" gorm:"comment:更新人"`
+	ID           int64     `json:"id" gorm:"primaryKey;autoIncrement;comment:配置ID"`
+	TableName    string    `json:"tableName" gorm:"size:64;not null;uniqueIndex:uk_table_name;comment:表名称"`
+	TableComment string    `json:"tableComment" gorm:"size:255;default:'';comment:表描述"`
+	BusinessName string    `json:"businessName" gorm:"size:64;not null;index:idx_business_name;comment:业务名称"`
+	ModuleName   string    `json:"moduleName" gorm:"size:64;not null;index:idx_module_name;comment:模块名称"`
+	FunctionName string    `json:"functionName" gorm:"size:64;not null;comment:功能名称"`
+	ClassName    string    `json:"className" gorm:"size:64;not null;comment:类名"`
+	PackageName  string    `json:"packageName" gorm:"size:64;not null;comment:包名"`
+	Author       string    `json:"author" gorm:"size:64;default:system;comment:作者"`
+	ParentMenuID *int64    `json:"parentMenuId" gorm:"comment:父级菜单ID"`
+	MenuName     string    `json:"menuName" gorm:"size:64;default:'';comment:菜单名称"`
+	MenuURL      string    `json:"menuUrl" gorm:"size:255;default:'';comment:菜单URL"`
+	MenuIcon     string    `json:"menuIcon" gorm:"size:64;default:'';comment:菜单图标"`
+	Permissions  string    `json:"permissions" gorm:"type:text;comment:权限字符串(JSON数组)"`
+	Options      string    `json:"options" gorm:"type:text;comment:其他配置选项(JSON)"`
+	Remark       string    `json:"remark" gorm:"size:500;default:'';comment:备注"`
+	CreatedAt    time.Time `json:"createdAt" gorm:"autoCreateTime;comment:创建时间"`
+	UpdatedAt    time.Time `json:"updatedAt" gorm:"autoUpdateTime;comment:更新时间"`
+	CreatedBy    *int64    `json:"createdBy" gorm:"comment:创建人"`
+	UpdatedBy    *int64    `json:"updatedBy" gorm:"comment:更新人"`
 
 	// 关联字段配置
 	Columns []GenTableColumn `json:"columns" gorm:"foreignKey:TableConfigID;constraint:OnDelete:CASCADE"`
+}
+
+// GetPermissions 获取权限列表
+func (g *GenTableConfig) GetPermissions() []string {
+	var permissions []string
+	if g.Permissions != "" {
+		json.Unmarshal([]byte(g.Permissions), &permissions)
+	}
+	return permissions
+}
+
+// SetPermissions 设置权限列表
+func (g *GenTableConfig) SetPermissions(permissions []string) error {
+	data, err := json.Marshal(permissions)
+	if err != nil {
+		return err
+	}
+	g.Permissions = string(data)
+	return nil
+}
+
+// GetOptions 获取选项配置
+func (g *GenTableConfig) GetOptions() OptionConfig {
+	var options OptionConfig
+	if g.Options != "" {
+		json.Unmarshal([]byte(g.Options), &options)
+	}
+	return options
+}
+
+// SetOptions 设置选项配置
+func (g *GenTableConfig) SetOptions(options OptionConfig) error {
+	data, err := json.Marshal(options)
+	if err != nil {
+		return err
+	}
+	g.Options = string(data)
+	return nil
 }
 
 // GenTableColumn 代码生成字段配置
@@ -74,35 +112,6 @@ type GenHistory struct {
 	CreatedBy     *int64    `json:"createdBy" gorm:"comment:创建人"`
 }
 
-// PermissionStrings 权限字符串数组类型
-type PermissionStrings []string
-
-// 实现 database/sql/driver.Valuer 接口
-func (p PermissionStrings) Value() (interface{}, error) {
-	if len(p) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(p)
-}
-
-// 实现 database/sql.Scanner 接口
-func (p *PermissionStrings) Scan(value interface{}) error {
-	if value == nil {
-		*p = nil
-		return nil
-	}
-
-	var bytes []byte
-	switch v := value.(type) {
-	case []byte:
-		bytes = v
-	case string:
-		bytes = []byte(v)
-	}
-
-	return json.Unmarshal(bytes, p)
-}
-
 // OptionConfig 其他配置选项
 type OptionConfig struct {
 	GenPath    string `json:"genPath"`    // 生成路径
@@ -111,28 +120,6 @@ type OptionConfig struct {
 	TreeCode   string `json:"treeCode"`   // 树表编码
 	TreeParent string `json:"treeParent"` // 树表父级
 	TreeName   string `json:"treeName"`   // 树表名称
-}
-
-// 实现 database/sql/driver.Valuer 接口
-func (o OptionConfig) Value() (interface{}, error) {
-	return json.Marshal(o)
-}
-
-// 实现 database/sql.Scanner 接口
-func (o *OptionConfig) Scan(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-
-	var bytes []byte
-	switch v := value.(type) {
-	case []byte:
-		bytes = v
-	case string:
-		bytes = []byte(v)
-	}
-
-	return json.Unmarshal(bytes, o)
 }
 
 // TableInfo 数据库表信息
