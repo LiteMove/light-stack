@@ -96,9 +96,9 @@ export function previewCode(configId: number) {
 }
 
 // 下载代码包
-export function downloadCode(taskId: string) {
+export function downloadCode(historyId: string) {
   return request({
-    url: `/v1/super-admin/gen/download/${taskId}`,
+    url: `/v1/super-admin/gen/download/${historyId}`,
     method: 'get',
     responseType: 'blob'
   })

@@ -82,7 +82,7 @@ func (s *{{.ClassName}}Service) validate{{.ClassName}}({{uncapitalize .BusinessN
 	if {{uncapitalize $.BusinessName}}.{{.GoField}} == "" {
 		return fmt.Errorf("{{.ColumnComment}}不能为空")
 	}
-	{{- else if eq .GoType "int" "int64" "uint" "uint64" }}
+	{{- else if or (eq .GoType "int") (eq .GoType "int64") (eq .GoType "uint") (eq .GoType "uint64") }}
 	if {{uncapitalize $.BusinessName}}.{{.GoField}} == 0 {
 		return fmt.Errorf("{{.ColumnComment}}不能为空")
 	}

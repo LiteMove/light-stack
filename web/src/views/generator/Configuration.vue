@@ -467,6 +467,10 @@ const handleGenerate = async () => {
     // 生成代码
     const generateResponse = await generateCode({
       configId,
+      generateBackend: true,
+      generateFrontend: true,
+      generateSQL: true,
+      outputFormat: 'zip',
       generateType: 'all'
     })
 

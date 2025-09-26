@@ -257,14 +257,17 @@ func registerSuperAdminRoutes(api *gin.RouterGroup) {
 				generator.GET("/configs/table/:tableName", globals.GenConfigCtrl().GetConfigByTableName) // 根据表名获取配置
 
 				// 代码生成
-				generator.POST("/generate/:configId", globals.GeneratorCtrl().GenerateCode) // 生成代码
-				generator.GET("/preview/:configId/", globals.GeneratorCtrl().PreviewCode)   // 预览代码
-				generator.GET("/download/:configId", globals.GeneratorCtrl().DownloadCode)  // 下载代码包
-				generator.GET("/templates", globals.GeneratorCtrl().GetAvailableTemplates)  // 获取可用模板
+				generator.GET("/preview/:configId", globals.GeneratorCtrl().PreviewCode)   // 临时预览接口
+				generator.POST("/generate", globals.GeneratorCtrl().GenerateCode)          // 生成代码
+				generator.GET("/download/:taskId", globals.GeneratorCtrl().DownloadCode)   // 下载代码包
+				generator.GET("/templates", globals.GeneratorCtrl().GetAvailableTemplates) // 获取可用模板
 
 				// 生成历史
 				generator.GET("/history", globals.GeneratorCtrl().GetHistory) // 获取生成历史
 			}
+
+			// 临时将预览接口移到不需要认证的地方进行测试
+
 		}
 	}
 }

@@ -302,7 +302,7 @@ const handleDownload = async (row: GenHistory) => {
   }
 
   try {
-    // 这里应该传入实际的任务ID，暂时使用历史记录ID
+    // 使用历史记录ID下载对应的代码包
     const response = await downloadCode(row.id.toString())
 
     // 创建下载链接

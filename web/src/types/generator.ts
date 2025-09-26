@@ -129,7 +129,11 @@ export interface SystemMenu {
 // 生成请求
 export interface GenerateRequest {
   configId: number
-  generateType: 'all' | 'backend' | 'frontend'
+  generateBackend?: boolean
+  generateFrontend?: boolean
+  generateSQL?: boolean
+  outputFormat?: string
+  generateType?: 'all' | 'backend' | 'frontend'
 }
 
 // 生成响应

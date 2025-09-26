@@ -36,6 +36,13 @@ func (e *TemplateEngine) LoadTemplates(templateDir string) error {
 		"repository": filepath.Join(templateDir, "backend", "repository.go.tpl"),
 		"request":    filepath.Join(templateDir, "backend", "request.go.tpl"),
 
+		// 前端模板
+		"list_vue":   filepath.Join(templateDir, "frontend", "list.vue.tpl"),
+		"form_vue":   filepath.Join(templateDir, "frontend", "form.vue.tpl"),
+		"detail_vue": filepath.Join(templateDir, "frontend", "detail.vue.tpl"),
+		"api_ts":     filepath.Join(templateDir, "frontend", "api.ts.tpl"),
+		"types_ts":   filepath.Join(templateDir, "frontend", "types.ts.tpl"),
+
 		// SQL模板
 		"menu_sql": filepath.Join(templateDir, "sql", "menu.sql.tpl"),
 	}
@@ -109,12 +116,20 @@ func (e *TemplateEngine) loadTemplate(name, path string) (*template.Template, er
 	}
 
 	// 解析模板文件
-	tmpl, err := template.New(name).Funcs(funcMap).ParseFiles(path)
+	// 使用文件的基础名作为模板名称
+	fileName := filepath.Base(path)
+	tmpl, err := template.New(fileName).Funcs(funcMap).ParseFiles(path)
 	if err != nil {
 		return nil, fmt.Errorf("解析模板文件失败: %v", err)
 	}
 
-	return tmpl, nil
+	// 由于ParseFiles可能会创建多个模板，我们需要获取正确的模板
+	mainTemplate := tmpl.Lookup(fileName)
+	if mainTemplate == nil {
+		return nil, fmt.Errorf("在模板文件中找不到模板 %s", fileName)
+	}
+
+	return mainTemplate, nil
 }
 
 // RenderTemplate 渲染模板
@@ -126,6 +141,7 @@ func (e *TemplateEngine) RenderTemplate(templateName string, data *model.Templat
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
+		fmt.Printf("渲染模板时出错: %v\n", err)
 		return "", fmt.Errorf("渲染模板失败: %v", err)
 	}
 
@@ -155,6 +171,12 @@ func (e *TemplateEngine) RenderAllTemplates(data *model.TemplateData) (map[strin
 
 // PrepareTemplateData 准备模板数据
 func (e *TemplateEngine) PrepareTemplateData(config *model.GenTableConfig) *model.TemplateData {
+	// 安全地处理ParentMenuID指针
+	var parentMenuID int64
+	if config.ParentMenuID != nil {
+		parentMenuID = *config.ParentMenuID
+	}
+
 	data := &model.TemplateData{
 		PackageName:  config.PackageName,
 		ClassName:    config.ClassName,
@@ -164,7 +186,7 @@ func (e *TemplateEngine) PrepareTemplateData(config *model.GenTableConfig) *mode
 		FunctionName: config.FunctionName,
 		Author:       config.Author,
 		Date:         formatDate(time.Now()),
-		ParentMenuID: *config.ParentMenuID,
+		ParentMenuID: parentMenuID,
 		MenuName:     config.MenuName,
 		MenuURL:      config.MenuURL,
 		MenuIcon:     config.MenuIcon,
@@ -245,10 +267,26 @@ func ge(a, b int) bool         { return a >= b }
 func lt(a, b int) bool         { return a < b }
 func le(a, b int) bool         { return a <= b }
 
-// 逻辑函数
-func and(a, b bool) bool { return a && b }
-func or(a, b bool) bool  { return a || b }
-func not(a bool) bool    { return !a }
+// 逻辑函数 - 支持可变参数
+func and(args ...bool) bool {
+	for _, arg := range args {
+		if !arg {
+			return false
+		}
+	}
+	return true
+}
+
+func or(args ...bool) bool {
+	for _, arg := range args {
+		if arg {
+			return true
+		}
+	}
+	return false
+}
+
+func not(a bool) bool { return !a }
 
 // generateGoField 生成Go字段
 func generateGoField(columnName string) string {

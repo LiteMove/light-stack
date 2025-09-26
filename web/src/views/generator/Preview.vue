@@ -313,6 +313,10 @@ const handleGenerate = async () => {
   try {
     const response = await generateCode({
       configId: configId.value,
+      generateBackend: true,
+      generateFrontend: true,
+      generateSQL: true,
+      outputFormat: 'zip',
       generateType: 'all'
     })
 

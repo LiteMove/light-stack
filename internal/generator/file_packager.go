@@ -207,6 +207,12 @@ func (p *FilePackager) GetFileSize(filePath string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
+// FileExists 检查文件是否存在
+func (p *FilePackager) FileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return err == nil
+}
+
 // DeleteFile 删除文件
 func (p *FilePackager) DeleteFile(filePath string) error {
 	if err := os.Remove(filePath); err != nil {

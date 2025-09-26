@@ -24,7 +24,7 @@ func NewCodeGenerator(templateEngine *TemplateEngine) *CodeGenerator {
 	}
 }
 
-// GenerateCode 生成代码
+// GenerateCode 生成代码 - 生成所有可用模板的代码
 func (g *CodeGenerator) GenerateCode(config *model.GenTableConfig, options *GenerateOptions) (*GenerateResult, error) {
 	// 准备模板数据
 	templateData := g.templateEngine.PrepareTemplateData(config)
@@ -36,29 +36,11 @@ func (g *CodeGenerator) GenerateCode(config *model.GenTableConfig, options *Gene
 		StartTime:    time.Now(),
 	}
 
-	// 根据生成选项决定生成哪些文件
-	if options.GenerateBackend {
-		if err := g.generateBackendCode(templateData, result); err != nil {
-			result.Success = false
-			result.ErrorMessage = err.Error()
-			return result, err
-		}
-	}
-
-	if options.GenerateFrontend {
-		if err := g.generateFrontendCode(templateData, result); err != nil {
-			result.Success = false
-			result.ErrorMessage = err.Error()
-			return result, err
-		}
-	}
-
-	if options.GenerateSQL {
-		if err := g.generateSQLCode(templateData, result); err != nil {
-			result.Success = false
-			result.ErrorMessage = err.Error()
-			return result, err
-		}
+	// 生成所有可用模板的代码，不再根据选项分类
+	if err := g.generateAllTemplates(templateData, result); err != nil {
+		result.Success = false
+		result.ErrorMessage = err.Error()
+		return result, err
 	}
 
 	result.EndTime = time.Now()
@@ -105,9 +87,9 @@ func (g *CodeGenerator) generateBackendCode(data *model.TemplateData, result *Ge
 func (g *CodeGenerator) generateFrontendCode(data *model.TemplateData, result *GenerateResult) error {
 	frontendTemplates := map[string]string{
 		"list_vue":   fmt.Sprintf("web/src/views/%s/%sList.vue", strings.ToLower(data.ModuleName), data.ClassName),
-		"form_vue":   fmt.Sprintf("web/src/views/%s/%sForm.vue", strings.ToLower(data.ModuleName), data.ClassName),
-		"detail_vue": fmt.Sprintf("web/src/views/%s/%sDetail.vue", strings.ToLower(data.ModuleName), data.ClassName),
-		"api_js":     fmt.Sprintf("web/src/api/%s.js", strings.ToLower(data.BusinessName)),
+		"form_vue":   fmt.Sprintf("web/src/views/%s/components/%sForm.vue", strings.ToLower(data.ModuleName), data.ClassName),
+		"detail_vue": fmt.Sprintf("web/src/views/%s/components/%sDetail.vue", strings.ToLower(data.ModuleName), data.ClassName),
+		"api_ts":     fmt.Sprintf("web/src/api/%s.ts", strings.ToLower(data.BusinessName)),
 		"types_ts":   fmt.Sprintf("web/src/types/%s.ts", strings.ToLower(data.BusinessName)),
 	}
 
@@ -171,10 +153,52 @@ func (g *CodeGenerator) SaveFiles(result *GenerateResult, baseDir string) error 
 	return nil
 }
 
-// PreviewCode 预览代码
-func (g *CodeGenerator) PreviewCode(config *model.GenTableConfig, templateName string) (string, error) {
+// generateAllTemplates 生成所有可用模板的代码
+func (g *CodeGenerator) generateAllTemplates(data *model.TemplateData, result *GenerateResult) error {
+	// 定义所有模板及其对应的文件名
+	allTemplates := map[string]string{
+		// 后端模板
+		"model":      fmt.Sprintf("internal/model/%s.go", strings.ToLower(data.BusinessName)),
+		"service":    fmt.Sprintf("internal/service/%s_service.go", strings.ToLower(data.BusinessName)),
+		"controller": fmt.Sprintf("internal/controller/%s_controller.go", strings.ToLower(data.BusinessName)),
+		"repository": fmt.Sprintf("internal/repository/%s_repository.go", strings.ToLower(data.BusinessName)),
+		"request":    fmt.Sprintf("internal/model/%s_request.go", strings.ToLower(data.BusinessName)),
+
+		// 前端模板
+		"list_vue":   fmt.Sprintf("web/src/views/%s/%sList.vue", strings.ToLower(data.ModuleName), data.ClassName),
+		"form_vue":   fmt.Sprintf("web/src/views/%s/components/%sForm.vue", strings.ToLower(data.ModuleName), data.ClassName),
+		"detail_vue": fmt.Sprintf("web/src/views/%s/components/%sDetail.vue", strings.ToLower(data.ModuleName), data.ClassName),
+		"api_ts":     fmt.Sprintf("web/src/api/%s.ts", strings.ToLower(data.BusinessName)),
+		"types_ts":   fmt.Sprintf("web/src/types/%s.ts", strings.ToLower(data.BusinessName)),
+
+		// SQL模板
+		"menu_sql": fmt.Sprintf("sql/%s_menu.sql", strings.ToLower(data.BusinessName)),
+	}
+
+	// 遍历所有模板并生成代码
+	for templateName, fileName := range allTemplates {
+		// 检查模板是否存在
+		if !g.templateEngine.HasTemplate(templateName) {
+			fmt.Printf("警告: 模板 %s 不存在，跳过生成文件: %s\n", templateName, fileName)
+			continue
+		}
+
+		content, err := g.templateEngine.RenderTemplate(templateName, data)
+		if err != nil {
+			return fmt.Errorf("生成文件 %s 失败: %v", fileName, err)
+		}
+		result.Files[fileName] = content
+	}
+
+	return nil
+}
+
+// PreviewCode 预览所有模板的代码
+func (g *CodeGenerator) PreviewCode(config *model.GenTableConfig) (map[string]string, error) {
 	templateData := g.templateEngine.PrepareTemplateData(config)
-	return g.templateEngine.RenderTemplate(templateName, templateData)
+
+	// 渲染所有可用模板
+	return g.templateEngine.RenderAllTemplates(templateData)
 }
 
 // GetAvailableTemplates 获取可用的模板列表

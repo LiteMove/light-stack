@@ -135,22 +135,20 @@ func (c *GeneratorController) GenerateCode(ctx *gin.Context) {
 		}
 	}
 
-	// 如果需要打包文件
-	if req.OutputFormat == "zip" {
-		zipFileName := fmt.Sprintf("%s_%s_%s.zip",
-			config.BusinessName,
-			time.Now().Format("20060102150405"),
-			fmt.Sprintf("%d", time.Now().UnixNano())[10:],
-		)
+	// 总是创建ZIP文件用于下载（不管前端是否指定outputFormat）
+	zipFileName := fmt.Sprintf("%s_%s_%s.zip",
+		config.BusinessName,
+		time.Now().Format("20060102150405"),
+		fmt.Sprintf("%d", time.Now().UnixNano())[10:],
+	)
 
-		zipPath, err := c.filePackager.PackageToZip(result, zipFileName)
-		if err != nil {
-			response.BadRequest(ctx, "打包文件失败: "+err.Error())
-			return
-		}
-
-		history.FilePath = zipPath
+	zipPath, err := c.filePackager.PackageToZip(result, zipFileName)
+	if err != nil {
+		response.BadRequest(ctx, "打包文件失败: "+err.Error())
+		return
 	}
+
+	history.FilePath = zipPath
 
 	// 保存历史记录
 	if _, err := c.configService.CreateHistory(history); err != nil {
@@ -176,11 +174,6 @@ func (c *GeneratorController) PreviewCode(ctx *gin.Context) {
 		return
 	}
 
-	templateName := ctx.Query("template")
-	if templateName == "" {
-		templateName = "model" // 默认预览model模板
-	}
-
 	// 获取配置
 	config, err := c.configService.GetConfig(configID)
 	if err != nil {
@@ -188,16 +181,15 @@ func (c *GeneratorController) PreviewCode(ctx *gin.Context) {
 		return
 	}
 
-	// 预览代码
-	content, err := c.codeGenerator.PreviewCode(config, templateName)
+	// 预览所有模板的代码
+	files, err := c.codeGenerator.PreviewCode(config)
 	if err != nil {
 		response.BadRequest(ctx, "预览代码失败: "+err.Error())
 		return
 	}
 
 	response.Success(ctx, gin.H{
-		"template": templateName,
-		"content":  content,
+		"files": files,
 	})
 }
 
@@ -209,20 +201,38 @@ func (c *GeneratorController) DownloadCode(ctx *gin.Context) {
 		return
 	}
 
-	// 这里应该根据taskID查找对应的ZIP文件
-	// 简化实现，直接从query参数获取文件路径
-	filePath := ctx.Query("filePath")
-	if filePath == "" {
-		response.BadRequest(ctx, "文件路径不能为空")
+	// 尝试将taskId解析为历史记录ID
+	historyID, err := strconv.ParseInt(taskID, 10, 64)
+	if err != nil {
+		response.BadRequest(ctx, "无效的任务ID")
+		return
+	}
+
+	// 根据历史记录ID查找文件路径
+	history, err := c.configService.GetHistoryByID(historyID)
+	if err != nil {
+		response.BadRequest(ctx, "找不到对应的生成记录: "+err.Error())
+		return
+	}
+
+	if history.FilePath == "" {
+		response.BadRequest(ctx, "该记录没有生成的文件包")
+		return
+	}
+
+	// 检查文件是否存在
+	if !c.filePackager.FileExists(history.FilePath) {
+		response.BadRequest(ctx, "文件不存在或已被删除")
 		return
 	}
 
 	// 设置下载头
+	fileName := fmt.Sprintf("%s_code.zip", history.BusinessName)
 	ctx.Header("Content-Type", "application/zip")
-	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", taskID+".zip"))
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 
 	// 发送文件
-	ctx.File(filePath)
+	ctx.File(history.FilePath)
 }
 
 // GetSystemMenus 获取系统现有菜单树

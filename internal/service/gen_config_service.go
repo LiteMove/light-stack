@@ -369,6 +369,11 @@ func (s *GenConfigService) GetHistoryList(page, size int, tableName string) ([]*
 	return s.repo.GetHistoryList(page, size, tableName)
 }
 
+// GetHistoryByID 根据ID获取历史记录
+func (s *GenConfigService) GetHistoryByID(id int64) (*model.GenHistory, error) {
+	return s.repo.GetHistoryByID(id)
+}
+
 // 请求结构体定义
 
 // CreateConfigRequest 创建配置请求
