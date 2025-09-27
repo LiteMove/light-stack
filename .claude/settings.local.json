@@ -30,7 +30,8 @@
       "Bash(rm:*)",
       "Bash(go vet:*)",
       "Bash(npx vue-tsc:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
