@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/LiteMove/light-stack/internal/modules/files/repository"
 	"io"
 	"mime/multipart"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/LiteMove/light-stack/internal/modules/files/model"
 	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	sharedModel "github.com/LiteMove/light-stack/internal/shared/model"
 	"github.com/LiteMove/light-stack/internal/shared/storage"
 )

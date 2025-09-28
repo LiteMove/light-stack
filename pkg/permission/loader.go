@@ -1,11 +1,11 @@
 package permission
 
 import (
-	"github.com/LiteMove/light-stack/internal/repository"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	"github.com/LiteMove/light-stack/pkg/logger"
 )
 
-func LoadUserPermissions(userID uint64, menuRepo repository.MenuRepository) error {
+func LoadUserPermissions(userID uint64, menuRepo repository2.MenuRepository) error {
 	permissions, err := menuRepo.GetUserPermissions(userID)
 	if err != nil {
 		logger.WithField("userId", userID).Error("Failed to load user permissions:", err)
@@ -17,7 +17,7 @@ func LoadUserPermissions(userID uint64, menuRepo repository.MenuRepository) erro
 	return nil
 }
 
-func LoadUserRoles(userID uint64, roleRepo repository.RoleRepository) error {
+func LoadUserRoles(userID uint64, roleRepo repository2.RoleRepository) error {
 	roles, err := roleRepo.GetUserRoles(userID)
 	if err != nil {
 		logger.WithField("userId", userID).Error("Failed to load user roles:", err)
@@ -34,7 +34,7 @@ func LoadUserRoles(userID uint64, roleRepo repository.RoleRepository) error {
 	return nil
 }
 
-func LoadUserData(userID uint64, menuRepo repository.MenuRepository, roleRepo repository.RoleRepository) error {
+func LoadUserData(userID uint64, menuRepo repository2.MenuRepository, roleRepo repository2.RoleRepository) error {
 	// 加载权限
 	if err := LoadUserPermissions(userID, menuRepo); err != nil {
 		return err

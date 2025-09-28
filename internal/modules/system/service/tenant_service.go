@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	"time"
 
 	"github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 )
 
 // TenantService 租户服务接口
@@ -38,8 +38,8 @@ type TenantService interface {
 
 // tenantService 租户服务实现
 type tenantService struct {
-	tenantRepo repository.TenantRepository
-	userRepo   repository.UserRepository
+	tenantRepo repository2.TenantRepository
+	userRepo   repository2.UserRepository
 }
 
 func (s *tenantService) GetSelectList() ([]*model.Tenant, error) {
@@ -47,7 +47,7 @@ func (s *tenantService) GetSelectList() ([]*model.Tenant, error) {
 }
 
 // NewTenantService 创建租户服务
-func NewTenantService(tenantRepo repository.TenantRepository, userRepo repository.UserRepository) TenantService {
+func NewTenantService(tenantRepo repository2.TenantRepository, userRepo repository2.UserRepository) TenantService {
 	return &tenantService{
 		tenantRepo: tenantRepo,
 		userRepo:   userRepo,

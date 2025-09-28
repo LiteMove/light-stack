@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/LiteMove/light-stack/internal/modules/files/repository"
 	"io"
 	"mime/multipart"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/storage"
 )
 

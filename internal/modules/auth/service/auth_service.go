@@ -2,10 +2,10 @@ package service
 
 import (
 	"errors"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	"strings"
 
 	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/shared/utils"
 	"github.com/LiteMove/light-stack/pkg/jwt"
 	"github.com/LiteMove/light-stack/pkg/logger"
@@ -38,13 +38,13 @@ type AuthService interface {
 
 // authService 认证服务实现
 type authService struct {
-	userRepo repository.UserRepository
-	roleRepo repository.RoleRepository
-	menuRepo repository.MenuRepository
+	userRepo repository2.UserRepository
+	roleRepo repository2.RoleRepository
+	menuRepo repository2.MenuRepository
 }
 
 // NewAuthService 创建认证服务实例
-func NewAuthService(userRepo repository.UserRepository, roleRepo repository.RoleRepository, menuRepo repository.MenuRepository) AuthService {
+func NewAuthService(userRepo repository2.UserRepository, roleRepo repository2.RoleRepository, menuRepo repository2.MenuRepository) AuthService {
 	return &authService{
 		userRepo: userRepo,
 		roleRepo: roleRepo,

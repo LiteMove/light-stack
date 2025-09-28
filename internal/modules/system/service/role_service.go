@@ -2,20 +2,20 @@ package service
 
 import (
 	"errors"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 
 	"github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/pkg/logger"
 )
 
 // roleService 角色服务实现
 type roleService struct {
-	roleRepo repository.RoleRepository
-	userRepo repository.UserRepository
+	roleRepo repository2.RoleRepository
+	userRepo repository2.UserRepository
 }
 
 // NewRoleService 创建角色服务实例
-func NewRoleService(roleRepo repository.RoleRepository, userRepo repository.UserRepository) RoleService {
+func NewRoleService(roleRepo repository2.RoleRepository, userRepo repository2.UserRepository) RoleService {
 	return &roleService{
 		roleRepo: roleRepo,
 		userRepo: userRepo,

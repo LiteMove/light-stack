@@ -6,11 +6,14 @@ import (
 	authController "github.com/LiteMove/light-stack/internal/modules/auth/controller"
 	authService "github.com/LiteMove/light-stack/internal/modules/auth/service"
 	fileController "github.com/LiteMove/light-stack/internal/modules/files/controller"
+	repository3 "github.com/LiteMove/light-stack/internal/modules/files/repository"
 	fileService "github.com/LiteMove/light-stack/internal/modules/files/service"
 	generatorController "github.com/LiteMove/light-stack/internal/modules/generator/controller"
 	generatorEngine "github.com/LiteMove/light-stack/internal/modules/generator/engine"
+	repository4 "github.com/LiteMove/light-stack/internal/modules/generator/repository"
 	generatorService "github.com/LiteMove/light-stack/internal/modules/generator/service"
 	systemController "github.com/LiteMove/light-stack/internal/modules/system/controller"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	systemService "github.com/LiteMove/light-stack/internal/modules/system/service"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/pkg/database"
@@ -20,14 +23,14 @@ import (
 // 全局服务实例
 var (
 	// Repository 层
-	userRepo       repository.UserRepository
-	roleRepo       repository.RoleRepository
-	menuRepo       repository.MenuRepository
-	tenantRepo     repository.TenantRepository
-	fileRepo       *repository.FileRepository
-	dictRepo       repository.DictRepository
+	userRepo       repository2.UserRepository
+	roleRepo       repository2.RoleRepository
+	menuRepo       repository2.MenuRepository
+	tenantRepo     repository2.TenantRepository
+	fileRepo       *repository3.FileRepository
+	dictRepo       repository2.DictRepository
 	dbAnalyzerRepo *repository.DBAnalyzerRepository
-	genConfigRepo  *repository.GenConfigRepository
+	genConfigRepo  *repository4.GenConfigRepository
 
 	// Generator 层
 	templateEngine *generatorEngine.TemplateEngine
@@ -75,14 +78,14 @@ func Init() {
 }
 
 func initRepositories(db *gorm.DB) {
-	userRepo = repository.NewUserRepository(db)
-	roleRepo = repository.NewRoleRepository(db)
-	menuRepo = repository.NewMenuRepository(db)
-	tenantRepo = repository.NewTenantRepository(db)
-	fileRepo = repository.NewFileRepository(db)
-	dictRepo = repository.NewDictRepository(db)
+	userRepo = repository2.NewUserRepository(db)
+	roleRepo = repository2.NewRoleRepository(db)
+	menuRepo = repository2.NewMenuRepository(db)
+	tenantRepo = repository2.NewTenantRepository(db)
+	fileRepo = repository3.NewFileRepository(db)
+	dictRepo = repository2.NewDictRepository(db)
 	dbAnalyzerRepo = repository.NewDBAnalyzerRepository(db)
-	genConfigRepo = repository.NewGenConfigRepository(db)
+	genConfigRepo = repository4.NewGenConfigRepository(db)
 }
 
 func initGenerators() {

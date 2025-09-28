@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 
 	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/utils"
 )
 
@@ -24,13 +24,13 @@ type ProfileService interface {
 
 // profileService 个人中心服务实现
 type profileService struct {
-	userRepo   repository.UserRepository
-	roleRepo   repository.RoleRepository
-	tenantRepo repository.TenantRepository
+	userRepo   repository2.UserRepository
+	roleRepo   repository2.RoleRepository
+	tenantRepo repository2.TenantRepository
 }
 
 // NewProfileService 创建个人中心服务
-func NewProfileService(userRepo repository.UserRepository, roleRepo repository.RoleRepository, tenantRepo repository.TenantRepository) ProfileService {
+func NewProfileService(userRepo repository2.UserRepository, roleRepo repository2.RoleRepository, tenantRepo repository2.TenantRepository) ProfileService {
 	return &profileService{
 		userRepo:   userRepo,
 		roleRepo:   roleRepo,

@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
+	repository3 "github.com/LiteMove/light-stack/internal/modules/files/repository"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	"runtime"
 	"time"
 
 	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 )
 
 // DashboardService 仪表盘服务接口
@@ -17,13 +18,13 @@ type DashboardService interface {
 
 // dashboardService 仪表盘服务实现
 type dashboardService struct {
-	userRepo   repository.UserRepository
-	tenantRepo repository.TenantRepository
-	fileRepo   *repository.FileRepository
+	userRepo   repository2.UserRepository
+	tenantRepo repository2.TenantRepository
+	fileRepo   *repository3.FileRepository
 }
 
 // NewDashboardService 创建仪表盘服务
-func NewDashboardService(userRepo repository.UserRepository, tenantRepo repository.TenantRepository, fileRepo *repository.FileRepository) DashboardService {
+func NewDashboardService(userRepo repository2.UserRepository, tenantRepo repository2.TenantRepository, fileRepo *repository3.FileRepository) DashboardService {
 	return &dashboardService{
 		userRepo:   userRepo,
 		tenantRepo: tenantRepo,

@@ -25,5 +25,11 @@ func RegisterAuthRoutes(api *gin.RouterGroup) {
 		profile.GET("", globals.AuthCtrl().GetProfile)
 		profile.PUT("", globals.AuthCtrl().UpdateProfile)
 		profile.PUT("/password", globals.AuthCtrl().ChangePassword)
+		// 用户查看和修改租户配置
+		profile.Use(middleware.TenantMiddleware(globals.TenantSvc()))
+		{
+			profile.GET("/tenant-config", globals.ProfileCtrl().GetTenantConfig)    // 获取所在租户配置
+			profile.PUT("/tenant-config", globals.ProfileCtrl().UpdateTenantConfig) // 更新所在租户配置
+		}
 	}
 }

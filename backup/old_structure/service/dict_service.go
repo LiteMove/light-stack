@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/LiteMove/light-stack/internal/modules/system/repository"
 
 	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 )
 
 // DictService 字典服务接口

@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 
 	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"gorm.io/gorm"
 )
 
@@ -33,12 +33,12 @@ type MenuService interface {
 
 // menuService 菜单服务实现
 type menuService struct {
-	menuRepo repository.MenuRepository
-	roleRepo repository.RoleRepository
+	menuRepo repository2.MenuRepository
+	roleRepo repository2.RoleRepository
 }
 
 // NewMenuService 创建菜单服务
-func NewMenuService(menuRepo repository.MenuRepository, roleRepo repository.RoleRepository) MenuService {
+func NewMenuService(menuRepo repository2.MenuRepository, roleRepo repository2.RoleRepository) MenuService {
 	return &menuService{
 		menuRepo: menuRepo,
 		roleRepo: roleRepo,

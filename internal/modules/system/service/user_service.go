@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	repository2 "github.com/LiteMove/light-stack/internal/modules/system/repository"
 	"strings"
 
 	"github.com/LiteMove/light-stack/internal/modules/system/model"
-	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
 
@@ -45,12 +45,12 @@ type UserService interface {
 
 // userService 用户服务实现
 type userService struct {
-	userRepo repository.UserRepository
-	roleRepo repository.RoleRepository
+	userRepo repository2.UserRepository
+	roleRepo repository2.RoleRepository
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repository.UserRepository, roleRepo repository.RoleRepository) UserService {
+func NewUserService(userRepo repository2.UserRepository, roleRepo repository2.RoleRepository) UserService {
 	return &userService{
 		userRepo: userRepo,
 		roleRepo: roleRepo,
