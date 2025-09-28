@@ -28,7 +28,7 @@ export function getTableColumns(tableName: string) {
 // 保存生成配置
 export function saveGenConfig(data: Partial<GenTableConfig>) {
   return request<GenTableConfig>({
-    url: '/v1/gen/config',
+    url: '/v1/gen/configs',
     method: 'post',
     data
   })
@@ -37,7 +37,7 @@ export function saveGenConfig(data: Partial<GenTableConfig>) {
 // 获取配置详情
 export function getGenConfig(id: number) {
   return request<GenTableConfig>({
-    url: `/v1/gen/config/${id}`,
+    url: `/v1/gen/configs/${id}`,
     method: 'get'
   })
 }
@@ -45,7 +45,7 @@ export function getGenConfig(id: number) {
 // 更新配置
 export function updateGenConfig(id: number, data: Partial<GenTableConfig>) {
   return request<GenTableConfig>({
-    url: `/v1/gen/config/${id}`,
+    url: `/v1/gen/configs/${id}`,
     method: 'put',
     data
   })
@@ -54,7 +54,7 @@ export function updateGenConfig(id: number, data: Partial<GenTableConfig>) {
 // 删除配置
 export function deleteGenConfig(id: number) {
   return request<void>({
-    url: `/v1/gen/config/${id}`,
+    url: `/v1/gen/configs/${id}`,
     method: 'delete'
   })
 }
