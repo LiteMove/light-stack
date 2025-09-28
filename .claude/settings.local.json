@@ -33,7 +33,10 @@
       "Bash(cat:*)",
       "Bash(mkdir:*)",
       "Bash(GOOS=linux go build -o server cmd/server/main.go)",
-      "Read(//d/work/person/go/src/github.com/LiteMove/**)"
+      "Read(//d/work/person/go/src/github.com/LiteMove/**)",
+      "Bash(set GOOS=windows)",
+      "Bash(set GOARCH=amd64)",
+      "Bash(server.exe)"
     ],
     "deny": [],
     "ask": []
