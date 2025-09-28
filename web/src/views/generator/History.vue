@@ -225,7 +225,7 @@ import {
   Download,
   Delete
 } from '@element-plus/icons-vue'
-import { getGenHistory, downloadCode } from '@/api/generator'
+import { getGenHistory, downloadCode,deleteGenHistory } from '@/api/generator'
 import type { GenHistory } from '@/types/generator'
 
 const router = useRouter()
@@ -334,7 +334,7 @@ const handleRegenerate = (row: GenHistory) => {
 const handleDelete = async (row: GenHistory) => {
   try {
     // TODO: 调用删除API
-    // await deleteGenHistory(row.id)
+    await deleteGenHistory(row.id)
 
     ElMessage.success('删除成功')
     loadHistory()

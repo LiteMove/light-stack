@@ -128,3 +128,11 @@ export function getGenHistory(params?: {
     params
   })
 }
+
+// 删除生成历史记录
+export function deleteGenHistory(id: number) {
+  return request<void>({
+    url: `/v1/gen/history/${id}`,
+    method: 'delete'
+  })
+}

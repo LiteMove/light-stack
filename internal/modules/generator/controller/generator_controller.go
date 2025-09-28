@@ -298,6 +298,21 @@ func (c *GeneratorController) getGenerateType(options *generator.GenerateOptions
 	return model.GenerateTypeAll
 }
 
+func (c *GeneratorController) DeleteHistory(context *gin.Context) {
+	idStr := context.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		response.BadRequest(context, "无效的历史记录ID")
+		return
+	}
+	if err := c.configService.DeleteHistory(id); err != nil {
+		response.BadRequest(context, "删除历史记录失败: "+err.Error())
+		return
+	}
+	response.Success(context, nil)
+
+}
+
 // 请求结构体定义
 
 // GenerateCodeRequest 生成代码请求

@@ -256,3 +256,8 @@ func (r *GenConfigRepository) GetHistoryByID(id int64) (*model.GenHistory, error
 	}
 	return &history, nil
 }
+
+// DeleteHistory 删除历史记录
+func (r *GenConfigRepository) DeleteHistory(id int64) error {
+	return r.db.Delete(&model.GenHistory{}, id).Error
+}

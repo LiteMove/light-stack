@@ -364,6 +364,10 @@ func (s *GenConfigService) GetHistoryByID(id int64) (*model.GenHistory, error) {
 	return s.repo.GetHistoryByID(id)
 }
 
+func (s *GenConfigService) DeleteHistory(id int64) error {
+	return s.repo.DeleteHistory(id)
+}
+
 // 请求结构体定义
 
 // CreateConfigRequest 创建配置请求

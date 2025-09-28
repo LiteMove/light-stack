@@ -37,6 +37,7 @@ func RegisterGeneratorRoutes(api *gin.RouterGroup) {
 		generator.GET("/templates", globals.GeneratorCtrl().GetAvailableTemplates) // 获取可用模板
 
 		// 生成历史
-		generator.GET("/history", globals.GeneratorCtrl().GetHistory) // 获取生成历史
+		generator.GET("/history", globals.GeneratorCtrl().GetHistory)           // 获取生成历史
+		generator.DELETE("/history/:id", globals.GeneratorCtrl().DeleteHistory) // 删除生成历史
 	}
 }
