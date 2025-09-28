@@ -142,6 +142,7 @@ type TemplateData struct {
 	PackageName  string       `json:"packageName"`  // 包名
 	ClassName    string       `json:"className"`    // 类名
 	TableName    string       `json:"tableName"`    // 表名
+	TableComment string       `json:"tableComment"` // 表注释
 	BusinessName string       `json:"businessName"` // 业务名
 	ModuleName   string       `json:"moduleName"`   // 模块名
 	FunctionName string       `json:"functionName"` // 功能名

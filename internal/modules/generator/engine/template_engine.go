@@ -181,6 +181,7 @@ func (e *TemplateEngine) PrepareTemplateData(config *model.GenTableConfig) *mode
 		PackageName:  config.PackageName,
 		ClassName:    config.ClassName,
 		TableName:    config.TableName,
+		TableComment: config.TableComment,
 		BusinessName: config.BusinessName,
 		ModuleName:   config.ModuleName,
 		FunctionName: config.FunctionName,

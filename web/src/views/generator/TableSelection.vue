@@ -51,6 +51,7 @@
           stripe
           @selection-change="handleSelectionChange"
           style="width: 100%"
+          :height="tableHeight"
           element-loading-text="正在加载数据库表..."
           element-loading-background="rgba(0, 0, 0, 0.1)"
         >
@@ -209,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -226,6 +227,20 @@ import type { TableInfo } from '@/types/generator'
 
 const router = useRouter()
 
+// 表格高度计算
+const tableHeight = ref<number | string>('auto')
+
+// 计算表格高度
+const calculateTableHeight = () => {
+  nextTick(() => {
+    const windowHeight = window.innerHeight
+    const headerHeight = 180 // 页面头部高度
+    const paginationHeight = 80 // 分页高度
+    const padding = 100 // 额外间距
+    const availableHeight = windowHeight - headerHeight - paginationHeight - padding
+    tableHeight.value = Math.max(400, availableHeight) // 最小高度400px
+  })
+}
 
 // 响应式数据
 const loading = ref(false)
@@ -345,6 +360,15 @@ const formatTimeOnly = (timeStr: string): string => {
 // 生命周期
 onMounted(() => {
   loadTables()
+  calculateTableHeight()
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', calculateTableHeight)
+})
+
+// 组件卸载时清理监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', calculateTableHeight)
 })
 </script>
 
@@ -353,6 +377,9 @@ onMounted(() => {
   padding: 24px;
   background: #f6f8fa;
   min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // 防止整个页面出现滚动条
 
   .page-header {
     display: flex;
@@ -363,6 +390,7 @@ onMounted(() => {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    flex-shrink: 0;
 
     .header-left {
       color: white;
@@ -433,6 +461,7 @@ onMounted(() => {
 
   .stats-row {
     margin-bottom: 24px;
+    flex-shrink: 0;
 
     .stats-card {
       border: 1px solid #d1d9e0;
@@ -504,9 +533,19 @@ onMounted(() => {
   .table-card {
     border: 1px solid #d1d9e0;
     border-radius: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0; // 关键：允许flex子元素收缩到内容大小以下
 
     :deep(.el-card__body) {
       padding: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0; // 关键：允许flex子元素收缩到内容大小以下
     }
 
     .el-table {

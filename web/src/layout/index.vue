@@ -43,6 +43,10 @@ const sidebarWidth = computed(() => {
   overflow: hidden;
 }
 
+.el-container {
+  overflow-y: auto;
+}
+
 .el-aside {
   background-color: #304156;
   transition: width 0.28s;
