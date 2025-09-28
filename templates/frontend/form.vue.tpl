@@ -34,6 +34,7 @@
 
 {{- $rowCount := 0 }}
 {{- range .FormFields }}
+{{- if not (or (eq .ColumnName "tenant_id") (contains .ColumnName "tenant")) }}
 {{- if mod $rowCount 2 | eq 0 }}
       <el-row :gutter="20">
 {{- end }}
@@ -187,6 +188,7 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
 {{- if mod $rowCount 2 | eq 1 }}
       </el-row>
 {{- end }}
@@ -232,7 +234,9 @@ import type { {{.ClassName}} } from '@/api/types'
 
 interface {{.ClassName}}FormData {
 {{- range .FormFields }}
+{{- if not (or (eq .ColumnName "tenant_id") (contains .ColumnName "tenant")) }}
   {{generateJSField .ColumnName}}: {{if eq .GoType "string"}}string{{else if eq .GoType "bool"}}boolean{{else if contains .GoType "int"}}number{{else if eq .GoType "time.Time"}}string{{else}}any{{end}}{{if not .IsRequired}} | null{{end}}
+{{- end }}
 {{- end }}
 }
 
@@ -263,7 +267,9 @@ const isEdit = computed(() => !!props.formData.{{range .Fields}}{{if .IsPk}}{{ge
 // 表单数据
 const form = ref<{{.ClassName}}FormData>({
 {{- range .FormFields }}
+{{- if not (or (eq .ColumnName "tenant_id") (contains .ColumnName "tenant")) }}
   {{generateJSField .ColumnName}}: {{getDefaultValue .}},
+{{- end }}
 {{- end }}
 })
 
@@ -291,6 +297,7 @@ const handleFileError = (error: string) => {
 // 表单验证规则
 const rules = computed<FormRules>(() => ({
 {{- range .FormFields }}
+{{- if not (or (eq .ColumnName "tenant_id") (contains .ColumnName "tenant")) }}
 {{- if .IsRequired }}
   {{generateJSField .ColumnName}}: [
     { required: true, message: '请{{if eq .HtmlType "select"}}选择{{else}}输入{{end}}{{.ColumnComment}}', trigger: '{{if eq .HtmlType "select"}}change{{else}}blur{{end}}' }
@@ -321,6 +328,7 @@ const rules = computed<FormRules>(() => ({
 {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
 }))
 
 // 监听表单数据变化
@@ -330,7 +338,9 @@ watch(
     if (newData) {
       Object.assign(form.value, {
 {{- range .FormFields }}
+{{- if not (or (eq .ColumnName "tenant_id") (contains .ColumnName "tenant")) }}
         {{generateJSField .ColumnName}}: newData.{{generateJSField .ColumnName}} {{if eq .GoType "string"}}|| ''{{else if eq .GoType "bool"}}|| false{{else if contains .GoType "int"}}|| 0{{else if eq .GoType "time.Time"}}|| null{{else}}|| null{{end}},
+{{- end }}
 {{- end }}
       })
     }

@@ -148,19 +148,6 @@
           </el-row>
         </el-card>
 
-        <!-- 权限配置 - 改为只读显示，不允许编辑 -->
-        <el-card class="config-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <el-icon><Key /></el-icon>
-              <span>权限配置</span>
-              <span style="margin-left: auto; font-size: 12px; color: #909399; font-weight: normal;">
-                权限将根据模块名和业务名自动生成
-              </span>
-            </div>
-          </template>
-        </el-card>
-
         <!-- 字段配置 -->
         <el-card class="config-card" shadow="never">
           <template #header>

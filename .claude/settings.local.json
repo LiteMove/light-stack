@@ -37,7 +37,9 @@
       "Bash(set GOOS=windows)",
       "Bash(set GOARCH=amd64)",
       "Bash(server.exe)",
-      "mcp__filesystem__read_text_file"
+      "mcp__filesystem__read_text_file",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__create_directory"
     ],
     "deny": [],
     "ask": []
