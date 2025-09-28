@@ -78,7 +78,13 @@ export const useTenantStore = defineStore('tenant', () => {
 
   // 切换租户
   const switchTenant = (tenant: Tenant | null) => {
+    const oldTenant = currentTenant.value
     setCurrentTenant(tenant)
+
+    // 发布租户切换事件
+    window.dispatchEvent(new CustomEvent('tenantChanged', {
+      detail: { newTenant: tenant, oldTenant }
+    }))
   }
 
   // 清除租户数据

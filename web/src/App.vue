@@ -8,6 +8,10 @@
 import { onMounted } from 'vue'
 import { useUserStore } from '@/store'
 import { useSystemStore } from '@/store/system'
+import { useGlobalTenantListener } from '@/composables/useGlobalTenantListener'
+
+// 启用全局租户监听
+useGlobalTenantListener()
 
 onMounted(async () => {
   // 应用启动时，从本地存储恢复用户信息

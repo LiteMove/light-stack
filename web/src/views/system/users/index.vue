@@ -389,12 +389,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Plus, 
-  RefreshRight, 
-  Search, 
-  Edit, 
-  Delete, 
+import {
+  Plus,
+  RefreshRight,
+  Search,
+  Edit,
+  Delete,
   UserFilled,
   List,
   InfoFilled,
@@ -450,31 +450,6 @@ const pagination = reactive({
   total: 0
 })
 
-// 监听租户变化
-watch(currentTenant, async (newTenant, oldTenant) => {
-  if (isSuperAdmin.value && newTenant !== oldTenant) {
-    // 显示切换提示
-    if (newTenant) {
-      //ElMessage.info(`正在切换到租户 "${newTenant.name}"...`)
-      console.log(`切换到租户 "${newTenant.name}"`)
-    }
-
-    // 重置分页到第一页
-    pagination.page = 1
-
-    userList.value = []
-    selectedUser.value = []
-
-    // 重新加载数据
-    refreshUsers()
-
-    // 切换完成提示
-    if (newTenant) {
-      ElMessage.success(`已切换到租户 "${newTenant.name}"`)
-    }
-  }
-}, { immediate: false })
-
 // 获取用户头像颜色
 const getAvatarColor = (username: string): string => {
   const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#f56565', '#38a169']
@@ -489,7 +464,7 @@ const fetchUsers = async () => {
     console.log('组件销毁中或用户未登录，跳过获取用户列表')
     return
   }
-  
+
   // 如果是超级管理员但没有选择租户，不加载数据
   if (isSuperAdmin.value && !currentTenant.value) {
     ElMessage.warning('请先选择要管理的租户')
@@ -497,15 +472,15 @@ const fetchUsers = async () => {
     pagination.total = 0
     return
   }
-  
+
   // 取消之前的请求
   if (abortController.value) {
     abortController.value.abort()
   }
-  
+
   // 创建新的 AbortController
   abortController.value = new AbortController()
-  
+
   try {
     loading.value = true
     const params: PageParams & { keyword?: string; status?: number } = {
@@ -514,18 +489,18 @@ const fetchUsers = async () => {
       keyword: searchForm.keyword || undefined,
       status: searchForm.status === 0 ? undefined : searchForm.status,
     }
-    
+
     // 租户ID现在通过请求头自动添加，不需要在参数中指定
     const { data } = await userApi.getUsers(params)
-    
+
     // 检查请求是否被取消或组件是否正在销毁
     if (abortController.value?.signal.aborted || isUnmounting.value) {
       return
     }
-    
+
     userList.value = data.list
     pagination.total = data.total
-    
+
   } catch (error: any) {
     // 如果是请求被取消或401错误，不显示错误信息
     if (error.name === 'AbortError' || error.message?.includes('登录') || isUnmounting.value) {
@@ -548,7 +523,7 @@ const fetchRoles = async () => {
     console.log('用户未登录，跳过获取角色列表')
     return
   }
-  
+
   try {
     const { data } = await roleApi.getActiveRoles()
     roles.value = data
@@ -570,7 +545,7 @@ const refreshUsers = () => {
     console.log('组件销毁中或用户未登录，跳过刷新用户列表')
     return
   }
-  
+
   fetchUsers()
   fetchRoles()
 }
@@ -582,7 +557,7 @@ const handleSearch = () => {
     console.log('组件销毁中或用户未登录，跳过搜索')
     return
   }
-  
+
   pagination.page = 1
   fetchUsers()
 }
@@ -594,7 +569,7 @@ const handleResetSearch = () => {
     console.log('组件销毁中，跳过重置搜索')
     return
   }
-  
+
   Object.assign(searchForm, {
     keyword: '',
     status: 0,
@@ -633,7 +608,7 @@ const handleDelete = async (row: User) => {
         dangerouslyUseHTMLString: false
       }
     )
-    
+
     await userApi.deleteUser(row.id)
     ElMessage.success('删除成功')
     refreshUsers()
@@ -677,7 +652,7 @@ const handleResetPassword = async (row: User) => {
         type: 'warning'
       }
     )
-    
+
     // 假设有重置密码的API
     // await userApi.resetPassword(row.id)
     ElMessage.success('密码重置成功，新密码已发送到用户邮箱')
@@ -743,7 +718,7 @@ const batchDelete = async () => {
         type: 'warning'
       }
     )
-    
+
     const promises = selectedRows.value.map(row => userApi.deleteUser(row.id))
     await Promise.all(promises)
     ElMessage.success('批量删除成功')
@@ -763,7 +738,7 @@ const handlePageSizeChange = (size: number) => {
     console.log('组件销毁中或用户未登录，跳过分页大小变更')
     return
   }
-  
+
   pagination.pageSize = size
   pagination.page = 1
   fetchUsers()
@@ -775,7 +750,7 @@ const handleCurrentChange = (page: number) => {
     console.log('组件销毁中或用户未登录，跳过页码变更')
     return
   }
-  
+
   pagination.page = page
   fetchUsers()
 }
@@ -805,6 +780,12 @@ onMounted(() => {
   refreshUsers()
 })
 
+onUnmounted(() => {
+  isUnmounting.value = true
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

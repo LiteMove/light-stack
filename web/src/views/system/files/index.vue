@@ -564,33 +564,6 @@ const stats = reactive({
 const isSuperAdmin = computed(() => tenantStore.checkIsSuperAdmin())
 const currentTenant = computed(() => tenantStore.getCurrentTenant())
 
-// 监听租户变化
-watch(currentTenant, async (newTenant, oldTenant) => {
-  if (isSuperAdmin.value && newTenant !== oldTenant) {
-    // 显示切换提示
-    if (newTenant) {
-      //ElMessage.info(`正在切换到租户 "${newTenant.name}"...`)
-      console.log(`切换到租户 "${newTenant.name}"`)
-    }
-
-    // 重置分页到第一页
-    pagination.page = 1
-
-    // 清空当前数据，避免显示错误的数据
-    fileList.value = []
-    selectedFiles.value = []
-    updateStats([])
-
-    // 重新加载数据
-    await loadFileList()
-
-    // 切换完成提示
-    if (newTenant) {
-      ElMessage.success(`已切换到租户 "${newTenant.name}"`)
-    }
-  }
-}, { immediate: false })
-
 // 文件大小格式化
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -673,13 +646,6 @@ const handleImageError = () => {
 
 // 加载文件列表
 const loadFileList = async (showMessage = false) => {
-  if (isSuperAdmin.value && !currentTenant.value) {
-    fileList.value = []
-    pagination.total = 0
-    updateStats([])
-    return
-  }
-
   try {
     loading.value = true
 
