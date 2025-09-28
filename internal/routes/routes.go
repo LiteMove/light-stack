@@ -1,13 +1,11 @@
 package routes
 
 import (
-	"log"
-
-	"github.com/LiteMove/light-stack/internal/modules/analytics"
-	"github.com/LiteMove/light-stack/internal/modules/auth"
-	"github.com/LiteMove/light-stack/internal/modules/files"
-	"github.com/LiteMove/light-stack/internal/modules/generator"
-	"github.com/LiteMove/light-stack/internal/modules/system"
+	analyticsRoutes "github.com/LiteMove/light-stack/internal/modules/analytics/routes"
+	authRoutes "github.com/LiteMove/light-stack/internal/modules/auth/routes"
+	filesRoutes "github.com/LiteMove/light-stack/internal/modules/files/routes"
+	generatorRoutes "github.com/LiteMove/light-stack/internal/modules/generator/routes"
+	systemRoutes "github.com/LiteMove/light-stack/internal/modules/system/routes"
 	"github.com/LiteMove/light-stack/internal/shared/config"
 	"github.com/LiteMove/light-stack/internal/shared/globals"
 	"github.com/LiteMove/light-stack/internal/shared/middleware"
@@ -20,22 +18,6 @@ func RegisterRoutes(r *gin.Engine) {
 	// 初始化所有服务
 	globals.Init()
 
-	// 初始化所有模块
-	modules := []ModuleInterface{
-		auth.NewModule(),
-		system.NewModule(),
-		files.NewModule(),
-		generator.NewModule(),
-		analytics.NewModule(),
-	}
-
-	// 初始化模块
-	for _, module := range modules {
-		if err := module.InitModule(); err != nil {
-			log.Printf("Failed to initialize module %s: %v", module.GetModuleName(), err)
-		}
-	}
-
 	// API 分组
 	api := r.Group("/api")
 
@@ -47,9 +29,11 @@ func RegisterRoutes(r *gin.Engine) {
 	registerPublicRoutes(api)
 
 	// 注册各模块路由
-	for _, module := range modules {
-		module.RegisterRoutes(api)
-	}
+	authRoutes.RegisterAuthRoutes(api)
+	systemRoutes.RegisterSystemRoutes(api)
+	filesRoutes.RegisterFileRoutes(api)
+	generatorRoutes.RegisterGeneratorRoutes(api)
+	analyticsRoutes.RegisterAnalyticsRoutes(api)
 
 	// 注册静态文件路由
 	registerStaticRoutes(r)

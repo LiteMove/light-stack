@@ -52,7 +52,7 @@ export const useUserStore = defineStore('user', () => {
       const storedToken = localStorage.getItem('token') || ''
 
       // 确保从localStorage获取的也是有效字符串
-      if (storedToken && typeof storedToken === 'string') {
+      if (storedToken) {
         token.value = storedToken.trim()
       } else {
         token.value = ''
