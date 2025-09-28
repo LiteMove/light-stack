@@ -56,7 +56,7 @@ import { CaretBottom, User, Setting, SwitchButton } from '@element-plus/icons-vu
 import { useAppStore, useUserStore } from '@/store'
 import Hamburger from './Hamburger.vue'
 import Breadcrumb from './Breadcrumb.vue'
-import TenantSwitcher from '@/components/TenantSwitcher.vue'
+import TenantSwitcher from '@/components/SimpleTenantSwitcher.vue'
 
 const router = useRouter()
 const appStore = useAppStore()

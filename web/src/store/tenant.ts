@@ -49,6 +49,7 @@ export const useTenantStore = defineStore('tenant', () => {
 
   // 检查是否为超级管理员
   const checkIsSuperAdmin = (): boolean => {
+      console.log(isSuperAdmin)
     if (!isSuperAdmin.value) {
       const stored = localStorage.getItem('isSuperAdmin')
       isSuperAdmin.value = stored === 'true'
@@ -58,15 +59,17 @@ export const useTenantStore = defineStore('tenant', () => {
 
   // 获取租户列表
   const fetchTenantList = async () => {
-    if (!checkIsSuperAdmin()) return []
 
+    if (!checkIsSuperAdmin()) return []
+    console.log("是超级管理员")
     try {
       const response = await tenantApi.getTenantSelectList()
-      
+      console.log(response)
       if (response.data) {
         tenantList.value = response.data || []
       }
       return tenantList.value
+
     } catch (error) {
       console.error('Failed to fetch tenant list:', error)
       return []

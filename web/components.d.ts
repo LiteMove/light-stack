@@ -64,6 +64,7 @@ declare module 'vue' {
     PermissionGenerator: typeof import('./src/components/Generator/PermissionGenerator.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SimpleTenantSwitcher: typeof import('./src/components/SimpleTenantSwitcher.vue')['default']
     TenantSwitcher: typeof import('./src/components/TenantSwitcher.vue')['default']
   }
   export interface ComponentCustomProperties {

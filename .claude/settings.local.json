@@ -36,7 +36,8 @@
       "Read(//d/work/person/go/src/github.com/LiteMove/**)",
       "Bash(set GOOS=windows)",
       "Bash(set GOARCH=amd64)",
-      "Bash(server.exe)"
+      "Bash(server.exe)",
+      "mcp__filesystem__read_text_file"
     ],
     "deny": [],
     "ask": []
