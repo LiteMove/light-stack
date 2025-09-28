@@ -9,8 +9,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
 
 // TemplateEngine 模板引擎

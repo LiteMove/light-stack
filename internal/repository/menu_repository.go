@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
 	"gorm.io/gorm"
 )
 

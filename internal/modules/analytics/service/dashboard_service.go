@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 )
 
@@ -127,7 +127,7 @@ func (s *dashboardService) getSuperAdminStats() (*SuperAdminStats, error) {
 }
 
 // getTenantAdminStats 获取租户管理员统计数据
-func (s *dashboardService) getTenantAdminStats(tenant *model.Tenant) (*TenantAdminStats, error) {
+func (s *dashboardService) getTenantAdminStats(tenant *systemModel.Tenant) (*TenantAdminStats, error) {
 	// 获取当前租户用户数
 	userCount, err := s.userRepo.GetCountByTenantID(tenant.ID)
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *dashboardService) getTenantAdminStats(tenant *model.Tenant) (*TenantAdm
 }
 
 // getUserWelcomeInfo 获取普通用户欢迎信息
-func (s *dashboardService) getUserWelcomeInfo(user *model.User, tenant *model.Tenant) (*UserWelcomeInfo, error) {
+func (s *dashboardService) getUserWelcomeInfo(user *systemModel.User, tenant *systemModel.Tenant) (*UserWelcomeInfo, error) {
 	lastLogin := ""
 	if user.LastLoginAt != nil {
 		lastLogin = user.LastLoginAt.Format("2006-01-02 15:04:05")

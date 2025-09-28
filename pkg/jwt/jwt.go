@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"errors"
-	"github.com/LiteMove/light-stack/internal/config"
+	"github.com/LiteMove/light-stack/internal/shared/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

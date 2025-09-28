@@ -153,11 +153,11 @@ export const useUserStore = defineStore('user', () => {
     // 如果本地没有或解析失败，从API获取
     if (!userMenus.value.length) {
       try {
-        const { data } = await authApi.getUserInfo()
-        userMenus.value = data.menus
+        const { data } = await menuApi.getUserMenuTree()
+        userMenus.value = data || []
         // 保存到本地存储
-        localStorage.setItem('userMenus', JSON.stringify(data))
-        return data.menus
+        localStorage.setItem('userMenus', JSON.stringify(data || []))
+        return data || []
       } catch (error) {
         console.error('Failed to fetch user menus:', error)
         return []
@@ -184,11 +184,11 @@ export const useUserStore = defineStore('user', () => {
     // 如果本地没有或解析失败，从API获取
     if (!permissions.value.length) {
       try {
-        const { data } = await authApi.getUserInfo()
-        permissions.value = data.permissions
+        const { data } = await menuApi.getUserPermissions()
+        permissions.value = data.permissions || []
         // 保存到本地存储
-        localStorage.setItem('permissions', JSON.stringify(data.permissions))
-        return data.permissions
+        localStorage.setItem('permissions', JSON.stringify(data.permissions || []))
+        return data.permissions || []
       } catch (error) {
         console.error('Failed to fetch menu permissions:', error)
         return []

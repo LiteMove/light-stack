@@ -7,11 +7,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/generator"
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/generator/engine"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
+	"github.com/LiteMove/light-stack/internal/modules/generator/service"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/gin-gonic/gin"
 )
+
+// MenuService 菜单服务接口（跨模块依赖）
+type MenuService interface {
+	CreateMenu(menu *systemModel.Menu) error
+	GetMenuTree() ([]systemModel.MenuTreeNode, error)
+}
 
 // GeneratorController 代码生成器控制器
 type GeneratorController struct {
@@ -19,7 +26,7 @@ type GeneratorController struct {
 	configService *service.GenConfigService
 	codeGenerator *generator.CodeGenerator
 	filePackager  *generator.FilePackager
-	menuService   service.MenuService
+	menuService   MenuService
 }
 
 // NewGeneratorController 创建代码生成器控制器
@@ -28,7 +35,7 @@ func NewGeneratorController(
 	configService *service.GenConfigService,
 	codeGenerator *generator.CodeGenerator,
 	filePackager *generator.FilePackager,
-	menuService service.MenuService,
+	menuService MenuService,
 ) *GeneratorController {
 	return &GeneratorController{
 		dbService:     dbService,

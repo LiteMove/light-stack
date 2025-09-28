@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/pkg/logger"
 )

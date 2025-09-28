@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
 	"github.com/LiteMove/light-stack/internal/repository"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
 
 // GenConfigService 代码生成配置服务

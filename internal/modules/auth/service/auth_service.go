@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/modules/auth/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/shared/utils"
 	"github.com/LiteMove/light-stack/pkg/jwt"
@@ -17,7 +17,7 @@ type AuthService interface {
 	// 用户登录
 	Login(tenantID uint64, req *LoginRequest) (*TokenResponse, error)
 	// 用户注册
-	Register(tenantID uint64, req *RegisterRequest) (*model.UserProfile, error)
+	Register(tenantID uint64, req *RegisterRequest) (*systemModel.UserProfile, error)
 	// 刷新token
 	RefreshToken(tokenString string) (*TokenResponse, error)
 	// 验证token
@@ -25,13 +25,13 @@ type AuthService interface {
 	// 修改密码
 	ChangePassword(userID uint64, oldPassword, newPassword string) error
 	// 获取用户信息
-	GetUserProfile(userID uint64) (*model.UserProfile, error)
+	GetUserProfile(userID uint64) (*systemModel.UserProfile, error)
 	// 更新用户信息
-	UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*model.UserProfile, error)
+	UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*systemModel.UserProfile, error)
 	// 为用户分配角色
 	AssignUserRoles(userID uint64, roleIDs []uint64) error
 	// 获取用户角色
-	GetUserRoles(userID uint64) ([]*model.Role, error)
+	GetUserRoles(userID uint64) ([]*systemModel.Role, error)
 }
 
 // RoleService 角色服务接口
@@ -92,7 +92,7 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 	}
 
 	// 获取用户信息（包含角色）
-	var user *model.User
+	var user *systemModel.User
 	var err error
 	// 支持用户名或邮箱登录
 	if strings.Contains(req.Username, "@") {
@@ -164,7 +164,7 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 }
 
 // Register 用户注册
-func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.UserProfile, error) {
+func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*systemModel.UserProfile, error) {
 	// 参数验证
 	if err := s.validateRegisterRequest(req); err != nil {
 		return nil, err
@@ -200,7 +200,7 @@ func (s *authService) Register(tenantID uint64, req *RegisterRequest) (*model.Us
 	}
 
 	// 创建用户
-	user := &model.User{
+	user := &systemModel.User{
 		Username: req.Username,
 		Password: hashedPassword,
 		Nickname: req.Nickname,
@@ -336,7 +336,7 @@ func (s *authService) ChangePassword(userID uint64, oldPassword, newPassword str
 }
 
 // GetUserProfile 获取用户信息（不包含菜单和权限）
-func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) {
+func (s *authService) GetUserProfile(userID uint64) (*systemModel.UserProfile, error) {
 	user, err := s.userRepo.GetByIDWithRoles(userID)
 	if err != nil {
 		return nil, errors.New("用户不存在")
@@ -352,11 +352,41 @@ func (s *authService) GetUserProfile(userID uint64) (*model.UserProfile, error) 
 		profile.Permissions = permissions
 	}
 
+	// 获取用户菜单树
+	menus, err := s.menuRepo.GetUserMenus(userID)
+	if err != nil {
+		logger.WithField("userId", userID).Warn("Failed to get user menus:", err)
+	} else {
+		// 转换为 MenuTreeNode 结构
+		menuTree := buildMenuTree(menus)
+		profile.Menus = menuTree
+	}
+
 	return &profile, nil
 }
 
+// buildMenuTree 构建菜单树
+func buildMenuTree(menus []systemModel.Menu) []systemModel.MenuTreeNode {
+	return buildMenuTreeRecursive(menus, 0)
+}
+
+// buildMenuTreeRecursive 递归构建菜单树
+func buildMenuTreeRecursive(menus []systemModel.Menu, parentID uint64) []systemModel.MenuTreeNode {
+	var tree []systemModel.MenuTreeNode
+
+	for _, menu := range menus {
+		if menu.ParentID == parentID {
+			node := menu.ToTreeNode()
+			node.Children = buildMenuTreeRecursive(menus, menu.ID)
+			tree = append(tree, node)
+		}
+	}
+
+	return tree
+}
+
 // UpdateUserProfile 更新用户信息
-func (s *authService) UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*model.UserProfile, error) {
+func (s *authService) UpdateUserProfile(userID uint64, req *UpdateProfileRequest) (*systemModel.UserProfile, error) {
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -394,7 +424,7 @@ func (s *authService) AssignUserRoles(userID uint64, roleIDs []uint64) error {
 }
 
 // GetUserRoles 获取用户角色
-func (s *authService) GetUserRoles(userID uint64) ([]*model.Role, error) {
+func (s *authService) GetUserRoles(userID uint64) ([]*systemModel.Role, error) {
 	return s.roleRepo.GetUserRoles(userID)
 }
 

@@ -1,10 +1,18 @@
 package globals
 
 import (
-	"github.com/LiteMove/light-stack/internal/controller"
-	"github.com/LiteMove/light-stack/internal/generator"
+	analyticsController "github.com/LiteMove/light-stack/internal/modules/analytics/controller"
+	analyticsService "github.com/LiteMove/light-stack/internal/modules/analytics/service"
+	authController "github.com/LiteMove/light-stack/internal/modules/auth/controller"
+	authService "github.com/LiteMove/light-stack/internal/modules/auth/service"
+	fileController "github.com/LiteMove/light-stack/internal/modules/files/controller"
+	fileService "github.com/LiteMove/light-stack/internal/modules/files/service"
+	generatorController "github.com/LiteMove/light-stack/internal/modules/generator/controller"
+	generatorEngine "github.com/LiteMove/light-stack/internal/modules/generator/engine"
+	generatorService "github.com/LiteMove/light-stack/internal/modules/generator/service"
+	systemController "github.com/LiteMove/light-stack/internal/modules/system/controller"
+	systemService "github.com/LiteMove/light-stack/internal/modules/system/service"
 	"github.com/LiteMove/light-stack/internal/repository"
-	"github.com/LiteMove/light-stack/internal/service"
 	"github.com/LiteMove/light-stack/pkg/database"
 	"gorm.io/gorm"
 )
@@ -22,35 +30,35 @@ var (
 	genConfigRepo  *repository.GenConfigRepository
 
 	// Generator 层
-	templateEngine *generator.TemplateEngine
-	codeGenerator  *generator.CodeGenerator
-	filePackager   *generator.FilePackager
+	templateEngine *generatorEngine.TemplateEngine
+	codeGenerator  *generatorEngine.CodeGenerator
+	filePackager   *generatorEngine.FilePackager
 
 	// Service 层
-	authSvc       service.AuthService
-	userSvc       service.UserService
-	roleSvc       service.RoleService
-	menuSvc       service.MenuService
-	tenantSvc     service.TenantService
-	fileSvc       *service.FileService
-	profileSvc    service.ProfileService
-	dashboardSvc  service.DashboardService
-	dictSvc       service.DictService
-	dbAnalyzerSvc *service.DBAnalyzerService
-	genConfigSvc  *service.GenConfigService
+	authSvc       authService.AuthService
+	userSvc       systemService.UserService
+	roleSvc       systemService.RoleService
+	menuSvc       systemService.MenuService
+	tenantSvc     systemService.TenantService
+	fileSvc       *fileService.FileService
+	profileSvc    authService.ProfileService
+	dashboardSvc  analyticsService.DashboardService
+	dictSvc       systemService.DictService
+	dbAnalyzerSvc *generatorService.DBAnalyzerService
+	genConfigSvc  *generatorService.GenConfigService
 
 	// Controller 层
-	authCtrl      *controller.AuthController
-	userCtrl      *controller.UserController
-	roleCtrl      *controller.RoleController
-	menuCtrl      *controller.MenuController
-	tenantCtrl    *controller.TenantController
-	fileCtrl      *controller.FileController
-	profileCtrl   *controller.ProfileController
-	dashboardCtrl *controller.DashboardController
-	dictCtrl      *controller.DictController
-	generatorCtrl *controller.GeneratorController
-	genConfigCtrl *controller.GenConfigController
+	authCtrl      *authController.AuthController
+	userCtrl      *systemController.UserController
+	roleCtrl      *systemController.RoleController
+	menuCtrl      *systemController.MenuController
+	tenantCtrl    *systemController.TenantController
+	fileCtrl      *fileController.FileController
+	profileCtrl   *authController.ProfileController
+	dashboardCtrl *analyticsController.DashboardController
+	dictCtrl      *systemController.DictController
+	generatorCtrl *generatorController.GeneratorController
+	genConfigCtrl *generatorController.GenConfigController
 )
 
 // Init 初始化所有服务
@@ -78,71 +86,71 @@ func initRepositories(db *gorm.DB) {
 }
 
 func initGenerators() {
-	templateEngine = generator.NewTemplateEngine()
+	templateEngine = generatorEngine.NewTemplateEngine()
 	if err := templateEngine.LoadTemplates("templates"); err != nil {
 		panic("Failed to load templates: " + err.Error())
 	}
-	codeGenerator = generator.NewCodeGenerator(templateEngine)
-	filePackager = generator.NewFilePackager("generated")
+	codeGenerator = generatorEngine.NewCodeGenerator(templateEngine)
+	filePackager = generatorEngine.NewFilePackager("generated")
 }
 
 func initServices() {
-	authSvc = service.NewAuthService(userRepo, roleRepo, menuRepo)
-	userSvc = service.NewUserService(userRepo, roleRepo)
-	roleSvc = service.NewRoleService(roleRepo, userRepo)
-	menuSvc = service.NewMenuService(menuRepo, roleRepo)
-	tenantSvc = service.NewTenantService(tenantRepo, userRepo)
-	profileSvc = service.NewProfileService(userRepo, roleRepo, tenantRepo)
-	fileSvc = service.NewFileService(fileRepo, tenantSvc)
-	dashboardSvc = service.NewDashboardService(userRepo, tenantRepo, fileRepo)
-	dictSvc = service.NewDictService(dictRepo)
-	dbAnalyzerSvc = service.NewDBAnalyzerService(dbAnalyzerRepo, database.GetDB())
-	genConfigSvc = service.NewGenConfigService(genConfigRepo, dbAnalyzerSvc)
+	authSvc = authService.NewAuthService(userRepo, roleRepo, menuRepo)
+	userSvc = systemService.NewUserService(userRepo, roleRepo)
+	roleSvc = systemService.NewRoleService(roleRepo, userRepo)
+	menuSvc = systemService.NewMenuService(menuRepo, roleRepo)
+	tenantSvc = systemService.NewTenantService(tenantRepo, userRepo)
+	profileSvc = authService.NewProfileService(userRepo, roleRepo, tenantRepo)
+	fileSvc = fileService.NewFileService(fileRepo, tenantSvc)
+	dashboardSvc = analyticsService.NewDashboardService(userRepo, tenantRepo, fileRepo)
+	dictSvc = systemService.NewDictService(dictRepo)
+	dbAnalyzerSvc = generatorService.NewDBAnalyzerService(dbAnalyzerRepo, database.GetDB())
+	genConfigSvc = generatorService.NewGenConfigService(genConfigRepo, dbAnalyzerSvc)
 
 }
 
 func initControllers() {
-	authCtrl = controller.NewAuthController(authSvc, roleSvc, menuSvc)
-	userCtrl = controller.NewUserController(userSvc)
-	roleCtrl = controller.NewRoleController(roleSvc)
-	menuCtrl = controller.NewMenuController(menuSvc)
-	tenantCtrl = controller.NewTenantController(tenantSvc)
-	fileCtrl = controller.NewFileController(fileSvc)
-	profileCtrl = controller.NewProfileController(profileSvc)
-	dashboardCtrl = controller.NewDashboardController(dashboardSvc)
-	dictCtrl = controller.NewDictController(dictSvc)
-	generatorCtrl = controller.NewGeneratorController(dbAnalyzerSvc, genConfigSvc, codeGenerator, filePackager, menuSvc)
-	genConfigCtrl = controller.NewGenConfigController(genConfigSvc)
+	authCtrl = authController.NewAuthController(authSvc)
+	userCtrl = systemController.NewUserController(userSvc)
+	roleCtrl = systemController.NewRoleController(roleSvc)
+	menuCtrl = systemController.NewMenuController(menuSvc)
+	tenantCtrl = systemController.NewTenantController(tenantSvc)
+	fileCtrl = fileController.NewFileController(fileSvc)
+	profileCtrl = authController.NewProfileController(profileSvc)
+	dashboardCtrl = analyticsController.NewDashboardController(dashboardSvc)
+	dictCtrl = systemController.NewDictController(dictSvc)
+	generatorCtrl = generatorController.NewGeneratorController(dbAnalyzerSvc, genConfigSvc, codeGenerator, filePackager, menuSvc)
+	genConfigCtrl = generatorController.NewGenConfigController(genConfigSvc)
 }
 
 // === Service 获取函数 ===
-func AuthSvc() service.AuthService           { return authSvc }
-func UserSvc() service.UserService           { return userSvc }
-func RoleSvc() service.RoleService           { return roleSvc }
-func MenuSvc() service.MenuService           { return menuSvc }
-func TenantSvc() service.TenantService       { return tenantSvc }
-func FileSvc() *service.FileService          { return fileSvc }
-func ProfileSvc() service.ProfileService     { return profileSvc }
-func DashboardSvc() service.DashboardService { return dashboardSvc }
-func DictSvc() service.DictService           { return dictSvc }
+func AuthSvc() authService.AuthService                { return authSvc }
+func UserSvc() systemService.UserService              { return userSvc }
+func RoleSvc() systemService.RoleService              { return roleSvc }
+func MenuSvc() systemService.MenuService              { return menuSvc }
+func TenantSvc() systemService.TenantService          { return tenantSvc }
+func FileSvc() *fileService.FileService               { return fileSvc }
+func ProfileSvc() authService.ProfileService          { return profileSvc }
+func DashboardSvc() analyticsService.DashboardService { return dashboardSvc }
+func DictSvc() systemService.DictService              { return dictSvc }
 
 // Generator 获取函数
-func TemplateEngine() *generator.TemplateEngine { return templateEngine }
-func CodeGenerator() *generator.CodeGenerator   { return codeGenerator }
-func FilePackager() *generator.FilePackager     { return filePackager }
+func TemplateEngine() *generatorEngine.TemplateEngine { return templateEngine }
+func CodeGenerator() *generatorEngine.CodeGenerator   { return codeGenerator }
+func FilePackager() *generatorEngine.FilePackager     { return filePackager }
 
 // === Controller 获取函数 ===
-func AuthCtrl() *controller.AuthController           { return authCtrl }
-func UserCtrl() *controller.UserController           { return userCtrl }
-func RoleCtrl() *controller.RoleController           { return roleCtrl }
-func MenuCtrl() *controller.MenuController           { return menuCtrl }
-func TenantCtrl() *controller.TenantController       { return tenantCtrl }
-func FileCtrl() *controller.FileController           { return fileCtrl }
-func ProfileCtrl() *controller.ProfileController     { return profileCtrl }
-func DashboardCtrl() *controller.DashboardController { return dashboardCtrl }
-func DictCtrl() *controller.DictController           { return dictCtrl }
-func GeneratorCtrl() *controller.GeneratorController { return generatorCtrl }
-func GenConfigCtrl() *controller.GenConfigController { return genConfigCtrl }
+func AuthCtrl() *authController.AuthController                { return authCtrl }
+func UserCtrl() *systemController.UserController              { return userCtrl }
+func RoleCtrl() *systemController.RoleController              { return roleCtrl }
+func MenuCtrl() *systemController.MenuController              { return menuCtrl }
+func TenantCtrl() *systemController.TenantController          { return tenantCtrl }
+func FileCtrl() *fileController.FileController                { return fileCtrl }
+func ProfileCtrl() *authController.ProfileController          { return profileCtrl }
+func DashboardCtrl() *analyticsController.DashboardController { return dashboardCtrl }
+func DictCtrl() *systemController.DictController              { return dictCtrl }
+func GeneratorCtrl() *generatorController.GeneratorController { return generatorCtrl }
+func GenConfigCtrl() *generatorController.GenConfigController { return genConfigCtrl }
 
 // === 权限检查函数 ===
 func CheckUserRole(userID uint64, roleCode string) bool {

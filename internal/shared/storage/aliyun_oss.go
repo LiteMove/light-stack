@@ -5,19 +5,19 @@ import (
 	"io"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
 // AliyunOSSProvider 阿里云OSS存储提供者
 type AliyunOSSProvider struct {
-	config *model.FileStorageConfig
+	config *systemModel.FileStorageConfig
 	client *oss.Client
 	bucket *oss.Bucket
 }
 
 // NewAliyunOSSProvider 创建阿里云OSS存储提供者
-func NewAliyunOSSProvider(config *model.FileStorageConfig) (*AliyunOSSProvider, error) {
+func NewAliyunOSSProvider(config *systemModel.FileStorageConfig) (*AliyunOSSProvider, error) {
 	// 创建OSS客户端
 	client, err := oss.New(config.OSSEndpoint, config.OSSAccessKey, config.OSSSecretKey)
 	if err != nil {

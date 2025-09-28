@@ -1,5 +1,7 @@
 package model
 
+import "github.com/LiteMove/light-stack/internal/shared/model"
+
 import (
 	"time"
 
@@ -8,7 +10,7 @@ import (
 
 // User 用户模型
 type User struct {
-	TenantBaseModel
+	model.TenantBaseModel
 	Username      string     `json:"username" gorm:"not null;size:50;uniqueIndex:uk_tenant_username" validate:"required,min=3,max=50"`
 	Password      string     `json:"-" gorm:"not null;size:255" validate:"required,min=6"`
 	Nickname      string     `json:"nickname" gorm:"size:100" validate:"max=100"`

@@ -2,22 +2,22 @@ package storage
 
 import (
 	"fmt"
-	sysConfig "github.com/LiteMove/light-stack/internal/config"
+	sysConfig "github.com/LiteMove/light-stack/internal/shared/config"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 )
 
 // LocalProvider 本地存储提供者
 type LocalProvider struct {
-	storageConfig *model.FileStorageConfig
+	storageConfig *systemModel.FileStorageConfig
 }
 
 // NewLocalProvider 创建本地存储提供者
-func NewLocalProvider(config *model.FileStorageConfig) (*LocalProvider, error) {
+func NewLocalProvider(config *systemModel.FileStorageConfig) (*LocalProvider, error) {
 	// 验证租户域名配置（必填）
 	if config.LocalAccessDomain == "" {
 		return nil, fmt.Errorf("租户本地访问域名配置不能为空，请在租户配置中设置 LocalAccessDomain")

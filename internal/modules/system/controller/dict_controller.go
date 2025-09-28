@@ -3,8 +3,8 @@ package controller
 import (
 	"strconv"
 
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/service"
 	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"

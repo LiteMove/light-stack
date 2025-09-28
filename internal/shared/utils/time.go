@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/config"
+	"github.com/LiteMove/light-stack/internal/shared/config"
 )
 
 func ParseToTime(timeStr string) (*time.Time, error) {

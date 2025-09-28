@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/service"
 	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"

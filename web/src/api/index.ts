@@ -31,7 +31,7 @@ export const authApi = {
 
   // 获取用户信息
   getUserInfo(): Promise<ApiResponse<User>> {
-    return http.get('/v1/user/profile')
+    return http.get('/v1/profile')
   },
 
   // 登出
@@ -101,57 +101,57 @@ export const roleApi = {
     },
   // 获取角色列表
   getRoles(params: RoleQueryParams): Promise<ApiResponse<PageResponse<Role>>> {
-    return http.get('/v1/super-admin/roles', { params })
+    return http.get('/v1/admin/roles', { params })
   },
 
   // 获取角色详情
   getRole(id: number): Promise<ApiResponse<Role>> {
-    return http.get(`/v1/super-admin/roles/${id}`)
+    return http.get(`/v1/admin/roles/${id}`)
   },
 
   // 创建角色
   createRole(data: RoleFormData): Promise<ApiResponse<Role>> {
-    return http.post('/v1/super-admin/roles', data)
+    return http.post('/v1/admin/roles', data)
   },
 
   // 更新角色
   updateRole(id: number, data: RoleFormData): Promise<ApiResponse<Role>> {
-    return http.put(`/v1/super-admin/roles/${id}`, data)
+    return http.put(`/v1/admin/roles/${id}`, data)
   },
 
   // 删除角色
   deleteRole(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/super-admin/roles/${id}`)
+    return http.delete(`/v1/admin/roles/${id}`)
   },
 
   // 更新角色状态
   updateRoleStatus(id: number, data: { status: number }): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/roles/${id}/status`, data)
+    return http.put(`/v1/admin/roles/${id}/status`, data)
   },
 
   // 批量更新角色状态
   batchUpdateRoleStatus(data: { ids: number[], status: number }): Promise<ApiResponse> {
-    return http.put('/v1/super-admin/roles/batch/status', data)
+    return http.put('/v1/admin/roles/batch/status', data)
   },
 
   // 获取角色权限
   getRolePermissions(roleId: number): Promise<ApiResponse<Permission[]>> {
-    return http.get(`/v1/super-admin/roles/${roleId}/permissions`)
+    return http.get(`/v1/admin/roles/${roleId}/permissions`)
   },
 
   // 为角色分配权限
   assignPermissionsToRole(roleId: number, data: AssignPermissionsData): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/roles/${roleId}/permissions`, data)
+    return http.put(`/v1/admin/roles/${roleId}/permissions`, data)
   },
 
   // 获取角色菜单
   getRoleMenus(roleId: number): Promise<ApiResponse<Menu[]>> {
-    return http.get(`/v1/super-admin/roles/${roleId}/menus`)
+    return http.get(`/v1/admin/roles/${roleId}/menus`)
   },
 
   // 为角色分配菜单
   assignMenusToRole(roleId: number, data: AssignMenusData): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/roles/${roleId}/menus`, data)
+    return http.put(`/v1/admin/roles/${roleId}/menus`, data)
   }
 }
 
@@ -159,12 +159,12 @@ export const roleApi = {
 export const menuApi = {
   // 获取菜单列表(分页)
   getMenus(params: MenuQueryParams): Promise<ApiResponse<PageResponse<Menu>>> {
-    return http.get('/v1/super-admin/menus', { params })
+    return http.get('/v1/admin/menus', { params })
   },
 
   // 获取菜单树
   getMenuTree(): Promise<ApiResponse<Menu[]>> {
-    return http.get('/v1/super-admin/menus/tree')
+    return http.get('/v1/admin/menus/tree')
   },
 
   // 获取用户菜单树
@@ -179,38 +179,38 @@ export const menuApi = {
 
   // 获取菜单详情
   getMenu(id: number): Promise<ApiResponse<Menu>> {
-    return http.get(`/v1/super-admin/menus/${id}`)
+    return http.get(`/v1/admin/menus/${id}`)
   },
 
   // 创建菜单
   createMenu(data: MenuFormData): Promise<ApiResponse<Menu>> {
-    return http.post('/v1/super-admin/menus', data)
+    return http.post('/v1/admin/menus', data)
   },
 
   // 更新菜单
   updateMenu(id: number, data: MenuFormData): Promise<ApiResponse<Menu>> {
-    return http.put(`/v1/super-admin/menus/${id}`, data)
+    return http.put(`/v1/admin/menus/${id}`, data)
   },
 
   // 删除菜单
   deleteMenu(id: number): Promise<ApiResponse> {
-    return http.delete(`/v1/super-admin/menus/${id}`)
+    return http.delete(`/v1/admin/menus/${id}`)
   },
 
   // 更新菜单状态
   updateMenuStatus(id: number, data: MenuStatusData): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/menus/${id}/status`, data)
+    return http.put(`/v1/admin/menus/${id}/status`, data)
   },
 
 
   // 获取角色菜单
   getRoleMenus(roleId: number): Promise<ApiResponse<Menu[]>> {
-    return http.get(`/v1/super-admin/roles/${roleId}/menus`)
+    return http.get(`/v1/admin/roles/${roleId}/menus`)
   },
 
   // 为角色分配菜单
   assignMenusToRole(roleId: number, data: AssignMenusData): Promise<ApiResponse> {
-    return http.put(`/v1/super-admin/roles/${roleId}/menus`, data)
+    return http.put(`/v1/admin/roles/${roleId}/menus`, data)
   }
 }
 

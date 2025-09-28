@@ -72,7 +72,7 @@ export const tenantApi = {
   // 获取租户列表
   getTenantList(params: TenantQueryParams): Promise<ApiResponse<PageResponse<Tenant>>> {
     return request({
-      url: '/v1/super-admin/tenants',
+      url: '/v1/admin/tenants',
       method: 'get',
       params
     })
@@ -80,7 +80,7 @@ export const tenantApi = {
     // 获取租户下拉列表
     getTenantSelectList(): Promise<ApiResponse<Tenant[]>> {
       return request({
-        url: '/v1/super-admin/tenants/list',
+        url: '/v1/admin/tenants/list',
         method: 'get'
       })
     },
@@ -88,7 +88,7 @@ export const tenantApi = {
   // 获取租户详情
   getTenant(id: number): Promise<ApiResponse<Tenant>> {
     return request({
-      url: `/v1/super-admin/tenants/${id}`,
+      url: `/v1/admin/tenants/${id}`,
       method: 'get'
     })
   },
@@ -96,7 +96,7 @@ export const tenantApi = {
   // 创建租户
   createTenant(data: TenantFormData): Promise<ApiResponse<Tenant>> {
     return request({
-      url: '/v1/super-admin/tenants',
+      url: '/v1/admin/tenants',
       method: 'post',
       data
     })
@@ -105,7 +105,7 @@ export const tenantApi = {
   // 更新租户
   updateTenant(id: number, data: TenantFormData): Promise<ApiResponse<Tenant>> {
     return request({
-      url: `/v1/super-admin/tenants/${id}`,
+      url: `/v1/admin/tenants/${id}`,
       method: 'put',
       data
     })
@@ -114,7 +114,7 @@ export const tenantApi = {
   // 删除租户
   deleteTenant(id: number): Promise<ApiResponse<void>> {
     return request({
-      url: `/v1/super-admin/tenants/${id}`,
+      url: `/v1/admin/tenants/${id}`,
       method: 'delete'
     })
   },
@@ -122,7 +122,7 @@ export const tenantApi = {
   // 更新租户状态
   updateTenantStatus(id: number, data: TenantStatusData): Promise<ApiResponse<void>> {
     return request({
-      url: `/v1/super-admin/tenants/${id}/status`,
+      url: `/v1/admin/tenants/${id}/status`,
       method: 'put',
       data
     })
@@ -131,7 +131,7 @@ export const tenantApi = {
   // 检查域名是否可用
   checkDomain(domain: string): Promise<ApiResponse<DomainCheckResponse>> {
     return request({
-      url: '/v1/super-admin/tenants/check-domain',
+      url: '/v1/admin/tenants/check-domain',
       method: 'get',
       params: { domain }
     })
@@ -140,7 +140,7 @@ export const tenantApi = {
   // 检查租户名称是否可用
   checkName(name: string): Promise<ApiResponse<NameCheckResponse>> {
     return request({
-      url: '/v1/super-admin/tenants/check-name',
+      url: '/v1/admin/tenants/check-name',
       method: 'get',
       params: { name }
     })
@@ -149,7 +149,7 @@ export const tenantApi = {
   // 获取租户统计信息
   getTenantStats(id: number): Promise<ApiResponse<TenantStats>> {
     return request({
-      url: `/v1/super-admin/tenants/${id}/stats`,
+      url: `/v1/admin/tenants/${id}/stats`,
       method: 'get'
     })
   }

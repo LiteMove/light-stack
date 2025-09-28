@@ -12,21 +12,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ChangePasswordRequest 修改密码请求
+type ChangePasswordRequest struct {
+	OldPassword string `json:"oldPassword" validate:"required"`
+	NewPassword string `json:"newPassword" validate:"required,min=6"`
+}
+
+// AssignRolesRequest 分配角色请求
+type AssignRolesRequest struct {
+	UserID  uint64   `json:"userId" validate:"required"`
+	RoleIDs []uint64 `json:"roleIds" validate:"required"`
+}
+
 // AuthController 认证控制器
 type AuthController struct {
 	authService service.AuthService
-	roleService service.RoleService
-	menuService service.MenuService
 }
 
 // NewAuthController 创建认证控制器
-func NewAuthController(authService service.AuthService,
-	roleService service.RoleService,
-	menuService service.MenuService) *AuthController {
+func NewAuthController(authService service.AuthService) *AuthController {
 	return &AuthController{
 		authService: authService,
-		roleService: roleService,
-		menuService: menuService,
 	}
 }
 
@@ -113,11 +119,6 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 		response.BadRequest(ctx, err.Error())
 		return
 	}
-	profile.Menus, err = c.menuService.GetUserMenuTree(userId)
-	if err != nil {
-		response.BadRequest(ctx, "获取用户菜单树失败")
-		return
-	}
 
 	// 从权限缓存中获取权限列表
 	perms, exists := permission.Cache.GetUserPermissions(userId)
@@ -127,15 +128,6 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 			permList = append(permList, p)
 		}
 		profile.Permissions = permList
-	} else {
-		// 如果缓存中没有，从数据库获取并缓存
-		profile.Permissions, err = c.menuService.GetMenuPermissions(userId)
-		if err != nil {
-			response.BadRequest(ctx, "获取用户权限失败")
-			return
-		}
-		// 加载到缓存
-		permission.Cache.LoadUserPermissions(userId, profile.Permissions)
 	}
 
 	response.Success(ctx, profile)

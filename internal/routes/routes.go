@@ -3,12 +3,12 @@ package routes
 import (
 	"log"
 
-	"github.com/LiteMove/light-stack/internal/config"
 	"github.com/LiteMove/light-stack/internal/modules/analytics"
 	"github.com/LiteMove/light-stack/internal/modules/auth"
 	"github.com/LiteMove/light-stack/internal/modules/files"
 	"github.com/LiteMove/light-stack/internal/modules/generator"
 	"github.com/LiteMove/light-stack/internal/modules/system"
+	"github.com/LiteMove/light-stack/internal/shared/config"
 	"github.com/LiteMove/light-stack/internal/shared/globals"
 	"github.com/LiteMove/light-stack/internal/shared/middleware"
 	"github.com/LiteMove/light-stack/pkg/response"

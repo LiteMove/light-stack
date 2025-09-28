@@ -2,11 +2,14 @@ package model
 
 import (
 	"time"
+
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
+	"github.com/LiteMove/light-stack/internal/shared/model"
 )
 
 // File 文件模型
 type File struct {
-	TenantBaseModel
+	model.TenantBaseModel
 	OriginalName string `json:"originalName" gorm:"not null;size:255" validate:"required,max=255"`
 	FileName     string `json:"fileName" gorm:"not null;size:255" validate:"required,max=255"`
 	FilePath     string `json:"filePath" gorm:"not null;size:500" validate:"required,max=500"`
@@ -21,7 +24,7 @@ type File struct {
 	AccessURL    string `json:"accessUrl" gorm:"size:1000"`
 
 	// 关联关系
-	UploadUser *User `json:"upload_user,omitempty" gorm:"foreignKey:UploadUserID"`
+	UploadUser *systemModel.User `json:"upload_user,omitempty" gorm:"foreignKey:UploadUserID"`
 }
 
 // TableName 指定表名

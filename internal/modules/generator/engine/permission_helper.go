@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
 
 // PermissionHelper 权限辅助工具

@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/LiteMove/light-stack/internal/config"
+	"github.com/LiteMove/light-stack/internal/shared/config"
 	"time"
 
 	"github.com/go-redis/redis/v8"

@@ -31,7 +31,9 @@
       "Bash(go vet:*)",
       "Bash(npx vue-tsc:*)",
       "Bash(cat:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(GOOS=linux go build -o server cmd/server/main.go)",
+      "Read(//d/work/person/go/src/github.com/LiteMove/**)"
     ],
     "deny": [],
     "ask": []

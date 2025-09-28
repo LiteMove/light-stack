@@ -1,5 +1,7 @@
 package model
 
+import "github.com/LiteMove/light-stack/internal/shared/model"
+
 import (
 	"encoding/json"
 	"gorm.io/gorm"
@@ -8,7 +10,7 @@ import (
 
 // Tenant 租户模型
 type Tenant struct {
-	BaseModel
+	model.BaseModel
 	Name      string     `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
 	Domain    string     `json:"domain" gorm:"size:100;uniqueIndex:uk_domain" validate:"max=100"`
 	Status    int        `json:"status" gorm:"not null;default:1;index" validate:"required,oneof=1 2 3 4"`

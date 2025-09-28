@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/generator/service"
 	"github.com/gin-gonic/gin"
 )
 

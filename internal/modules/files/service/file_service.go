@@ -10,10 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/files/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
-	"github.com/LiteMove/light-stack/internal/storage"
+	sharedModel "github.com/LiteMove/light-stack/internal/shared/model"
+	"github.com/LiteMove/light-stack/internal/shared/storage"
 )
+
+// TenantService 租户服务接口（跨模块依赖）
+type TenantService interface {
+	GetTenant(tenantID uint64) (*systemModel.Tenant, error)
+}
 
 // FileService 文件服务
 type FileService struct {
@@ -109,7 +116,7 @@ func (s *FileService) UploadFile(file *multipart.FileHeader, userID, tenantID ui
 
 	// 创建文件记录
 	fileModel := &model.File{
-		TenantBaseModel: model.TenantBaseModel{
+		TenantBaseModel: sharedModel.TenantBaseModel{
 			TenantID: tenantID,
 		},
 		OriginalName: file.Filename,

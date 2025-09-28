@@ -44,7 +44,7 @@ export function createDictType(data: {
   status: number
 }) {
   return request({
-    url: '/v1/super-admin/dict/types',
+    url: '/v1/admin/dicts/types',
     method: 'post',
     data
   })
@@ -58,7 +58,7 @@ export function getDictTypeList(params: {
   name?: string
 }) {
   return request({
-    url: '/v1/super-admin/dict/types',
+    url: '/v1/admin/dicts/types',
     method: 'get',
     params
   })
@@ -67,7 +67,7 @@ export function getDictTypeList(params: {
 // 获取字典类型详情
 export function getDictType(id: number) {
   return request({
-    url: `/v1/super-admin/dict/types/${id}`,
+    url: `/v1/admin/dicts/types/${id}`,
     method: 'get'
   })
 }
@@ -80,7 +80,7 @@ export function updateDictType(id: number, data: {
   status: number
 }) {
   return request({
-    url: `/v1/super-admin/dict/types/${id}`,
+    url: `/v1/admin/dicts/types/${id}`,
     method: 'put',
     data
   })
@@ -89,7 +89,7 @@ export function updateDictType(id: number, data: {
 // 删除字典类型
 export function deleteDictType(id: number) {
   return request({
-    url: `/v1/super-admin/dict/types/${id}`,
+    url: `/v1/admin/dicts/types/${id}`,
     method: 'delete'
   })
 }
@@ -109,7 +109,7 @@ export function createDictData(data: {
   remark?: string
 }) {
   return request({
-    url: '/v1/super-admin/dict/data',
+    url: '/v1/admin/dicts/data',
     method: 'post',
     data
   })
@@ -123,7 +123,7 @@ export function getDictDataList(dictType: string, params: {
   label?: string
 }) {
   return request({
-    url: `/v1/super-admin/dict/data/type/${dictType}`,
+    url: `/v1/admin/dicts/data/type/${dictType}`,
     method: 'get',
     params
   })
@@ -132,7 +132,7 @@ export function getDictDataList(dictType: string, params: {
 // 获取字典数据详情
 export function getDictData(id: number) {
   return request({
-    url: `/v1/super-admin/dict/data/${id}`,
+    url: `/v1/admin/dicts/data/${id}`,
     method: 'get'
   })
 }
@@ -150,7 +150,7 @@ export function updateDictData(id: number, data: {
   remark?: string
 }) {
   return request({
-    url: `/v1/super-admin/dict/data/${id}`,
+    url: `/v1/admin/dicts/data/${id}`,
     method: 'put',
     data
   })
@@ -159,7 +159,7 @@ export function updateDictData(id: number, data: {
 // 删除字典数据
 export function deleteDictData(id: number) {
   return request({
-    url: `/v1/super-admin/dict/data/${id}`,
+    url: `/v1/admin/dicts/data/${id}`,
     method: 'delete'
   })
 }
@@ -170,7 +170,7 @@ export function batchUpdateDictDataStatus(data: {
   status: number
 }) {
   return request({
-    url: '/v1/super-admin/dict/data/batch/status',
+    url: '/v1/admin/dicts/data/batch/status',
     method: 'put',
     data
   })
@@ -181,7 +181,7 @@ export function batchDeleteDictData(data: {
   ids: number[]
 }) {
   return request({
-    url: '/v1/super-admin/dict/data/batch',
+    url: '/v1/admin/dicts/data/batch',
     method: 'delete',
     data
   })

@@ -3,7 +3,7 @@ package repository
 import (
 	"fmt"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
 	"gorm.io/gorm"
 )
 

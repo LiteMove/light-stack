@@ -28,11 +28,7 @@ request.interceptors.request.use(
     // 更严格的token验证和处理
     if (token) {
       // 确保token字符串有效
-      if (token && token.trim()) {
         config.headers.Authorization = `Bearer ${token.trim()}`
-      } else {
-        console.log('Token is empty or invalid after processing:', token)
-      }
     } else {
       console.log('No token available')
     }

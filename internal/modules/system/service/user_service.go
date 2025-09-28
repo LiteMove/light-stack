@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
 
 // UserService 用户服务接口

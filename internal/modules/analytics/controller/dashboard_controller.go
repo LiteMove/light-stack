@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/analytics/service"
 	"github.com/LiteMove/light-stack/pkg/response"
 	"github.com/gin-gonic/gin"
 )

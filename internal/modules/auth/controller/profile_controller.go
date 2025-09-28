@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/LiteMove/light-stack/internal/modules/auth/model"
 	"github.com/LiteMove/light-stack/internal/modules/auth/service"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/shared/middleware"
 	"github.com/LiteMove/light-stack/pkg/response"
 
@@ -40,11 +40,11 @@ type ProfileChangePasswordRequest struct {
 
 // UpdateTenantConfigRequest 更新租户配置请求
 type UpdateTenantConfigRequest struct {
-	SystemName  string                  `json:"systemName"`
-	Logo        string                  `json:"logo"`
-	Description string                  `json:"description"`
-	Copyright   string                  `json:"copyright"`
-	FileStorage model.FileStorageConfig `json:"fileStorage" validate:"required"`
+	SystemName  string                        `json:"systemName"`
+	Logo        string                        `json:"logo"`
+	Description string                        `json:"description"`
+	Copyright   string                        `json:"copyright"`
+	FileStorage systemModel.FileStorageConfig `json:"fileStorage" validate:"required"`
 }
 
 // GetProfile 获取个人信息
@@ -227,7 +227,7 @@ func (c *ProfileController) UpdateTenantConfig(ctx *gin.Context) {
 	}
 
 	// 构建租户配置
-	config := &model.TenantConfig{
+	config := &systemModel.TenantConfig{
 		SystemName:  req.SystemName,
 		Logo:        req.Logo,
 		Description: req.Description,

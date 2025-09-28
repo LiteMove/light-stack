@@ -3,9 +3,9 @@ package controller
 import (
 	"strconv"
 
-	"github.com/LiteMove/light-stack/internal/model"
-	"github.com/LiteMove/light-stack/internal/service"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/service"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -303,4 +303,40 @@ func (mc *MenuController) AssignMenusToRole(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"message": "分配菜单成功"})
+}
+
+// GetUserMenuTree 获取用户菜单树
+func (mc *MenuController) GetUserMenuTree(c *gin.Context) {
+	// 从JWT中间件中获取用户ID
+	userID := c.GetUint64("userId")
+	if userID == 0 {
+		response.Unauthorized(c, "未授权")
+		return
+	}
+
+	menuTree, err := mc.menuService.GetUserMenuTree(userID)
+	if err != nil {
+		response.BadRequest(c, "获取用户菜单失败")
+		return
+	}
+
+	response.Success(c, menuTree)
+}
+
+// GetUserPermissions 获取用户权限
+func (mc *MenuController) GetUserPermissions(c *gin.Context) {
+	// 从JWT中间件中获取用户ID
+	userID := c.GetUint64("userId")
+	if userID == 0 {
+		response.Unauthorized(c, "未授权")
+		return
+	}
+
+	permissions, err := mc.menuService.GetMenuPermissions(userID)
+	if err != nil {
+		response.BadRequest(c, "获取用户权限失败")
+		return
+	}
+
+	response.Success(c, gin.H{"permissions": permissions})
 }

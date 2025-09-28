@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/generator/model"
 )
 
 // CodeGenerator 代码生成器

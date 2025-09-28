@@ -62,26 +62,26 @@ export interface TenantConfig {
 export const profileApi = {
   // 获取个人信息
   getProfile(): Promise<ApiResponse<ProfileInfo>> {
-    return http.get('/v1/user/profile')
+    return http.get('/v1/profile')
   },
 
   // 更新个人信息
   updateProfile(data: UpdateProfileData): Promise<ApiResponse> {
-    return http.put('/v1/user/profile', data)
+    return http.put('/v1/profile', data)
   },
 
   // 修改密码
   changePassword(data: ChangePasswordData): Promise<ApiResponse> {
-    return http.put('/v1/user/password', data)
+    return http.put('/v1/profile/password', data)
   },
 
   // 获取所在租户配置（仅租户管理员）
   getTenantConfig(): Promise<ApiResponse<TenantConfig>> {
-    return http.get('/v1/user/tenant-config')
+    return http.get('/v1/profile/tenant-config')
   },
 
   // 更新所在租户配置（仅租户管理员）
   updateTenantConfig(data: TenantConfig): Promise<ApiResponse> {
-    return http.put('/v1/user/tenant-config', data)
+    return http.put('/v1/profile/tenant-config', data)
   }
 }

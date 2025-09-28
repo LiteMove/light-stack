@@ -1,5 +1,7 @@
 package model
 
+import "github.com/LiteMove/light-stack/internal/shared/model"
+
 import (
 	"gorm.io/gorm"
 	"time"
@@ -7,7 +9,7 @@ import (
 
 // DictType 字典类型模型
 type DictType struct {
-	BaseModel
+	model.BaseModel
 	Name        string `json:"name" gorm:"not null;size:100" validate:"required,min=1,max=100"`
 	Type        string `json:"type" gorm:"not null;size:100;uniqueIndex:uk_type" validate:"required,min=1,max=100"`
 	Description string `json:"description" gorm:"size:255" validate:"max=255"`
@@ -24,7 +26,7 @@ func (DictType) TableName() string {
 
 // DictData 字典数据模型
 type DictData struct {
-	BaseModel
+	model.BaseModel
 	DictType  string `json:"dictType" gorm:"not null;size:100;uniqueIndex:uk_type_value;index:idx_dict_type" validate:"required,max=100"`
 	Label     string `json:"label" gorm:"not null;size:100" validate:"required,max=100"`
 	Value     string `json:"value" gorm:"not null;size:100;uniqueIndex:uk_type_value" validate:"required,max=100"`

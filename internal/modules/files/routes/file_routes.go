@@ -13,10 +13,9 @@ func RegisterFileRoutes(api *gin.RouterGroup) {
 	files := v1.Group("/files")
 	files.Use(middleware.Auth())
 	{
-		files.POST("/upload", globals.FileCtrl().UploadFile)
-		files.GET("", globals.FileCtrl().GetAllFiles)
-		files.GET("/:id", globals.FileCtrl().GetFile)
-		files.DELETE("/:id", globals.FileCtrl().DeleteFile)
-		files.GET("/:id/download", globals.FileCtrl().GetPrivateFile)
+		files.GET("", globals.FileCtrl().GetAllFiles)       // 获取所有文件列表
+		files.GET("/:id", globals.FileCtrl().GetFile)       // 获取文件信息
+		files.DELETE("/:id", globals.FileCtrl().DeleteFile) // 删除文件
 	}
+
 }

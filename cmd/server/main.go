@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/LiteMove/light-stack/internal/config"
-	"github.com/LiteMove/light-stack/internal/middleware"
 	"github.com/LiteMove/light-stack/internal/routes"
-	"github.com/LiteMove/light-stack/internal/utils"
+	"github.com/LiteMove/light-stack/internal/shared/config"
+	"github.com/LiteMove/light-stack/internal/shared/middleware"
+	"github.com/LiteMove/light-stack/internal/shared/utils"
 	"github.com/LiteMove/light-stack/pkg/cache"
 	"github.com/LiteMove/light-stack/pkg/database"
 	"github.com/LiteMove/light-stack/pkg/logger"

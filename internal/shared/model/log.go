@@ -20,8 +20,7 @@ type OperationLog struct {
 	Duration     int    `json:"duration"` // 执行时长（毫秒）
 	Status       int    `json:"status" gorm:"not null;index:idx_status" validate:"required,oneof=1 2"`
 
-	// 关联关系
-	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	// 关联关系 - User 在 system 模块中
 }
 
 // TableName 指定表名
@@ -44,8 +43,7 @@ type LoginLog struct {
 	Message   string    `json:"message" gorm:"size:255" validate:"max=255"`
 	LoginTime time.Time `json:"loginTime" gorm:"not null;default:CURRENT_TIMESTAMP;index:idx_login_time"`
 
-	// 关联关系
-	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	// 关联关系 - User 在 system 模块中
 }
 
 // TableName 指定表名

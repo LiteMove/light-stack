@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/LiteMove/light-stack/internal/modules/auth/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 	"github.com/LiteMove/light-stack/internal/shared/utils"
 )
@@ -12,14 +12,14 @@ import (
 // ProfileService 个人中心服务接口
 type ProfileService interface {
 	// 个人信息操作
-	GetProfile(userID uint64) (*model.UserProfile, error)
+	GetProfile(userID uint64) (*systemModel.UserProfile, error)
 	UpdateProfile(userID uint64, nickname, email, phone, avatar string) error
 	ChangePassword(userID uint64, oldPassword, newPassword string) error
 
 	// 租户配置操作（仅租户管理员）
 	IsTenantAdmin(userID, tenantID uint64) (bool, error)
-	GetTenantConfig(tenantID uint64) (*model.TenantConfig, error)
-	UpdateTenantConfig(tenantID uint64, config *model.TenantConfig) error
+	GetTenantConfig(tenantID uint64) (*systemModel.TenantConfig, error)
+	UpdateTenantConfig(tenantID uint64, config *systemModel.TenantConfig) error
 }
 
 // profileService 个人中心服务实现
@@ -39,7 +39,7 @@ func NewProfileService(userRepo repository.UserRepository, roleRepo repository.R
 }
 
 // GetProfile 获取个人信息
-func (s *profileService) GetProfile(userID uint64) (*model.UserProfile, error) {
+func (s *profileService) GetProfile(userID uint64) (*systemModel.UserProfile, error) {
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取用户信息失败: %w", err)
@@ -51,7 +51,7 @@ func (s *profileService) GetProfile(userID uint64) (*model.UserProfile, error) {
 		return nil, fmt.Errorf("获取用户角色失败: %w", err)
 	}
 
-	profile := &model.UserProfile{
+	profile := &systemModel.UserProfile{
 		ID:       user.ID,
 		Username: user.Username,
 		Nickname: user.Nickname,
@@ -59,7 +59,7 @@ func (s *profileService) GetProfile(userID uint64) (*model.UserProfile, error) {
 		Phone:    user.Phone,
 		Status:   user.Status,
 		TenantID: user.TenantID,
-		Roles:    make([]model.RoleProfile, 0, len(roles)),
+		Roles:    make([]systemModel.RoleProfile, 0, len(roles)),
 	}
 
 	// 转换角色信息
@@ -177,7 +177,7 @@ func (s *profileService) IsTenantAdmin(userID, tenantID uint64) (bool, error) {
 }
 
 // GetTenantConfig 获取租户配置
-func (s *profileService) GetTenantConfig(tenantID uint64) (*model.TenantConfig, error) {
+func (s *profileService) GetTenantConfig(tenantID uint64) (*systemModel.TenantConfig, error) {
 	// 获取租户信息
 	tenant, err := s.tenantRepo.GetByID(tenantID)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *profileService) GetTenantConfig(tenantID uint64) (*model.TenantConfig, 
 }
 
 // UpdateTenantConfig 更新租户配置
-func (s *profileService) UpdateTenantConfig(tenantID uint64, config *model.TenantConfig) error {
+func (s *profileService) UpdateTenantConfig(tenantID uint64, config *systemModel.TenantConfig) error {
 	// 获取租户信息
 	tenant, err := s.tenantRepo.GetByID(tenantID)
 	if err != nil {
@@ -234,7 +234,7 @@ func (s *profileService) UpdateTenantConfig(tenantID uint64, config *model.Tenan
 }
 
 // validateTenantConfig 验证租户配置
-func (s *profileService) validateTenantConfig(config *model.TenantConfig) error {
+func (s *profileService) validateTenantConfig(config *systemModel.TenantConfig) error {
 	// 验证文件存储配置
 	fileStorage := &config.FileStorage
 

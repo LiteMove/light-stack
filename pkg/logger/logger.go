@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/LiteMove/light-stack/internal/config"
+	"github.com/LiteMove/light-stack/internal/shared/config"
 	"os"
 
 	"github.com/sirupsen/logrus"

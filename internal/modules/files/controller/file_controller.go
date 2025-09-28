@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/LiteMove/light-stack/internal/middleware"
-	"github.com/LiteMove/light-stack/internal/service"
+	"github.com/LiteMove/light-stack/internal/modules/files/service"
+	"github.com/LiteMove/light-stack/internal/shared/middleware"
 	"github.com/LiteMove/light-stack/pkg/response"
 	"github.com/gin-gonic/gin"
 )

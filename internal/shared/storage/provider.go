@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	systemModel "github.com/LiteMove/light-stack/internal/modules/system/model"
 )
 
 // Provider 存储提供者接口
@@ -18,11 +18,11 @@ type Provider interface {
 // Manager 存储管理器
 type Manager struct {
 	provider Provider
-	config   *model.FileStorageConfig
+	config   *systemModel.FileStorageConfig
 }
 
 // NewManager 创建新的存储管理器
-func NewManager(config *model.FileStorageConfig) (*Manager, error) {
+func NewManager(config *systemModel.FileStorageConfig) (*Manager, error) {
 	var provider Provider
 	var err error
 

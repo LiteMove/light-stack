@@ -3,7 +3,7 @@ package repository
 import (
 	"strings"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/files/model"
 	"gorm.io/gorm"
 )
 

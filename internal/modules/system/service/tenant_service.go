@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/LiteMove/light-stack/internal/model"
+	"github.com/LiteMove/light-stack/internal/modules/system/model"
 	"github.com/LiteMove/light-stack/internal/repository"
 )
 
