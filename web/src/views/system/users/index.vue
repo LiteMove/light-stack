@@ -450,6 +450,31 @@ const pagination = reactive({
   total: 0
 })
 
+// 监听租户变化
+watch(currentTenant, async (newTenant, oldTenant) => {
+  if (isSuperAdmin.value && newTenant !== oldTenant) {
+    // 显示切换提示
+    if (newTenant) {
+      //ElMessage.info(`正在切换到租户 "${newTenant.name}"...`)
+      console.log(`切换到租户 "${newTenant.name}"`)
+    }
+
+    // 重置分页到第一页
+    pagination.page = 1
+
+    userList.value = []
+    selectedUser.value = []
+
+    // 重新加载数据
+    refreshUsers()
+
+    // 切换完成提示
+    if (newTenant) {
+      ElMessage.success(`已切换到租户 "${newTenant.name}"`)
+    }
+  }
+}, { immediate: false })
+
 // 获取用户头像颜色
 const getAvatarColor = (username: string): string => {
   const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#f56565', '#38a169']
@@ -780,41 +805,6 @@ onMounted(() => {
   refreshUsers()
 })
 
-// 监听租户变化，自动刷新用户列表
-const stopTenantWatcher = tenantStore.$subscribe((mutation, state) => {
-  // 只有在组件没有销毁且用户已登录时才重新获取数据
-  if (!isUnmounting.value && userStore.getToken()) {
-    console.log('租户变化，重新获取用户列表')
-    fetchUsers()
-  } else {
-    console.log('组件销毁中或用户未登录，跳过租户变化响应')
-  }
-})
-
-// 组件销毁时停止监听并清理资源
-onUnmounted(() => {
-  console.log('用户管理组件开始销毁，清理资源')
-  isUnmounting.value = true
-  
-  // 停止租户监听器
-  if (stopTenantWatcher) {
-    stopTenantWatcher()
-  }
-  
-  // 取消所有进行中的请求
-  if (abortController.value) {
-    abortController.value.abort()
-    abortController.value = null
-  }
-  
-  // 清空数据
-  userList.value = []
-  roles.value = []
-  selectedRows.value = []
-  loading.value = false
-  
-  console.log('用户管理组件资源清理完成')
-})
 </script>
 
 <style lang="scss" scoped>
