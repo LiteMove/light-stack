@@ -38,7 +38,6 @@
             <el-radio-group v-model="form.type" @change="handleTypeChange">
               <el-radio label="directory">目录</el-radio>
               <el-radio label="menu">菜单</el-radio>
-              <el-radio label="permission">权限</el-radio>
             </el-radio-group>
           </el-form-item>
         </el-col>
@@ -56,16 +55,13 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="form.type === 'permission' ? '权限标识' : '菜单编码'" prop="code">
+          <el-form-item label="菜单编码" prop="code">
             <el-input
               v-model="form.code"
-              :placeholder="form.type === 'permission' ? '请输入权限标识，如：system:user:create' : '请输入菜单编码'"
+              placeholder="请输入菜单编码"
               maxlength="100"
               show-word-limit
             />
-            <div v-if="form.type === 'permission'" class="el-form-item__hint">
-              支持冒号分隔的多级权限，如：system:user:create
-            </div>
           </el-form-item>
         </el-col>
       </el-row>
@@ -204,8 +200,7 @@ const form = ref<MenuFormData>({
 const treeProps = {
   label: 'name',
   value: 'id',
-  children: 'children',
-  disabled: (data: Menu) => data.type === 'permission'
+  children: 'children'
 }
 
 // 表单验证规则
@@ -215,21 +210,11 @@ const rules = computed<FormRules>(() => ({
     { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
   ],
   code: [
-    { 
-      required: form.value.type === 'permission', 
-      message: form.value.type === 'permission' ? '权限标识不能为空' : '菜单编码不能为空', 
-      trigger: 'blur' 
-    },
-    { 
-      min: form.value.type === 'permission' ? 1 : 0, 
-      max: 100, 
-      message: '长度在 1 到 100 个字符', 
-      trigger: 'blur' 
-    },
-    { 
-      pattern: /^[a-zA-Z0-9:_-]*$/, 
-      message: '只能包含字母、数字、冒号、下划线和横线', 
-      trigger: 'blur' 
+    { max: 100, message: '长度不能超过 100 个字符', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z0-9:_-]*$/,
+      message: '只能包含字母、数字、冒号、下划线和横线',
+      trigger: 'blur'
     }
   ],
   type: [
@@ -287,19 +272,10 @@ watch(
 // 菜单类型变化处理
 const handleTypeChange = (type: string) => {
   // 清空相关字段
-  if (type === 'permission') {
-    form.value.path = ''
-    form.value.component = ''
-    form.value.icon = ''
-  } else if (type === 'directory') {
+  if (type === 'directory') {
     form.value.component = ''
   }
-  
-  // 如果类型不是权限，清空权限标识
-  if (type !== 'permission') {
-    form.value.code = ''
-  }
-  
+
   // 触发表单验证
   nextTick(() => {
     formRef.value?.clearValidate()

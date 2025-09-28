@@ -190,7 +190,6 @@ func (e *TemplateEngine) PrepareTemplateData(config *model.GenTableConfig) *mode
 		MenuName:     config.MenuName,
 		MenuURL:      config.MenuURL,
 		MenuIcon:     config.MenuIcon,
-		Permissions:  config.GetPermissions(),
 		Options:      config.GetOptions(),
 	}
 

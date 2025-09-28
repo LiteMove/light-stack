@@ -7,7 +7,7 @@
           <el-icon class="title-icon"><MenuIcon /></el-icon>
           菜单管理
         </h2>
-        <p class="page-desc">管理系统菜单结构、权限配置和路由设置</p>
+        <p class="page-desc">管理系统菜单结构和路由设置</p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="Plus" @click="handleAdd" size="default">
@@ -130,15 +130,7 @@
             <span v-else class="empty-value">-</span>
           </template>
         </el-table-column>
-        
-        <!-- 权限标识列 -->
-        <el-table-column prop="resource" label="权限标识" width="180" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span v-if="row.resource" class="permission-code">{{ row.resource }}:{{ row.action || '*' }}</span>
-            <span v-else class="empty-value">-</span>
-          </template>
-        </el-table-column>
-        
+
         <!-- 排序列 -->
         <el-table-column prop="sortOrder" label="排序" width="80" align="center">
           <template #default="{ row }">
@@ -200,7 +192,6 @@
                   size="small"
                   :icon="Plus"
                   @click="handleAdd(row)"
-                  v-if="row.type !== 'permission'"
                 />
               </el-tooltip>
               <el-tooltip content="编辑菜单" placement="top">
@@ -389,7 +380,7 @@ const fetchMenus = async () => {
 const fetchParentOptions = async () => {
   try {
     const { data } = await menuApi.getMenuTree()
-    parentOptions.value = data.filter(menu => menu.type !== 'permission')
+    parentOptions.value = data
   } catch (error) {
     // 错误信息已在响应拦截器中处理
     console.error('获取父菜单选项失败:', error)
@@ -508,8 +499,7 @@ const handleFormSuccess = () => {
 const getMenuTypeTagType = (type: string) => {
   const typeMap: Record<string, string> = {
     directory: 'info',
-    menu: 'success',
-    permission: 'warning'
+    menu: 'success'
   }
   return typeMap[type] || 'info'
 }
@@ -518,8 +508,7 @@ const getMenuTypeTagType = (type: string) => {
 const getMenuTypeLabel = (type: string) => {
   const typeMap: Record<string, string> = {
     directory: '目录',
-    menu: '菜单',
-    permission: '权限'
+    menu: '菜单'
   }
   return typeMap[type] || type
 }
@@ -834,11 +823,6 @@ onMounted(() => {
               background: radial-gradient(circle, #e8f5e8 0%, transparent 70%);
             }
             
-            &.icon-permission {
-              color: #f44336;
-              background: radial-gradient(circle, #ffebee 0%, transparent 70%);
-            }
-
             &.default-icon {
               opacity: 0.7;
               color: #9e9e9e;
@@ -886,16 +870,6 @@ onMounted(() => {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-
-      .permission-code {
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        font-size: 12px;
-        color: #e91e63;
-        background: #fce4ec;
-        padding: 4px 8px;
-        border-radius: 4px;
-        display: inline-block;
       }
 
       .empty-value {

@@ -25,10 +25,8 @@ type MenuService interface {
 	// 状态操作
 	UpdateMenuStatus(id uint64, status int) error
 
-	// 权限相关
+	// 角色菜单分配
 	AssignMenusToRole(roleID uint64, menuIDs []uint64) error
-	GetMenuPermissions(userID uint64) ([]string, error)
-	CheckMenuPermission(userID uint64, menuCode string) (bool, error)
 }
 
 // menuService 菜单服务实现
@@ -276,22 +274,6 @@ func (s *menuService) GetMenuPermissions(userID uint64) ([]string, error) {
 	}
 
 	return permissions, nil
-}
-
-// CheckMenuPermission 检查菜单权限
-func (s *menuService) CheckMenuPermission(userID uint64, menuCode string) (bool, error) {
-	permissions, err := s.GetMenuPermissions(userID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, permission := range permissions {
-		if permission == menuCode {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 
 // hasCircularReference 检查是否存在循环引用

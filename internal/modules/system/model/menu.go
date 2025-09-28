@@ -6,13 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// Menu 菜单权限模型
+// Menu 菜单模型
 type Menu struct {
 	ID        uint64         `json:"id" gorm:"primarykey"`
 	ParentID  uint64         `json:"parentId" gorm:"not null;default:0;index"`
 	Name      string         `json:"name" gorm:"not null;size:100" validate:"required,max=100"`
-	Code      string         `json:"code" gorm:"size:100;index" validate:"required_if_permission,permission_code,max=100"`
-	Type      string         `json:"type" gorm:"not null;default:menu;size:20" validate:"required,oneof=directory menu permission"`
+	Code      string         `json:"code" gorm:"size:100;index" validate:"max=100"`
+	Type      string         `json:"type" gorm:"not null;default:menu;size:20" validate:"required,oneof=directory menu"`
 	Path      string         `json:"path" gorm:"size:255" validate:"max=255"`
 	Component string         `json:"component" gorm:"size:255" validate:"max=255"`
 	Icon      string         `json:"icon" gorm:"size:100" validate:"max=100"`
@@ -24,7 +24,6 @@ type Menu struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 关联关系
-	Roles    []Role `json:"roles,omitempty" gorm:"many2many:role_menus;"`
 	Children []Menu `json:"children,omitempty" gorm:"-"`
 }
 

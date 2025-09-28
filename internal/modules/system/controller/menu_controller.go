@@ -32,8 +32,8 @@ func NewMenuController(menuService service.MenuService) *MenuController {
 type CreateMenuRequest struct {
 	ParentID  uint64 `json:"parentId" validate:""`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
-	Code      string `json:"code" validate:"required_if_permission,permission_code,max=100"`
-	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
+	Code      string `json:"code" validate:"max=100"`
+	Type      string `json:"type" validate:"required,oneof=directory menu"`
 	Path      string `json:"path" validate:"max=255"`
 	Component string `json:"component" validate:"max=255"`
 	Icon      string `json:"icon" validate:"max=100"`
@@ -46,8 +46,8 @@ type CreateMenuRequest struct {
 type UpdateMenuRequest struct {
 	ParentID  uint64 `json:"parentId"`
 	Name      string `json:"name" validate:"required,min=1,max=100"`
-	Code      string `json:"code" validate:"required_if_permission,permission_code,max=100"`
-	Type      string `json:"type" validate:"required,oneof=directory menu permission"`
+	Code      string `json:"code" validate:"max=100"`
+	Type      string `json:"type" validate:"required,oneof=directory menu"`
 	Path      string `json:"path" validate:"max=255"`
 	Component string `json:"component" validate:"max=255"`
 	Icon      string `json:"icon" validate:"max=100"`
@@ -321,22 +321,4 @@ func (mc *MenuController) GetUserMenuTree(c *gin.Context) {
 	}
 
 	response.Success(c, menuTree)
-}
-
-// GetUserPermissions 获取用户权限
-func (mc *MenuController) GetUserPermissions(c *gin.Context) {
-	// 从JWT中间件中获取用户ID
-	userID := c.GetUint64("userId")
-	if userID == 0 {
-		response.Unauthorized(c, "未授权")
-		return
-	}
-
-	permissions, err := mc.menuService.GetMenuPermissions(userID)
-	if err != nil {
-		response.BadRequest(c, "获取用户权限失败")
-		return
-	}
-
-	response.Success(c, gin.H{"permissions": permissions})
 }

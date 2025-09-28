@@ -49,7 +49,6 @@ type UserProfile struct {
 	LastLoginIP string                     `json:"lastLoginIp"`
 	Roles       []systemModel.RoleProfile  `json:"roles,omitempty"`
 	RoleCodes   []string                   `json:"roleCodes,omitempty"`
-	Permissions []string                   `json:"permissions,omitempty"`
 	Menus       []systemModel.MenuTreeNode `json:"menus,omitempty"`
 	CreatedAt   time.Time                  `json:"createdAt"`
 	UpdatedAt   time.Time                  `json:"updatedAt"`

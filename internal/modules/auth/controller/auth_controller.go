@@ -6,7 +6,6 @@ import (
 
 	"github.com/LiteMove/light-stack/internal/modules/auth/service"
 	"github.com/LiteMove/light-stack/internal/shared/middleware"
-	"github.com/LiteMove/light-stack/pkg/permission"
 	"github.com/LiteMove/light-stack/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -120,16 +119,6 @@ func (c *AuthController) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	// 从权限缓存中获取权限列表
-	perms, exists := permission.Cache.GetUserPermissions(userId)
-	if exists {
-		permList := make([]string, 0, len(perms))
-		for p := range perms {
-			permList = append(permList, p)
-		}
-		profile.Permissions = permList
-	}
-
 	response.Success(ctx, profile)
 }
 
@@ -225,12 +214,6 @@ func (c *AuthController) GetUserRoles(ctx *gin.Context) {
 
 // Logout 用户登出
 func (c *AuthController) Logout(ctx *gin.Context) {
-	// 获取用户ID并清除权限缓存
-	userID := ctx.GetUint64("userId")
-	if userID != 0 {
-		permission.ClearUserPermissions(userID)
-	}
-
 	// 对于JWT，登出通常由客户端删除token即可
 	// 如果需要服务端记录登出状态，可以将token加入黑名单
 	response.Success(ctx, gin.H{"message": "登出成功"})

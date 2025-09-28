@@ -20,7 +20,6 @@ type GenTableConfig struct {
 	MenuName     string    `json:"menuName" gorm:"size:64;default:'';comment:菜单名称"`
 	MenuURL      string    `json:"menuUrl" gorm:"size:255;default:'';comment:菜单URL"`
 	MenuIcon     string    `json:"menuIcon" gorm:"size:64;default:'';comment:菜单图标"`
-	Permissions  string    `json:"permissions" gorm:"type:text;comment:权限字符串(JSON数组)"`
 	Options      string    `json:"options" gorm:"type:text;comment:其他配置选项(JSON)"`
 	Remark       string    `json:"remark" gorm:"size:500;default:'';comment:备注"`
 	CreatedAt    time.Time `json:"createdAt" gorm:"autoCreateTime;comment:创建时间"`
@@ -30,25 +29,6 @@ type GenTableConfig struct {
 
 	// 关联字段配置
 	Columns []GenTableColumn `json:"columns" gorm:"foreignKey:TableConfigID;constraint:OnDelete:CASCADE"`
-}
-
-// GetPermissions 获取权限列表
-func (g *GenTableConfig) GetPermissions() []string {
-	var permissions []string
-	if g.Permissions != "" {
-		json.Unmarshal([]byte(g.Permissions), &permissions)
-	}
-	return permissions
-}
-
-// SetPermissions 设置权限列表
-func (g *GenTableConfig) SetPermissions(permissions []string) error {
-	data, err := json.Marshal(permissions)
-	if err != nil {
-		return err
-	}
-	g.Permissions = string(data)
-	return nil
 }
 
 // GetOptions 获取选项配置
@@ -171,7 +151,6 @@ type TemplateData struct {
 	MenuName     string       `json:"menuName"`     // 菜单名称
 	MenuURL      string       `json:"menuUrl"`      // 菜单URL
 	MenuIcon     string       `json:"menuIcon"`     // 菜单图标
-	Permissions  []string     `json:"permissions"`  // 权限字符串列表
 	Fields       []ColumnInfo `json:"fields"`       // 字段信息
 	HasQuery     bool         `json:"hasQuery"`     // 是否有查询字段
 	QueryFields  []ColumnInfo `json:"queryFields"`  // 查询字段

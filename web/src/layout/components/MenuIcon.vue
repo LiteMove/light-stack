@@ -29,8 +29,6 @@ const iconComponent = computed(() => {
     'system': 'Setting',
     'role': 'UserFilled',
     'roles': 'UserFilled',
-    'permission': 'Key',
-    'permissions': 'Key',
     'dashboard': 'House',
     'home': 'House'
   }

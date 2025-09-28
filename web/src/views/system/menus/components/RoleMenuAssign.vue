@@ -50,10 +50,6 @@
                 <span class="summary-label">菜单:</span>
                 <span class="summary-value">{{ getMenuCountByType('menu') }} 个</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">权限:</span>
-                <span class="summary-value">{{ getMenuCountByType('permission') }} 个</span>
-              </div>
             </div>
           </template>
         </el-alert>

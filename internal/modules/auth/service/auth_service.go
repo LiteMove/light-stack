@@ -9,7 +9,6 @@ import (
 	"github.com/LiteMove/light-stack/internal/shared/utils"
 	"github.com/LiteMove/light-stack/pkg/jwt"
 	"github.com/LiteMove/light-stack/pkg/logger"
-	"github.com/LiteMove/light-stack/pkg/permission"
 )
 
 // AuthService 认证服务接口
@@ -150,10 +149,10 @@ func (s *authService) Login(tenantID uint64, req *LoginRequest) (*TokenResponse,
 		logger.WithField("userId", user.ID).Warn("Failed to update login info:", err)
 	}
 
-	// 加载用户权限和角色到缓存
-	if err := permission.LoadUserData(user.ID, s.menuRepo, s.roleRepo); err != nil {
-		logger.WithField("userId", user.ID).Warn("Failed to load permissions and roles:", err)
-	}
+	//// 加载用户角色到缓存
+	//if err := permission.LoadUserData(user.ID, s.roleRepo); err != nil {
+	//	logger.WithField("userId", user.ID).Warn("Failed to load permissions and roles:", err)
+	//}
 
 	logger.WithField("userId", user.ID).Info("User logged in successfully")
 
@@ -343,14 +342,6 @@ func (s *authService) GetUserProfile(userID uint64) (*systemModel.UserProfile, e
 	}
 
 	profile := user.ToProfile()
-
-	// 获取用户权限（仅返回权限码数组）
-	permissions, err := s.menuRepo.GetUserPermissions(userID)
-	if err != nil {
-		logger.WithField("userId", userID).Warn("Failed to get user permissions:", err)
-	} else {
-		profile.Permissions = permissions
-	}
 
 	// 获取用户菜单树
 	menus, err := s.menuRepo.GetUserMenus(userID)

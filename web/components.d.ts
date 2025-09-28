@@ -63,8 +63,6 @@ declare module 'vue' {
     FieldConfigTable: typeof import('./src/components/Generator/FieldConfigTable.vue')['default']
     FileUpload: typeof import('./src/components/FileUpload.vue')['default']
     MenuSelector: typeof import('./src/components/Generator/MenuSelector.vue')['default']
-    Permission: typeof import('./src/components/Permission/index.vue')['default']
-    PermissionGenerator: typeof import('./src/components/Generator/PermissionGenerator.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SimpleTenantSwitcher: typeof import('./src/components/SimpleTenantSwitcher.vue')['default']

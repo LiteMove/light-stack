@@ -206,7 +206,6 @@ const getMenuTypeTagType = (type: string) => {
   const typeMap: Record<string, string> = {
     directory: 'info',
     menu: 'success',
-    permission: 'warning'
   }
   return typeMap[type] || 'info'
 }
@@ -216,7 +215,6 @@ const getMenuTypeLabel = (type: string) => {
   const typeMap: Record<string, string> = {
     directory: '目录',
     menu: '菜单',
-    permission: '权限'
   }
   return typeMap[type] || type
 }

@@ -90,11 +90,6 @@ func (s *GenConfigService) CreateConfig(req *CreateConfigRequest) (*model.GenTab
 	}
 
 	// 构建配置
-	// 序列化权限
-	permissionsJSON, err := json.Marshal(utils.GeneratePermissions(req.ModuleName, req.BusinessName))
-	if err != nil {
-		return nil, fmt.Errorf("序列化权限失败: %v", err)
-	}
 
 	// 序列化选项
 	optionsJSON, err := json.Marshal(req.Options)
@@ -115,7 +110,6 @@ func (s *GenConfigService) CreateConfig(req *CreateConfigRequest) (*model.GenTab
 		MenuName:     req.MenuName,
 		MenuURL:      req.MenuURL,
 		MenuIcon:     req.MenuIcon,
-		Permissions:  string(permissionsJSON),
 		Options:      string(optionsJSON),
 		Remark:       req.Remark,
 		CreatedBy:    req.CreatedBy,
@@ -168,14 +162,10 @@ func (s *GenConfigService) UpdateConfig(id int64, req *UpdateConfigRequest) (*mo
 	if req.BusinessName != "" {
 		config.BusinessName = req.BusinessName
 		config.ClassName = utils.ToPascalCase(req.BusinessName)
-		permissionsJSON, _ := json.Marshal(utils.GeneratePermissions(config.ModuleName, req.BusinessName))
-		config.Permissions = string(permissionsJSON)
 	}
 	if req.ModuleName != "" {
 		config.ModuleName = req.ModuleName
 		config.PackageName = strings.ToLower(req.ModuleName)
-		permissionsJSON, _ := json.Marshal(utils.GeneratePermissions(req.ModuleName, config.BusinessName))
-		config.Permissions = string(permissionsJSON)
 	}
 	if req.FunctionName != "" {
 		config.FunctionName = req.FunctionName

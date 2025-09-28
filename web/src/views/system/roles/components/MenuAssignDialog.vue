@@ -233,7 +233,6 @@ const getTypeLabel = (type: string): string => {
   const typeMap: Record<string, string> = {
     directory: '目录',
     menu: '菜单',
-    permission: '权限'
   }
   return typeMap[type] || type
 }

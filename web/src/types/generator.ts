@@ -48,7 +48,6 @@ export interface GenTableConfig {
   menuName: string
   menuUrl: string
   menuIcon: string
-  permissions: string[]
   options: OptionConfig
   remark: string
   createdAt: string

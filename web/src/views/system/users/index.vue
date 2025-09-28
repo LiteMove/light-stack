@@ -22,8 +22,7 @@
       </div>
       <div class="header-actions">
         <el-button 
-          v-if="$hasPer('system:user:create')"
-          type="primary" 
+          type="primary"
           :icon="Plus" 
           @click="handleAdd" 
           size="default"
@@ -39,8 +38,7 @@
           刷新
         </el-button>
         <el-button 
-          v-if="$hasPer('system:user:export')"
-          :icon="Download" 
+          :icon="Download"
           @click="exportUsers"
           size="default"
         >
@@ -103,8 +101,7 @@
           </div>
           <div class="batch-actions">
             <el-button 
-              v-if="$hasPer('system:user:update')"
-              type="success" 
+              type="success"
               size="small" 
               :icon="Check" 
               @click="batchEnable"
@@ -112,8 +109,7 @@
               批量启用
             </el-button>
             <el-button 
-              v-if="$hasPer('system:user:update')"
-              type="warning" 
+              type="warning"
               size="small" 
               :icon="Close" 
               @click="batchDisable"
@@ -121,8 +117,7 @@
               批量禁用
             </el-button>
             <el-button 
-              v-if="$hasPer('system:user:delete')"
-              type="danger" 
+              type="danger"
               size="small" 
               :icon="Delete" 
               @click="batchDelete"
@@ -260,7 +255,7 @@
               :active-value="1"
               :inactive-value="2"
               @change="handleStatusChange(row)"
-              :disabled="row.isSystem || !$hasPer('system:user:update')"
+              :disabled="row.isSystem"
               size="small"
             />
           </template>
@@ -293,8 +288,7 @@
           <template #default="{ row }">
             <div class="action-buttons">
               <el-tooltip 
-                v-if="$hasPer('system:user:update')"
-                content="编辑用户" 
+                content="编辑用户"
                 placement="top"
               >
                 <el-button
@@ -306,8 +300,7 @@
                 />
               </el-tooltip>
               <el-tooltip 
-                v-if="$hasPer('system:user:role:assign')"
-                content="分配角色" 
+                content="分配角色"
                 placement="top"
               >
                 <el-button
@@ -320,8 +313,7 @@
                 />
               </el-tooltip>
               <el-tooltip 
-                v-if="$hasPer('system:user:reset')"
-                content="重置密码" 
+                content="重置密码"
                 placement="top"
               >
                 <el-button
@@ -334,8 +326,7 @@
                 />
               </el-tooltip>
               <el-tooltip 
-                v-if="$hasPer('system:user:delete')"
-                content="删除用户" 
+                content="删除用户"
                 placement="top"
               >
                 <el-button

@@ -16,16 +16,16 @@ func RegisterSystemRoutes(api *gin.RouterGroup) {
 		// 用户管理
 		users := admin.Group("/users")
 		{
-			users.POST("", middleware.CheckPermission("system:user:create"), globals.UserCtrl().CreateUser)                        // 创建用户
-			users.GET("", middleware.CheckPermission("system:user:list"), globals.UserCtrl().GetUsers)                             // 获取用户列表
-			users.GET("/:id", middleware.CheckPermission("system:user:detail"), globals.UserCtrl().GetUser)                        // 获取用户详情
-			users.PUT("/:id", middleware.CheckPermission("system:user:update"), globals.UserCtrl().UpdateUser)                     // 更新用户
-			users.DELETE("/:id", middleware.CheckPermission("system:user:delete"), globals.UserCtrl().DeleteUser)                  // 删除用户
-			users.PUT("/:id/status", middleware.CheckPermission("system:user:update"), globals.UserCtrl().UpdateUserStatus)        // 更新用户状态
-			users.PUT("/batch/status", middleware.CheckPermission("system:user:update"), globals.UserCtrl().BatchUpdateUserStatus) // 批量更新用户状态
-			users.POST("/:id/reset-password", middleware.CheckPermission("system:user:reset"), globals.UserCtrl().ResetPassword)   // 重置密码
-			users.PUT("/:id/roles", middleware.CheckPermission("system:user:role:assign"), globals.UserCtrl().AssignUserRoles)     // 为用户分配角色
-			users.GET("/:id/roles", middleware.CheckPermission("system:user:role:assign"), globals.UserCtrl().GetUserRoles)        // 获取用户角色
+			users.POST("", globals.UserCtrl().CreateUser)                        // 创建用户
+			users.GET("", globals.UserCtrl().GetUsers)                           // 获取用户列表
+			users.GET("/:id", globals.UserCtrl().GetUser)                        // 获取用户详情
+			users.PUT("/:id", globals.UserCtrl().UpdateUser)                     // 更新用户
+			users.DELETE("/:id", globals.UserCtrl().DeleteUser)                  // 删除用户
+			users.PUT("/:id/status", globals.UserCtrl().UpdateUserStatus)        // 更新用户状态
+			users.PUT("/batch/status", globals.UserCtrl().BatchUpdateUserStatus) // 批量更新用户状态
+			users.POST("/:id/reset-password", globals.UserCtrl().ResetPassword)  // 重置密码
+			users.PUT("/:id/roles", globals.UserCtrl().AssignUserRoles)          // 为用户分配角色
+			users.GET("/:id/roles", globals.UserCtrl().GetUserRoles)             // 获取用户角色
 		}
 
 		// 角色管理

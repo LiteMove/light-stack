@@ -159,26 +159,6 @@
               </span>
             </div>
           </template>
-
-          <div class="permission-display">
-            <el-row v-if="generatedPermissions.length > 0">
-              <el-col :span="24">
-                <div class="permission-list">
-                  <el-tag
-                    v-for="permission in generatedPermissions"
-                    :key="permission"
-                    class="permission-tag"
-                    effect="plain"
-                  >
-                    {{ permission }}
-                  </el-tag>
-                </div>
-              </el-col>
-            </el-row>
-            <div v-else class="no-permission-tip">
-              <el-text type="info">请先配置模块名和业务名，权限将自动生成</el-text>
-            </div>
-          </div>
         </el-card>
 
         <!-- 字段配置 -->
@@ -252,7 +232,6 @@ const configForm = reactive<Partial<GenTableConfig>>({
   menuName: '',
   menuUrl: '',
   menuIcon: '',
-  permissions: [],
   columns: []
 })
 
@@ -280,22 +259,6 @@ const configRules = {
 
 // 计算属性
 const tableId = computed(() => route.params.tableId as string)
-
-// 根据模块名和业务名自动生成权限
-const generatedPermissions = computed(() => {
-  const moduleName = configForm.moduleName || ''
-  const businessName = configForm.businessName || ''
-
-  if (!moduleName || !businessName) return []
-
-  return [
-    `${moduleName}:${businessName}:list`,
-    `${moduleName}:${businessName}:add`,
-    `${moduleName}:${businessName}:edit`,
-    `${moduleName}:${businessName}:delete`,
-    `${moduleName}:${businessName}:view`
-  ]
-})
 
 // 方法
 const loadTableColumns = async () => {
@@ -381,8 +344,6 @@ const updateDerivedFields = () => {
     configForm.functionName = businessName + '管理'
     configForm.menuName = configForm.functionName
     configForm.menuUrl = `/${businessName}`
-    // 自动更新权限配置
-    configForm.permissions = generatedPermissions.value
   }
 }
 
@@ -414,9 +375,6 @@ const handlePreview = async () => {
 
   previewLoading.value = true
   try {
-    // 确保权限配置是最新的
-    configForm.permissions = generatedPermissions.value
-
     // 先保存配置
     const saveResponse = await saveGenConfig(configForm)
     const configId = saveResponse.data.id
@@ -457,9 +415,6 @@ const handleGenerate = async () => {
 
   generateLoading.value = true
   try {
-    // 确保权限配置是最新的
-    configForm.permissions = generatedPermissions.value
-
     // 保存配置
     const saveResponse = await saveGenConfig(configForm)
     const configId = saveResponse.data.id
@@ -581,26 +536,4 @@ onMounted(() => {
   }
 }
 
-.permission-display {
-  padding: 20px 0;
-}
-
-.permission-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.permission-tag {
-  font-family: 'Monaco', 'Consolas', monospace;
-  padding: 4px 12px;
-  background-color: #f5f7fa;
-  border-color: #dcdfe6;
-}
-
-.no-permission-tip {
-  text-align: center;
-  padding: 40px 0;
-  color: #909399;
-}
 </style>

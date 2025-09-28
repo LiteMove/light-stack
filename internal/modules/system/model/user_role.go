@@ -19,14 +19,13 @@ func (UserRole) TableName() string {
 
 // UserRoleInfo 用户角色信息（包含角色详情）
 type UserRoleInfo struct {
-	UserID      uint64    `json:"userId"`
-	Username    string    `json:"username"`
-	Nickname    string    `json:"nickname"`
-	Email       string    `json:"email"`
-	Roles       []Role    `json:"roles"`
-	RoleCodes   []string  `json:"role_codes"`
-	Permissions []string  `json:"permissions"`
-	CreatedAt   time.Time `json:"createdAt"`
+	UserID    uint64    `json:"userId"`
+	Username  string    `json:"username"`
+	Nickname  string    `json:"nickname"`
+	Email     string    `json:"email"`
+	Roles     []Role    `json:"roles"`
+	RoleCodes []string  `json:"role_codes"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // RoleWithUsers 角色及其用户信息

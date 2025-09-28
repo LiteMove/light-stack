@@ -51,9 +51,7 @@ export interface User {
   updatedAt: string
   roleCodes: string[]
   roles: Role[]
-  permissions: string[]
   menus: Menu[]
-
 }
 
 // 角色信息
@@ -76,12 +74,10 @@ export interface Menu {
   parentId: number
   name: string
   code: string
-  type: 'directory' | 'menu' | 'permission'
+  type: 'directory' | 'menu'
   path?: string
   component?: string
   icon?: string
-  resource?: string
-  action?: string
   sortOrder: number
   isHidden: boolean
   isSystem: boolean
@@ -96,12 +92,10 @@ export interface MenuFormData {
   parentId?: number
   name: string
   code: string
-  type: 'directory' | 'menu' | 'permission'
+  type: 'directory' | 'menu'
   path?: string
   component?: string
   icon?: string
-  resource?: string
-  action?: string
   sortOrder: number
   isHidden: boolean
   status: number

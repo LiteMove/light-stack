@@ -14,16 +14,13 @@ export interface UserInfo {
   email: string
   avatar?: string
   roles: string[]
-  permissions: string[]
-    menus: Menu[]
+  menus: Menu[]
 }
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string>('')
   const userInfo = ref<UserInfo | null>(null)
-  const permissions = ref<string[]>([])
   const userMenus = ref<Menu[]>([])
-  const menuPermissions = ref<string[]>([])
 
   // 设置token
   const setToken = (newToken: string) => {
@@ -75,13 +72,12 @@ export const useUserStore = defineStore('user', () => {
   // 设置用户信息
   const setUserInfo = (info: UserInfo) => {
     userInfo.value = info
-    permissions.value = info.permissions || []
     userMenus.value = info.menus || []
     // 检查是否为超级管理员（只检查super_admin角色）
     const tenantStore = useTenantStore()
     const isSuperAdminRole = info.roles?.includes('super_admin')
     tenantStore.setIsSuperAdmin(isSuperAdminRole)
-    
+
     // 将用户信息持久化到本地存储
     localStorage.setItem('userInfo', JSON.stringify(info))
   }
@@ -110,7 +106,6 @@ export const useUserStore = defineStore('user', () => {
                   email: data.email,
                   avatar: data.avatar,
                   roles: data.roleCodes || [],
-                  permissions: data.permissions || [],
                   menus: data.menus || []
               }
 
@@ -128,11 +123,9 @@ export const useUserStore = defineStore('user', () => {
   // 清除用户信息
   const clearUserInfo = () => {
     userInfo.value = null
-    permissions.value = []
     userMenus.value = []
     localStorage.removeItem('userInfo')
     localStorage.removeItem('userMenus')
-    localStorage.removeItem('permissions')
   }
 
   // 获取用户菜单
@@ -164,58 +157,6 @@ export const useUserStore = defineStore('user', () => {
       }
     }
     return userMenus.value
-  }
-
-  // 获取菜单权限
-  const getPermissions = async (): Promise<string[]> => {
-    // 首先检查本地存储
-    if (!permissions.value.length) {
-      const storedPermissions = localStorage.getItem('permissions')
-      if (storedPermissions) {
-        try {
-            permissions.value = JSON.parse(storedPermissions)
-          return permissions.value
-        } catch (error) {
-          console.error('Failed to parse stored permissions:', error)
-        }
-      }
-    }
-
-    // 如果本地没有或解析失败，从API获取
-    if (!permissions.value.length) {
-      try {
-        const { data } = await menuApi.getUserPermissions()
-        permissions.value = data.permissions || []
-        // 保存到本地存储
-        localStorage.setItem('permissions', JSON.stringify(data.permissions || []))
-        return data.permissions || []
-      } catch (error) {
-        console.error('Failed to fetch menu permissions:', error)
-        return []
-      }
-    }
-
-    return permissions.value
-  }
-
-  // 检查权限
-  const hasPermission = (permission: string): boolean => {
-    return permissions.value.includes(permission) || menuPermissions.value.includes(permission)
-  }
-
-  // 检查菜单权限
-  const hasMenuPermission = (permission: string): boolean => {
-    return menuPermissions.value.includes(permission)
-  }
-
-  // 检查是否拥有任意一个权限
-  const hasAnyPermission = (permissionList: string[]): boolean => {
-    return permissionList.some(permission => hasPermission(permission))
-  }
-
-  // 检查是否拥有所有权限
-  const hasAllPermissions = (permissionList: string[]): boolean => {
-    return permissionList.every(permission => hasPermission(permission))
   }
 
   // 检查角色
@@ -279,7 +220,6 @@ export const useUserStore = defineStore('user', () => {
         icon: menu.icon,
         hidden: menu.isHidden,
         type: menu.type,
-        permission: menu.code // 添加权限标识
       }
     }
 
@@ -340,7 +280,6 @@ export const useUserStore = defineStore('user', () => {
               icon: menu.icon,
               hidden: menu.isHidden,
               type: menu.type,
-              permission: menu.code
             }
           }]
         } else {
@@ -380,7 +319,6 @@ export const useUserStore = defineStore('user', () => {
               icon: menu.icon,
               hidden: menu.isHidden,
               type: menu.type,
-              permission: menu.code
             }
           }]
         } else {
@@ -394,7 +332,7 @@ export const useUserStore = defineStore('user', () => {
     if (menu.children && menu.children.length > 0) {
       const childRoutes = menu.children
         .filter(child => {
-          const isValid = !child.isHidden && child.status === 1 && child.type !== 'permission'
+          const isValid = !child.isHidden && child.status === 1
           return isValid
         })
         .map(child => menuToRoute(child, true)) // 传递isChild=true
@@ -434,9 +372,7 @@ export const useUserStore = defineStore('user', () => {
   return {
     token,
     userInfo,
-    permissions,
     userMenus,
-    menuPermissions,
     setToken,
     getToken,
     clearToken,
@@ -444,11 +380,6 @@ export const useUserStore = defineStore('user', () => {
     getUserInfo,
     clearUserInfo,
     getUserMenus,
-    getPermissions,
-    hasPermission,
-    hasMenuPermission,
-    hasAnyPermission,
-    hasAllPermissions,
     hasRole,
     hasAnyRole,
     hasAllRoles,
